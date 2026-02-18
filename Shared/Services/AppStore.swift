@@ -445,6 +445,13 @@ final class AppStore: ObservableObject {
     private func append(events: [ReminderEvent]) {
         guard !events.isEmpty else { return }
         reminders.append(contentsOf: events)
+
+        #if targetEnvironment(simulator)
+        if ProcessInfo.processInfo.environment["AUTO_WATCH_DEMO"] == "1" {
+            return
+        }
+        #endif
+
         Task {
             await reminderService.scheduleNotifications(events: events)
         }

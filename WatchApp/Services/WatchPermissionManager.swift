@@ -46,6 +46,12 @@ final class WatchPermissionManager: NSObject, ObservableObject {
     }
 
     func requestNotificationsIfNeeded() {
+        #if targetEnvironment(simulator)
+        if ProcessInfo.processInfo.environment["AUTO_WATCH_DEMO"] == "1" {
+            return
+        }
+        #endif
+
         guard !notificationAuthorized else { return }
 
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in

@@ -87,7 +87,16 @@ struct WatchRootView: View {
 
     private func configureRuntime() {
         permissionManager.refreshStatus()
-        permissionManager.requestBaselinePermissions()
+
+        #if targetEnvironment(simulator)
+        let isAutoDemo = ProcessInfo.processInfo.environment["AUTO_WATCH_DEMO"] == "1"
+        #else
+        let isAutoDemo = false
+        #endif
+
+        if !isAutoDemo {
+            permissionManager.requestBaselinePermissions()
+        }
 
         if permissionManager.locationAuthorized {
             locationMonitor.start()
@@ -156,8 +165,9 @@ struct WatchRootView: View {
             try? await Task.sleep(nanoseconds: 1_600_000_000)
 
             store.handleHomeArrival(arrivedAt: .now)
-            demoCaption = "Back home (simulated)"
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            selectedTab = .live
+            demoCaption = "Back home simulated"
+            try? await Task.sleep(nanoseconds: 3_500_000_000)
 
             selectedTab = .timeline
             demoCaption = "Final recap"
