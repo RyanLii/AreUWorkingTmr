@@ -40,9 +40,7 @@ final class WatchPermissionManager: NSObject, ObservableObject {
     }
 
     func requestBaselinePermissions() {
-        // Temporarily disabled to prevent the notification permission banner
-        // from blocking watch demo recordings.
-        // requestNotificationsIfNeeded()
+        requestNotificationsIfNeeded()
         requestLocationIfNeeded()
         requestHealthKitReadIfNeeded()
     }
