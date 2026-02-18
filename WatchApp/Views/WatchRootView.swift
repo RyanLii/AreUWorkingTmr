@@ -6,22 +6,50 @@ struct WatchRootView: View {
     @EnvironmentObject private var store: AppStore
     @EnvironmentObject private var permissionManager: WatchPermissionManager
     @EnvironmentObject private var locationMonitor: WatchLocationMonitor
+    enum DemoTab: Hashable {
+        case quickAdd, voice, live, timeline
+    }
+
     @State private var didBind = false
     @State private var didConfigureRuntime = false
+    @State private var selectedTab: DemoTab = .quickAdd
+    @State private var demoTask: Task<Void, Never>?
+    @State private var demoCaption: String? = nil
 
     var body: some View {
         ZStack {
             WatchBackdrop()
 
-            TabView {
+            TabView(selection: $selectedTab) {
                 QuickAddView()
+                    .tag(DemoTab.quickAdd)
                 VoiceLogView()
+                    .tag(DemoTab.voice)
                 LiveStatusView()
+                    .tag(DemoTab.live)
                 TimelineView()
+                    .tag(DemoTab.timeline)
             }
             .tabViewStyle(.verticalPage)
             .safeAreaPadding(.top, 2)
             .safeAreaPadding(.bottom, 2)
+
+            if let demoCaption {
+                VStack {
+                    Text(demoCaption)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule()
+                                .fill(Color.black.opacity(0.45))
+                        )
+                        .padding(.top, 6)
+                    Spacer()
+                }
+                .allowsHitTesting(false)
+            }
         }
         .onAppear {
             guard !didBind else { return }
@@ -47,6 +75,13 @@ struct WatchRootView: View {
         }
         .onChange(of: store.profile.homeLocation) { _, _ in
             locationMonitor.homeLocation = store.profile.homeLocation?.coordinate
+        }
+        .onAppear {
+            startAutoDemoIfNeeded()
+        }
+        .onDisappear {
+            demoTask?.cancel()
+            demoTask = nil
         }
     }
 
@@ -78,5 +113,58 @@ struct WatchRootView: View {
                 )
             }
         }
+    }
+
+    private func startAutoDemoIfNeeded() {
+        #if targetEnvironment(simulator)
+        guard ProcessInfo.processInfo.environment["AUTO_WATCH_DEMO"] == "1" else { return }
+
+        demoTask?.cancel()
+        demoTask = Task { @MainActor in
+            store.clearAllData()
+            selectedTab = .quickAdd
+            demoCaption = "Demo: starting night"
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+
+            let beer = store.preset(for: .beer)
+            let wine = store.preset(for: .wine)
+            let cocktail = store.preset(for: .cocktail)
+
+            store.addQuickDrink(preset: beer, count: 1)
+            demoCaption = "Added beer"
+            try? await Task.sleep(nanoseconds: 1_300_000_000)
+
+            store.addQuickDrink(preset: wine, count: 1)
+            demoCaption = "Added wine"
+            try? await Task.sleep(nanoseconds: 1_300_000_000)
+
+            store.addQuickDrink(preset: cocktail, count: 1)
+            demoCaption = "Added cocktail"
+            try? await Task.sleep(nanoseconds: 1_400_000_000)
+
+            selectedTab = .timeline
+            demoCaption = "Timeline updated"
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+
+            selectedTab = .live
+            demoCaption = "Live status"
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+
+            selectedTab = .quickAdd
+            store.markDoneTonight()
+            demoCaption = "I'm done tonight"
+            try? await Task.sleep(nanoseconds: 1_600_000_000)
+
+            store.handleHomeArrival(arrivedAt: .now)
+            demoCaption = "Back home (simulated)"
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+
+            selectedTab = .timeline
+            demoCaption = "Final recap"
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+
+            demoCaption = nil
+        }
+        #endif
     }
 }
