@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 private struct ServingOption: Identifiable, Hashable {
     let id: String
@@ -36,6 +37,7 @@ struct QuickAddView: View {
         state: .clear,
         workingTomorrow: false
     )
+    @State private var detailScrollToBottomToken = 0
 
     private var presets: [DrinkPreset] {
         store.quickAddPresets()
@@ -166,6 +168,29 @@ struct QuickAddView: View {
         }
         .sheet(isPresented: $showDoneTonightSheet) {
             doneTonightSheet
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .watchDemoAction)) { note in
+            guard ProcessInfo.processInfo.environment["AUTO_WATCH_DEMO"] == "1" else { return }
+            guard let action = note.userInfo?["action"] as? String else { return }
+
+            switch action {
+            case "tapBeer":
+                openDetail(for: store.preset(for: .beer))
+            case "pickBeerSize":
+                let template = detailTemplate(for: .beer, region: store.profile.regionStandard)
+                selectedServing = template.servings.dropFirst().first ?? template.servings.first
+            case "pickBeerABV":
+                selectedABV = 6.0
+            case "scrollBottom":
+                detailScrollToBottomToken += 1
+            case "logBeer":
+                logSelection(for: .beer)
+            case "doneTonight":
+                store.markDoneTonight()
+                showDoneTonightSheet = true
+            default:
+                break
+            }
         }
     }
 
@@ -503,8 +528,9 @@ struct QuickAddView: View {
         )
         let projectedSnapshot = store.projectedSnapshot(adding: previewPreset, count: quantity)
 
-        return ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 10) {
+        return ScrollViewReader { proxy in
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 10) {
                 Text("\(template.title) Details")
                     .font(WatchNightTheme.titleFont)
                     .foregroundStyle(.white)
@@ -661,6 +687,7 @@ struct QuickAddView: View {
                                 .fill(WatchNightTheme.accent)
                         )
                 }
+                .id("detail-log-button")
                 .buttonStyle(.plain)
 
                 Button {
@@ -709,10 +736,16 @@ struct QuickAddView: View {
                 Text("Default: \(presetSummary(defaultPreset))")
                     .font(WatchNightTheme.captionFont)
                     .foregroundStyle(WatchNightTheme.label)
+                }
+                .padding(.horizontal, 12)
+                .padding(.top, 6)
+                .padding(.bottom, 10)
             }
-            .padding(.horizontal, 12)
-            .padding(.top, 6)
-            .padding(.bottom, 10)
+            .onChange(of: detailScrollToBottomToken) { _, _ in
+                withAnimation(.easeInOut(duration: 0.65)) {
+                    proxy.scrollTo("detail-log-button", anchor: .bottom)
+                }
+            }
         }
         .presentationDetents([.medium, .large])
     }
@@ -943,6 +976,10 @@ struct QuickAddView: View {
         }
     }
 }
+extension Notification.Name {
+    static let watchDemoAction = Notification.Name("WatchDemoAction")
+}
+
 private enum DoneTonightTone {
     case softStart
     case goodVibe
