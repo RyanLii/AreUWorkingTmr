@@ -1,0 +1,25 @@
+{
+  "images" : [
+    { "size" : "24x24", "idiom" : "watch", "role" : "notificationCenter", "subtype" : "38mm", "scale" : "2x", "filename" : "icon-watch-notification-38mm@2x.png" },
+    { "size" : "27.5x27.5", "idiom" : "watch", "role" : "notificationCenter", "subtype" : "42mm", "scale" : "2x", "filename" : "icon-watch-notification-42mm@2x.png" },
+
+    { "size" : "29x29", "idiom" : "iphone", "scale" : "2x", "filename" : "icon-watch-settings-iphone@2x.png" },
+    { "size" : "29x29", "idiom" : "iphone", "scale" : "3x", "filename" : "icon-watch-settings-iphone@3x.png" },
+
+    { "size" : "40x40", "idiom" : "watch", "role" : "appLauncher", "subtype" : "38mm", "scale" : "2x", "filename" : "icon-watch-app-38mm@2x.png" },
+    { "size" : "44x44", "idiom" : "watch", "role" : "appLauncher", "subtype" : "40mm", "scale" : "2x", "filename" : "icon-watch-app-40mm@2x.png" },
+    { "size" : "46x46", "idiom" : "watch", "role" : "appLauncher", "subtype" : "41mm", "scale" : "2x", "filename" : "icon-watch-app-41mm@2x.png" },
+    { "size" : "50x50", "idiom" : "watch", "role" : "appLauncher", "subtype" : "44mm", "scale" : "2x", "filename" : "icon-watch-app-44mm@2x.png" },
+    { "size" : "51x51", "idiom" : "watch", "role" : "appLauncher", "subtype" : "45mm", "scale" : "2x", "filename" : "icon-watch-app-45mm@2x.png" },
+
+    { "size" : "86x86", "idiom" : "watch", "role" : "quickLook", "subtype" : "38mm", "scale" : "2x", "filename" : "icon-watch-quicklook-86@2x.png" },
+    { "size" : "98x98", "idiom" : "watch", "role" : "quickLook", "subtype" : "42mm", "scale" : "2x", "filename" : "icon-watch-quicklook-98@2x.png" },
+    { "size" : "108x108", "idiom" : "watch", "role" : "quickLook", "subtype" : "44mm", "scale" : "2x", "filename" : "icon-watch-quicklook-108@2x.png" },
+
+    { "size" : "1024x1024", "idiom" : "watch-marketing", "scale" : "1x", "filename" : "icon-watch-marketing-1024@1x.png" }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

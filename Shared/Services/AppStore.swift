@@ -1,0 +1,649 @@
+import Foundation
+import SwiftData
+import CoreLocation
+
+protocol AppStoreSessionPolicy {
+    func sessionKey(for now: Date) -> String
+    func sessionInterval(containing date: Date) -> DateInterval
+    func sessionEntries(from entries: [DrinkEntry], now: Date) -> [DrinkEntry]
+    func inferWorkingTomorrow(now: Date) -> Bool
+    func nextMorningCheckInDate(after now: Date) -> Date
+}
+
+struct DefaultAppStoreSessionPolicy: AppStoreSessionPolicy {
+    private let calendar: Calendar
+
+    init(calendar: Calendar = .current) {
+        self.calendar = calendar
+    }
+
+    func sessionKey(for now: Date) -> String {
+        SessionClock.key(for: now, calendar: calendar)
+    }
+
+    func sessionInterval(containing date: Date) -> DateInterval {
+        SessionClock.interval(containing: date, calendar: calendar)
+    }
+
+    func sessionEntries(from entries: [DrinkEntry], now: Date) -> [DrinkEntry] {
+        SessionClock.entriesInCurrentSession(entries, now: now, calendar: calendar)
+    }
+
+    // If user does not pick manually, infer from local day rhythm:
+    // noon->noon session means late night/early morning should map to the coming wake-up day.
+    func inferWorkingTomorrow(now: Date) -> Bool {
+        let hour = calendar.component(.hour, from: now)
+
+        let targetDate: Date
+        if hour < SessionClock.boundaryHour {
+            targetDate = now
+        } else {
+            targetDate = calendar.date(byAdding: .day, value: 1, to: now) ?? now.addingTimeInterval(24 * 3600)
+        }
+
+        let weekday = calendar.component(.weekday, from: targetDate)
+        return (2...6).contains(weekday)
+    }
+
+    func nextMorningCheckInDate(after now: Date) -> Date {
+        if let todayCheckIn = calendar.date(bySettingHour: 9, minute: 30, second: 0, of: now),
+           todayCheckIn > now {
+            return todayCheckIn
+        }
+
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: now) ?? now.addingTimeInterval(24 * 3600)
+        return calendar.date(bySettingHour: 9, minute: 30, second: 0, of: tomorrow) ?? tomorrow
+    }
+}
+
+protocol AppStorePersistence {
+    func load(modelContext: ModelContext, fallbackProfile: UserProfile) throws -> (profile: UserProfile, entries: [DrinkEntry])
+    func save(entry: DrinkEntry, modelContext: ModelContext) throws
+    func save(profile: UserProfile, modelContext: ModelContext) throws
+    func deleteEntries(ids: Set<UUID>, modelContext: ModelContext) throws
+    func clearAll(profile: UserProfile, modelContext: ModelContext) throws
+}
+
+struct SwiftDataAppStorePersistence: AppStorePersistence {
+    func load(modelContext: ModelContext, fallbackProfile: UserProfile) throws -> (profile: UserProfile, entries: [DrinkEntry]) {
+        let profileFetch = FetchDescriptor<UserProfileModel>()
+        let profile: UserProfile
+
+        if let storedProfile = try modelContext.fetch(profileFetch).first {
+            profile = storedProfile.domain
+        } else {
+            modelContext.insert(UserProfileModel(profile: fallbackProfile))
+            profile = fallbackProfile
+        }
+
+        let entryFetch = FetchDescriptor<DrinkRecordModel>(
+            sortBy: [SortDescriptor(\DrinkRecordModel.timestamp, order: .forward)]
+        )
+        let entries = try modelContext.fetch(entryFetch).map(\.domain)
+
+        try modelContext.save()
+        return (profile, entries)
+    }
+
+    func save(entry: DrinkEntry, modelContext: ModelContext) throws {
+        modelContext.insert(DrinkRecordModel(entry: entry))
+        try modelContext.save()
+    }
+
+    func save(profile: UserProfile, modelContext: ModelContext) throws {
+        let fetch = FetchDescriptor<UserProfileModel>()
+        if let existing = try modelContext.fetch(fetch).first {
+            existing.update(from: profile)
+        } else {
+            modelContext.insert(UserProfileModel(profile: profile))
+        }
+
+        try modelContext.save()
+    }
+
+    func deleteEntries(ids: Set<UUID>, modelContext: ModelContext) throws {
+        guard !ids.isEmpty else { return }
+
+        let fetch = FetchDescriptor<DrinkRecordModel>()
+        let all = try modelContext.fetch(fetch)
+
+        for model in all where ids.contains(model.id) {
+            modelContext.delete(model)
+        }
+
+        try modelContext.save()
+    }
+
+    func clearAll(profile: UserProfile, modelContext: ModelContext) throws {
+        let entryFetch = FetchDescriptor<DrinkRecordModel>()
+        for entry in try modelContext.fetch(entryFetch) {
+            modelContext.delete(entry)
+        }
+
+        let profileFetch = FetchDescriptor<UserProfileModel>()
+        for model in try modelContext.fetch(profileFetch) {
+            modelContext.delete(model)
+        }
+
+        modelContext.insert(UserProfileModel(profile: profile))
+        try modelContext.save()
+    }
+}
+
+@MainActor
+final class AppStore: ObservableObject {
+    @Published private(set) var entries: [DrinkEntry] = []
+    @Published var profile: UserProfile = .default
+    @Published private(set) var reminders: [ReminderEvent] = []
+    @Published private(set) var hasMarkedDoneTonight = false
+    @Published private(set) var effectiveWorkingTomorrow = false
+    @Published private(set) var isWorkingTomorrowAuto = true
+    @Published private(set) var sessionSnapshot: SessionSnapshot = SessionSnapshot(
+        date: .now,
+        totalStandardDrinks: 0,
+        estimatedBAC: 0,
+        intoxicationState: .clear,
+        saferDriveTime: .now,
+        remainingToSaferDrive: 0,
+        hydrationPlanMl: 600,
+        recommendElectrolytes: false
+    )
+    @Published private(set) var reviewRequestNonce: Int = 0
+
+    private let estimationService: EstimationService
+    private let reminderService: ReminderService
+    private let persistence: AppStorePersistence
+    private let sessionPolicy: AppStoreSessionPolicy
+    private var modelContext: ModelContext?
+
+    private var hasHomeHydrationReminderBeenSent = false
+    private var hasMorningCheckInScheduled = false
+    private var activeSessionKey: String?
+    private var hasManualWorkingTomorrowForSession = false
+
+    private let reviewSessionsCountKey = "app.review.sessions.count"
+    private let reviewPromptMilestones: Set<Int> = [3, 8, 15]
+
+    private static let customBasePreset = DrinkPreset(
+        id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
+        name: "Custom",
+        category: .custom,
+        defaultVolumeMl: 180,
+        defaultABV: 12
+    )
+
+    init(
+        estimationService: EstimationService = DefaultEstimationService(),
+        reminderService: ReminderService = DefaultReminderService(),
+        persistence: AppStorePersistence = SwiftDataAppStorePersistence(),
+        sessionPolicy: AppStoreSessionPolicy = DefaultAppStoreSessionPolicy()
+    ) {
+        self.estimationService = estimationService
+        self.reminderService = reminderService
+        self.persistence = persistence
+        self.sessionPolicy = sessionPolicy
+    }
+
+    func bind(modelContext: ModelContext) {
+        self.modelContext = modelContext
+        loadFromStore()
+    }
+
+    func quickAddPresets() -> [DrinkPreset] {
+        DrinkCategory.allCases.map { preset(for: $0) }
+    }
+
+    func preset(for category: DrinkCategory) -> DrinkPreset {
+        let base = basePreset(for: category)
+        return profile.preferredPreset(for: category, fallback: base)
+    }
+
+    func projectedSnapshot(adding preset: DrinkPreset, count: Int = 1, now: Date = .now) -> SessionSnapshot {
+        refreshSessionStateIfNeeded(now: now)
+        let effectiveProfile = effectiveProfileForSession(now: now, updatePublishedState: false)
+        let currentSessionEntries = sessionEntries(now: now)
+
+        guard count > 0 else {
+            return estimationService.recalculate(entries: currentSessionEntries, profile: effectiveProfile, now: now)
+        }
+
+        var projectedEntries = currentSessionEntries
+        for _ in 0..<count {
+            let projectedEntry = estimationService.makeEntry(
+                category: preset.category,
+                servingName: preset.name,
+                volumeMl: preset.defaultVolumeMl,
+                abvPercent: preset.defaultABV,
+                source: .quick,
+                timestamp: now,
+                locationSnapshot: nil,
+                region: effectiveProfile.regionStandard
+            )
+            projectedEntries.append(projectedEntry)
+        }
+
+        return estimationService.recalculate(entries: projectedEntries, profile: effectiveProfile, now: now)
+    }
+
+    func setPreferredPreset(category: DrinkCategory, name: String, volumeMl: Double, abvPercent: Double) {
+        var next = profile
+        next.drinkPreferences[category.rawValue] = DrinkPreference(
+            name: name,
+            volumeMl: min(max(volumeMl, 20), 2000),
+            abvPercent: min(max(abvPercent, 0.5), 80)
+        )
+
+        updateProfile(next)
+    }
+
+    func resetPreferredPreset(category: DrinkCategory) {
+        guard profile.drinkPreferences[category.rawValue] != nil else { return }
+        var next = profile
+        next.drinkPreferences.removeValue(forKey: category.rawValue)
+        updateProfile(next)
+    }
+
+    func setWorkingTomorrowForCurrentSession(_ value: Bool) {
+        refreshSessionStateIfNeeded(now: .now)
+        hasManualWorkingTomorrowForSession = true
+
+        if profile.workingTomorrow == value {
+            recalculateSnapshot(now: .now)
+            return
+        }
+
+        var next = profile
+        next.workingTomorrow = value
+        profile = next
+        persist(profile: next)
+        recalculateSnapshot(now: .now)
+    }
+
+    func clearWorkingTomorrowOverrideForSession() {
+        guard hasManualWorkingTomorrowForSession else { return }
+        hasManualWorkingTomorrowForSession = false
+        recalculateSnapshot(now: .now)
+    }
+
+    func addQuickDrink(preset: DrinkPreset, count: Int = 1, source: DrinkSource = .quick, location: CLLocationCoordinate2D? = nil) {
+        guard count > 0 else { return }
+        refreshSessionStateIfNeeded(now: .now)
+        hasMarkedDoneTonight = false
+
+        for _ in 0..<count {
+            let entry = estimationService.makeEntry(
+                category: preset.category,
+                servingName: preset.name,
+                volumeMl: preset.defaultVolumeMl,
+                abvPercent: preset.defaultABV,
+                source: source,
+                timestamp: .now,
+                locationSnapshot: location.map(LocationSnapshot.init),
+                region: profile.regionStandard
+            )
+            entries.append(entry)
+            persist(entry: entry)
+        }
+
+        recalculateSnapshot(now: .now)
+    }
+
+    func addVoiceDrink(parsed: ParsedDrinkIntent, location: CLLocationCoordinate2D? = nil) {
+        refreshSessionStateIfNeeded(now: .now)
+
+        let fallbackPreset = preset(for: parsed.category)
+        let quantity = max(parsed.quantity, 1)
+        hasMarkedDoneTonight = false
+
+        for _ in 0..<quantity {
+            let volume = parsed.volumeMl ?? fallbackPreset.defaultVolumeMl
+            let abv = parsed.abvPercent ?? fallbackPreset.defaultABV
+            let entry = estimationService.makeEntry(
+                category: parsed.category,
+                servingName: fallbackPreset.name,
+                volumeMl: volume,
+                abvPercent: abv,
+                source: .voice,
+                timestamp: .now,
+                locationSnapshot: location.map(LocationSnapshot.init),
+                region: profile.regionStandard
+            )
+            entries.append(entry)
+            persist(entry: entry)
+        }
+
+        recalculateSnapshot(now: .now)
+    }
+
+    func canUndoLastDrink(now: Date = .now) -> Bool {
+        guard let last = sessionEntries(now: now).last else { return false }
+        return now.timeIntervalSince(last.timestamp) <= 60
+    }
+
+    @discardableResult
+    func undoLastDrink(now: Date = .now) -> Bool {
+        guard let last = sessionEntries(now: now).last,
+              now.timeIntervalSince(last.timestamp) <= 60
+        else {
+            return false
+        }
+
+        entries.removeAll(where: { $0.id == last.id })
+        deletePersistedEntries(ids: [last.id])
+        recalculateSnapshot(now: now)
+        return true
+    }
+
+    func deleteEntries(at offsets: IndexSet) {
+        let ids = offsets.compactMap { entries[safe: $0]?.id }
+        for index in offsets.sorted(by: >) where entries.indices.contains(index) {
+            entries.remove(at: index)
+        }
+        deletePersistedEntries(ids: Set(ids))
+        recalculateSnapshot(now: .now)
+    }
+
+    func markReminderAcknowledged(_ reminderID: UUID) {
+        if let idx = reminders.firstIndex(where: { $0.id == reminderID }) {
+            reminders[idx].acknowledged = true
+        }
+    }
+
+    func updateProfile(_ newProfile: UserProfile) {
+        if newProfile.workingTomorrow != profile.workingTomorrow {
+            hasManualWorkingTomorrowForSession = true
+        }
+
+        profile = newProfile
+        persist(profile: newProfile)
+        recalculateSnapshot(now: .now)
+    }
+
+    // Prefer Health-provided metrics when available, but keep manual values as fallback.
+    func updateProfileFromHealth(weightKg: Double?, biologicalSex: BiologicalSex?) {
+        var next = profile
+        var didChange = false
+
+        if let weightKg {
+            let clampedWeight = min(max(weightKg, 35), 220)
+            if abs(clampedWeight - next.weightKg) > 0.01 {
+                next.weightKg = clampedWeight
+                didChange = true
+            }
+        }
+
+        if let biologicalSex, biologicalSex != next.biologicalSex {
+            next.biologicalSex = biologicalSex
+            didChange = true
+        }
+
+        guard didChange else { return }
+
+        profile = next
+        persist(profile: next)
+        recalculateSnapshot(now: .now)
+    }
+
+    func markDoneTonight() {
+        refreshSessionStateIfNeeded(now: .now)
+        hasMarkedDoneTonight = true
+        scheduleMorningCheckInIfNeeded(now: .now)
+        registerDoneSessionForReview()
+    }
+
+    func clearAllData() {
+        entries = []
+        reminders = []
+        hasMarkedDoneTonight = false
+        hasHomeHydrationReminderBeenSent = false
+        hasMorningCheckInScheduled = false
+        hasManualWorkingTomorrowForSession = false
+        activeSessionKey = nil
+        profile = .default
+        effectiveWorkingTomorrow = false
+        isWorkingTomorrowAuto = true
+        reviewRequestNonce = 0
+        UserDefaults.standard.removeObject(forKey: reviewSessionsCountKey)
+        recalculateSnapshot(now: .now)
+        clearPersistedModels()
+    }
+
+    func handleLocationTransition(stayedDuration: TimeInterval, movedDistanceMeters: Double, now: Date = .now) {
+        refreshSessionStateIfNeeded(now: now)
+        guard !hasMarkedDoneTonight else { return }
+
+        let currentSession = sessionEntries(now: now)
+        let context = LocationStayContext(
+            stayedDuration: stayedDuration,
+            movedDistanceMeters: movedDistanceMeters,
+            lastDrinkLoggedAt: currentSession.last?.timestamp,
+            now: now
+        )
+
+        let events = reminderService.evaluateLocationTransition(context: context)
+        append(events: events)
+    }
+
+    func handleHomeArrival(arrivedAt: Date, now: Date = .now) {
+        refreshSessionStateIfNeeded(now: now)
+        guard sessionSnapshot.totalStandardDrinks > 0 else { return }
+
+        let context = HomeArrivalContext(
+            arrivedAt: arrivedAt,
+            now: now,
+            hasHydrationReminderBeenSent: hasHomeHydrationReminderBeenSent
+        )
+
+        let events = reminderService.evaluateHomeArrival(context: context, snapshot: sessionSnapshot)
+        if events.contains(where: { $0.type == .homeHydration }) {
+            hasHomeHydrationReminderBeenSent = true
+        }
+
+        append(events: events)
+    }
+
+    private func append(events: [ReminderEvent]) {
+        guard !events.isEmpty else { return }
+        reminders.append(contentsOf: events)
+        Task {
+            await reminderService.scheduleNotifications(events: events)
+        }
+    }
+
+    private func recalculateSnapshot(now: Date) {
+        refreshSessionStateIfNeeded(now: now)
+        let sessionDrinks = sessionEntries(now: now)
+        let effectiveProfile = effectiveProfileForSession(now: now, updatePublishedState: true)
+        sessionSnapshot = estimationService.recalculate(entries: sessionDrinks, profile: effectiveProfile, now: now)
+    }
+
+    private func effectiveProfileForSession(now: Date, updatePublishedState: Bool) -> UserProfile {
+        let sessionWorkingTomorrow: Bool
+        let autoMode: Bool
+
+        if hasManualWorkingTomorrowForSession {
+            autoMode = false
+            sessionWorkingTomorrow = profile.workingTomorrow
+        } else {
+            autoMode = true
+            sessionWorkingTomorrow = sessionPolicy.inferWorkingTomorrow(now: now)
+        }
+
+        if updatePublishedState {
+            isWorkingTomorrowAuto = autoMode
+            effectiveWorkingTomorrow = sessionWorkingTomorrow
+        }
+
+        var effective = profile
+        effective.workingTomorrow = sessionWorkingTomorrow
+        return effective
+    }
+
+    private func sessionEntries(now: Date) -> [DrinkEntry] {
+        sessionPolicy.sessionEntries(from: entries, now: now)
+    }
+
+    private func refreshSessionStateIfNeeded(now: Date) {
+        let key = sessionPolicy.sessionKey(for: now)
+        guard key != activeSessionKey else { return }
+
+        activeSessionKey = key
+        hasMarkedDoneTonight = false
+        hasHomeHydrationReminderBeenSent = false
+        hasMorningCheckInScheduled = false
+        hasManualWorkingTomorrowForSession = false
+
+        let window = sessionPolicy.sessionInterval(containing: now)
+        reminders.removeAll(where: { !window.contains($0.triggerTime) })
+    }
+
+    private func scheduleMorningCheckInIfNeeded(now: Date) {
+        guard !hasMorningCheckInScheduled else { return }
+        guard sessionSnapshot.totalStandardDrinks > 0 else { return }
+
+        let checkInTime = sessionPolicy.nextMorningCheckInDate(after: now)
+        let message: String
+
+        if effectiveWorkingTomorrow {
+            message = "Morning check: how are you feeling? Water + a light breakfast can help before work."
+        } else {
+            message = "Morning check: hope you slept well. Sip some water and take it easy."
+        }
+
+        let event = ReminderEvent(
+            type: .morningCheckIn,
+            triggerTime: checkInTime,
+            context: message
+        )
+
+        hasMorningCheckInScheduled = true
+        append(events: [event])
+    }
+
+    private func basePreset(for category: DrinkCategory) -> DrinkPreset {
+        if category == .custom {
+            return Self.customBasePreset
+        }
+
+        return regionBaselinePreset(for: category, region: profile.regionStandard)
+    }
+
+    private func regionBaselinePreset(for category: DrinkCategory, region: RegionStandard) -> DrinkPreset {
+        switch (category, region) {
+        case (.beer, .au10g):
+            return DrinkPreset(name: "Schooner", category: .beer, defaultVolumeMl: 425, defaultABV: 4.8)
+        case (.beer, .uk8g):
+            return DrinkPreset(name: "Pint", category: .beer, defaultVolumeMl: 568, defaultABV: 4.5)
+        case (.beer, .us14g):
+            return DrinkPreset(name: "12oz Can", category: .beer, defaultVolumeMl: 355, defaultABV: 5.0)
+
+        case (.wine, .au10g):
+            return DrinkPreset(name: "Standard", category: .wine, defaultVolumeMl: 150, defaultABV: 12.5)
+        case (.wine, .uk8g):
+            return DrinkPreset(name: "175ml", category: .wine, defaultVolumeMl: 175, defaultABV: 12.0)
+        case (.wine, .us14g):
+            return DrinkPreset(name: "5oz Pour", category: .wine, defaultVolumeMl: 148, defaultABV: 12.0)
+
+        case (.shot, .au10g):
+            return DrinkPreset(name: "Classic", category: .shot, defaultVolumeMl: 45, defaultABV: 40.0)
+        case (.shot, .uk8g):
+            return DrinkPreset(name: "Single", category: .shot, defaultVolumeMl: 25, defaultABV: 40.0)
+        case (.shot, .us14g):
+            return DrinkPreset(name: "1.5oz", category: .shot, defaultVolumeMl: 44, defaultABV: 40.0)
+
+        case (.cocktail, _):
+            return DrinkPreset(name: "Standard", category: .cocktail, defaultVolumeMl: 180, defaultABV: 18.0)
+
+        case (.spirits, .au10g):
+            return DrinkPreset(name: "Single", category: .spirits, defaultVolumeMl: 45, defaultABV: 40.0)
+        case (.spirits, .uk8g):
+            return DrinkPreset(name: "Single", category: .spirits, defaultVolumeMl: 25, defaultABV: 40.0)
+        case (.spirits, .us14g):
+            return DrinkPreset(name: "Single", category: .spirits, defaultVolumeMl: 45, defaultABV: 40.0)
+
+        case (.custom, _):
+            return Self.customBasePreset
+        }
+    }
+
+    private func loadFromStore() {
+        guard let modelContext else {
+            recalculateSnapshot(now: .now)
+            return
+        }
+
+        do {
+            let loaded = try persistence.load(modelContext: modelContext, fallbackProfile: profile)
+            profile = loaded.profile
+            entries = loaded.entries
+            recalculateSnapshot(now: .now)
+        } catch {
+            #if DEBUG
+            print("Failed loading persisted data: \(error)")
+            #endif
+            recalculateSnapshot(now: .now)
+        }
+    }
+
+    private func persist(entry: DrinkEntry) {
+        guard let modelContext else { return }
+
+        do {
+            try persistence.save(entry: entry, modelContext: modelContext)
+        } catch {
+            logPersistenceError("persisting drink entry", error: error)
+        }
+    }
+
+    private func persist(profile: UserProfile) {
+        guard let modelContext else { return }
+
+        do {
+            try persistence.save(profile: profile, modelContext: modelContext)
+        } catch {
+            logPersistenceError("persisting profile", error: error)
+        }
+    }
+
+    private func deletePersistedEntries(ids: Set<UUID>) {
+        guard let modelContext, !ids.isEmpty else { return }
+
+        do {
+            try persistence.deleteEntries(ids: ids, modelContext: modelContext)
+        } catch {
+            logPersistenceError("deleting entries", error: error)
+        }
+    }
+
+    private func clearPersistedModels() {
+        guard let modelContext else { return }
+
+        do {
+            try persistence.clearAll(profile: profile, modelContext: modelContext)
+        } catch {
+            logPersistenceError("clearing all data", error: error)
+        }
+    }
+
+    private func logPersistenceError(_ action: String, error: Error) {
+        #if DEBUG
+        print("Failed \(action): \(error)")
+        #endif
+    }
+
+    private func registerDoneSessionForReview() {
+        let defaults = UserDefaults.standard
+        let nextCount = defaults.integer(forKey: reviewSessionsCountKey) + 1
+        defaults.set(nextCount, forKey: reviewSessionsCountKey)
+
+        if reviewPromptMilestones.contains(nextCount) {
+            reviewRequestNonce += 1
+        }
+    }
+}
+
+private extension Array {
+    subscript(safe index: Int) -> Element? {
+        indices.contains(index) ? self[index] : nil
+    }
+}

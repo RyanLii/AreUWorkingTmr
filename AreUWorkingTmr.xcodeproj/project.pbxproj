@@ -1,0 +1,742 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		19D43EEF6759952F92C70486 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6BFF8F395727E210F82C200 /* TodayView.swift */; };
+		1EDB3D412EF1E149638AB558 /* DisplayFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F054CE612E2C81E5632656 /* DisplayFormatter.swift */; };
+		25C6CD585E058EB7BFD16CE9 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 984BA16F6A37E0812139F38E /* ProfileView.swift */; };
+		2C5567B17142A38965E52F0C /* EstimationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0D2809A0D5A478DE450294 /* EstimationService.swift */; };
+		2F904501EE9394A3AC95BF5E /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38784054EA12747F620E058D /* Theme.swift */; };
+		304F1B8B7690DBB33D199475 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5614B0440491A76516A2A69A /* PersistenceController.swift */; };
+		3F3E1BAE8568E8EBFF163CBB /* QuickAddView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25E490B26863E63F1AACA368 /* QuickAddView.swift */; };
+		415C498B93AB629BEF12C616 /* DomainModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B8E282AB31F06D4F8C9F16 /* DomainModels.swift */; };
+		4438E207250456DA1C8E85BE /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFEDB9F8ED0255803A65F93E /* ReminderService.swift */; };
+		46D061EFD6916CBB803672F7 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2538157D4B06C4869E3F2B9D /* HistoryView.swift */; };
+		48656F907CF089F43DEFCE2C /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B337A264CBB826B069F98979 /* RootTabView.swift */; };
+		48EA006C4FE0835ADCC72E13 /* EstimationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C62F8E844D4DC07A640BAE4 /* EstimationServiceTests.swift */; };
+		4B74A2C6F42EF85BEEC943B9 /* DomainModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B8E282AB31F06D4F8C9F16 /* DomainModels.swift */; };
+		4DA5851922647F2ECAB10DE8 /* PrivacyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E6D7A2B7E0D5FF96E21D45C /* PrivacyView.swift */; };
+		50C11B4137A236ED95C72E53 /* AreUWorkingTmrApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63CDAEA51FA9DEE0271F7368 /* AreUWorkingTmrApp.swift */; };
+		5521D03A52BBD36A8464137E /* AreUWorkingTmrWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB521D2D3E07474E345C759 /* AreUWorkingTmrWatchApp.swift */; };
+		62BF9748C10839272EE72E0F /* DrinkParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A61C3149EBB796A7238C563 /* DrinkParser.swift */; };
+		65300875CB6C9A5A049133D1 /* WatchPermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75FED9377F58DC4ADD1FA942 /* WatchPermissionManager.swift */; };
+		66E4F47D4369CD5C94AB03BD /* WatchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04AC2023EBDABA6D80DD16E2 /* WatchRootView.swift */; };
+		66EFF32A3EA5FE5A34EB016C /* RemindersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE9B7650854EC74EC8BB18B /* RemindersView.swift */; };
+		7A8C9B77D3EF471712E5B997 /* WatchLocationMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D32EA39ED61D4BFDB9AB500F /* WatchLocationMonitor.swift */; };
+		7B41530F701FC30AE337FED8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9AAA65E762E58D6B375DECC3 /* Assets.xcassets */; };
+		7CB518A5C337CE795D4AC984 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F56984A24D1CF9F16055277 /* TimelineView.swift */; };
+		7F2BBB0B4C68A144538B4340 /* DisplayFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F054CE612E2C81E5632656 /* DisplayFormatter.swift */; };
+		7F7E74C17BD462007161C867 /* LocationMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D7CDD37617C6A38D28A1E1 /* LocationMonitor.swift */; };
+		844D0B586438C9FFB5FD8FF1 /* DisplayFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F054CE612E2C81E5632656 /* DisplayFormatter.swift */; };
+		85D9A0A3551129DE46F7F5BB /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 065D72303F83C17078FA0A00 /* SwiftDataModels.swift */; };
+		894CFDC0CC6B4C64FF379EE6 /* VoiceLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EBC278ABE286C1A4A07B8F /* VoiceLogView.swift */; };
+		956FDEAACD7595C14BE6C241 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5614B0440491A76516A2A69A /* PersistenceController.swift */; };
+		A587BBAF520DCCA7F762030A /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFEDB9F8ED0255803A65F93E /* ReminderService.swift */; };
+		A62773078471C9DB44B380EB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C110590027DD105351C1BC94 /* Assets.xcassets */; };
+		A6F74530B65479B6BE5ADC7C /* ReminderServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3358E82BED9408F78908DF40 /* ReminderServiceTests.swift */; };
+		ADD367165CB99BA6F04CCB58 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E4846124C3BCE913296FAF4 /* OnboardingView.swift */; };
+		B03319810C4C7DCEFED619E1 /* WatchTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F73567E4C42BFAE5B51EE7E3 /* WatchTheme.swift */; };
+		B1B47A9A4A36F2179E373907 /* DomainModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B8E282AB31F06D4F8C9F16 /* DomainModels.swift */; };
+		B2CD788811A5DF56EA81572A /* DrinkParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A61C3149EBB796A7238C563 /* DrinkParser.swift */; };
+		B715B49B104C14D39CE60969 /* EstimationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0D2809A0D5A478DE450294 /* EstimationService.swift */; };
+		B85088DC115B81262E9A9A1A /* LiveStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5722B75F3F0CBD40B642C755 /* LiveStatusView.swift */; };
+		BBAE7B9A4CA25557BD00F47A /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E7068AFCC1F70E81B421F9 /* AppStore.swift */; };
+		D207AB4207DAD5204AB2D812 /* DrinkParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A83082139CD4379076104C0A /* DrinkParserTests.swift */; };
+		D37E0B0F9D74DDDAE53201AE /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 065D72303F83C17078FA0A00 /* SwiftDataModels.swift */; };
+		D7B890045B2A5FE881B6DBCC /* DrinkParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A61C3149EBB796A7238C563 /* DrinkParser.swift */; };
+		D948EC3A29A2C3A86B8BD2FC /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5614B0440491A76516A2A69A /* PersistenceController.swift */; };
+		E260BB59B1AD454D53275BFB /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E7068AFCC1F70E81B421F9 /* AppStore.swift */; };
+		E5221CE5366292F008208238 /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFEDB9F8ED0255803A65F93E /* ReminderService.swift */; };
+		EB91D7B577797968613D4235 /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E7068AFCC1F70E81B421F9 /* AppStore.swift */; };
+		F71375569C02BCA43BA00BD3 /* PermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C5E6962BE0E385510311EEB /* PermissionManager.swift */; };
+		F9D27A6275B3F0360F52ECD5 /* SessionClockTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4236A3CD907EE833E02E68EB /* SessionClockTests.swift */; };
+		FD315B68E5053140EA927FA4 /* EstimationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0D2809A0D5A478DE450294 /* EstimationService.swift */; };
+		FE6E4A7CF0BB3F944821C716 /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 065D72303F83C17078FA0A00 /* SwiftDataModels.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		04AC2023EBDABA6D80DD16E2 /* WatchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRootView.swift; sourceTree = "<group>"; };
+		065D72303F83C17078FA0A00 /* SwiftDataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataModels.swift; sourceTree = "<group>"; };
+		0F56984A24D1CF9F16055277 /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
+		11D7CDD37617C6A38D28A1E1 /* LocationMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationMonitor.swift; sourceTree = "<group>"; };
+		1A61C3149EBB796A7238C563 /* DrinkParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkParser.swift; sourceTree = "<group>"; };
+		1C62F8E844D4DC07A640BAE4 /* EstimationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EstimationServiceTests.swift; sourceTree = "<group>"; };
+		2538157D4B06C4869E3F2B9D /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		25E490B26863E63F1AACA368 /* QuickAddView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddView.swift; sourceTree = "<group>"; };
+		28A99D3BB1FD2F24D4C40298 /* AreUWorkingTmrWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AreUWorkingTmrWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2E4846124C3BCE913296FAF4 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		3358E82BED9408F78908DF40 /* ReminderServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderServiceTests.swift; sourceTree = "<group>"; };
+		38784054EA12747F620E058D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		4236A3CD907EE833E02E68EB /* SessionClockTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionClockTests.swift; sourceTree = "<group>"; };
+		42776EAFA9A2351E2666C5DB /* AreUWorkingTmr.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AreUWorkingTmr.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5614B0440491A76516A2A69A /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		5722B75F3F0CBD40B642C755 /* LiveStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveStatusView.swift; sourceTree = "<group>"; };
+		5E0D2809A0D5A478DE450294 /* EstimationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EstimationService.swift; sourceTree = "<group>"; };
+		63CDAEA51FA9DEE0271F7368 /* AreUWorkingTmrApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AreUWorkingTmrApp.swift; sourceTree = "<group>"; };
+		6C5E6962BE0E385510311EEB /* PermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionManager.swift; sourceTree = "<group>"; };
+		75FED9377F58DC4ADD1FA942 /* WatchPermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchPermissionManager.swift; sourceTree = "<group>"; };
+		7E6D7A2B7E0D5FF96E21D45C /* PrivacyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyView.swift; sourceTree = "<group>"; };
+		81B8E282AB31F06D4F8C9F16 /* DomainModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainModels.swift; sourceTree = "<group>"; };
+		984BA16F6A37E0812139F38E /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		9AAA65E762E58D6B375DECC3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A83082139CD4379076104C0A /* DrinkParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkParserTests.swift; sourceTree = "<group>"; };
+		A9E7068AFCC1F70E81B421F9 /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
+		ABEDEC44B8C504AF4F3F1914 /* AreUWorkingTmrTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AreUWorkingTmrTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B2EBC278ABE286C1A4A07B8F /* VoiceLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceLogView.swift; sourceTree = "<group>"; };
+		B337A264CBB826B069F98979 /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
+		BFB521D2D3E07474E345C759 /* AreUWorkingTmrWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AreUWorkingTmrWatchApp.swift; sourceTree = "<group>"; };
+		C110590027DD105351C1BC94 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		CB4411EDE4DADD64920E2961 /* AreUWorkingTmrWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AreUWorkingTmrWatch.entitlements; sourceTree = "<group>"; };
+		CFEDB9F8ED0255803A65F93E /* ReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderService.swift; sourceTree = "<group>"; };
+		D32EA39ED61D4BFDB9AB500F /* WatchLocationMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchLocationMonitor.swift; sourceTree = "<group>"; };
+		D6BFF8F395727E210F82C200 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		F3F054CE612E2C81E5632656 /* DisplayFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayFormatter.swift; sourceTree = "<group>"; };
+		F73567E4C42BFAE5B51EE7E3 /* WatchTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTheme.swift; sourceTree = "<group>"; };
+		FBCD03B4EE69C1EC9EBF6925 /* AreUWorkingTmr.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AreUWorkingTmr.entitlements; sourceTree = "<group>"; };
+		FDE9B7650854EC74EC8BB18B /* RemindersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		2F35FB26B3D2322AA1B4A47B /* WatchApp */ = {
+			isa = PBXGroup;
+			children = (
+				CB4411EDE4DADD64920E2961 /* AreUWorkingTmrWatch.entitlements */,
+				BFB521D2D3E07474E345C759 /* AreUWorkingTmrWatchApp.swift */,
+				692C87555385FE423CFD05FE /* Resources */,
+				BF8C9ED33437D6D11E90B08A /* Services */,
+				711692F3BC9DE1ED097F727A /* Views */,
+			);
+			path = WatchApp;
+			sourceTree = "<group>";
+		};
+		3A78278CB7E9A0CA6D47D618 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				A83082139CD4379076104C0A /* DrinkParserTests.swift */,
+				1C62F8E844D4DC07A640BAE4 /* EstimationServiceTests.swift */,
+				3358E82BED9408F78908DF40 /* ReminderServiceTests.swift */,
+				4236A3CD907EE833E02E68EB /* SessionClockTests.swift */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		464AA79E56D6F8AAF6CFE942 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				42776EAFA9A2351E2666C5DB /* AreUWorkingTmr.app */,
+				ABEDEC44B8C504AF4F3F1914 /* AreUWorkingTmrTests.xctest */,
+				28A99D3BB1FD2F24D4C40298 /* AreUWorkingTmrWatch.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4F946C3787103D86EB0D2AD1 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				81B8E282AB31F06D4F8C9F16 /* DomainModels.swift */,
+				065D72303F83C17078FA0A00 /* SwiftDataModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		692C87555385FE423CFD05FE /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				C110590027DD105351C1BC94 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		711692F3BC9DE1ED097F727A /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				5722B75F3F0CBD40B642C755 /* LiveStatusView.swift */,
+				25E490B26863E63F1AACA368 /* QuickAddView.swift */,
+				0F56984A24D1CF9F16055277 /* TimelineView.swift */,
+				B2EBC278ABE286C1A4A07B8F /* VoiceLogView.swift */,
+				04AC2023EBDABA6D80DD16E2 /* WatchRootView.swift */,
+				F73567E4C42BFAE5B51EE7E3 /* WatchTheme.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		7D0ACD14C8C204F4BA4503C6 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				11D7CDD37617C6A38D28A1E1 /* LocationMonitor.swift */,
+				6C5E6962BE0E385510311EEB /* PermissionManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		87E4E33D7AE5E1A5E34B5631 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				2538157D4B06C4869E3F2B9D /* HistoryView.swift */,
+				2E4846124C3BCE913296FAF4 /* OnboardingView.swift */,
+				7E6D7A2B7E0D5FF96E21D45C /* PrivacyView.swift */,
+				984BA16F6A37E0812139F38E /* ProfileView.swift */,
+				FDE9B7650854EC74EC8BB18B /* RemindersView.swift */,
+				D6BFF8F395727E210F82C200 /* TodayView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		88B11CC7E5CDFFAB624D66AF /* iOSApp */ = {
+			isa = PBXGroup;
+			children = (
+				FBCD03B4EE69C1EC9EBF6925 /* AreUWorkingTmr.entitlements */,
+				63CDAEA51FA9DEE0271F7368 /* AreUWorkingTmrApp.swift */,
+				B337A264CBB826B069F98979 /* RootTabView.swift */,
+				38784054EA12747F620E058D /* Theme.swift */,
+				A0C9DF533336760221A6216A /* Resources */,
+				7D0ACD14C8C204F4BA4503C6 /* Services */,
+				87E4E33D7AE5E1A5E34B5631 /* Views */,
+			);
+			path = iOSApp;
+			sourceTree = "<group>";
+		};
+		8D4A4B4BCD702C4C9FF10D33 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A9E7068AFCC1F70E81B421F9 /* AppStore.swift */,
+				1A61C3149EBB796A7238C563 /* DrinkParser.swift */,
+				5E0D2809A0D5A478DE450294 /* EstimationService.swift */,
+				5614B0440491A76516A2A69A /* PersistenceController.swift */,
+				CFEDB9F8ED0255803A65F93E /* ReminderService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A0C9DF533336760221A6216A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				9AAA65E762E58D6B375DECC3 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		BF8C9ED33437D6D11E90B08A /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				D32EA39ED61D4BFDB9AB500F /* WatchLocationMonitor.swift */,
+				75FED9377F58DC4ADD1FA942 /* WatchPermissionManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		D1E6AE059A7F21B23F6108A4 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				F3F054CE612E2C81E5632656 /* DisplayFormatter.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		E30134B4761C2803EEE329EA /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				4F946C3787103D86EB0D2AD1 /* Models */,
+				8D4A4B4BCD702C4C9FF10D33 /* Services */,
+				D1E6AE059A7F21B23F6108A4 /* Utilities */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		FAD8AA136E6662FC41A2E194 = {
+			isa = PBXGroup;
+			children = (
+				88B11CC7E5CDFFAB624D66AF /* iOSApp */,
+				E30134B4761C2803EEE329EA /* Shared */,
+				3A78278CB7E9A0CA6D47D618 /* Tests */,
+				2F35FB26B3D2322AA1B4A47B /* WatchApp */,
+				464AA79E56D6F8AAF6CFE942 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		28064BF416DE6C07BA8798E8 /* AreUWorkingTmr */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 56C4B6562454DD29F23F1CAD /* Build configuration list for PBXNativeTarget "AreUWorkingTmr" */;
+			buildPhases = (
+				E176FB7925D597EE41F92DB4 /* Sources */,
+				6A23FB09AE801149CE131EB3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AreUWorkingTmr;
+			packageProductDependencies = (
+			);
+			productName = AreUWorkingTmr;
+			productReference = 42776EAFA9A2351E2666C5DB /* AreUWorkingTmr.app */;
+			productType = "com.apple.product-type.application";
+		};
+		30044BDB545EB07DDF4F6622 /* AreUWorkingTmrTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6623AADD84871AB1BC5A27CB /* Build configuration list for PBXNativeTarget "AreUWorkingTmrTests" */;
+			buildPhases = (
+				87CC659CB05B5BA08D932BDE /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AreUWorkingTmrTests;
+			packageProductDependencies = (
+			);
+			productName = AreUWorkingTmrTests;
+			productReference = ABEDEC44B8C504AF4F3F1914 /* AreUWorkingTmrTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		54D2B0DDE5A6CAAC239A176D /* AreUWorkingTmrWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C3E49BE058A170700E7BBDC6 /* Build configuration list for PBXNativeTarget "AreUWorkingTmrWatch" */;
+			buildPhases = (
+				83983110B0CE61D3E288F70A /* Sources */,
+				CB8E1C36D1AF8C793ABC8977 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AreUWorkingTmrWatch;
+			packageProductDependencies = (
+			);
+			productName = AreUWorkingTmrWatch;
+			productReference = 28A99D3BB1FD2F24D4C40298 /* AreUWorkingTmrWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		82906091BABF32952ED2A43D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					28064BF416DE6C07BA8798E8 = {
+						DevelopmentTeam = "";
+					};
+					30044BDB545EB07DDF4F6622 = {
+						DevelopmentTeam = "";
+					};
+					54D2B0DDE5A6CAAC239A176D = {
+						DevelopmentTeam = "";
+					};
+				};
+			};
+			buildConfigurationList = CA674A2D2983C143F77526BE /* Build configuration list for PBXProject "AreUWorkingTmr" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = FAD8AA136E6662FC41A2E194;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				28064BF416DE6C07BA8798E8 /* AreUWorkingTmr */,
+				30044BDB545EB07DDF4F6622 /* AreUWorkingTmrTests */,
+				54D2B0DDE5A6CAAC239A176D /* AreUWorkingTmrWatch */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		6A23FB09AE801149CE131EB3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7B41530F701FC30AE337FED8 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CB8E1C36D1AF8C793ABC8977 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A62773078471C9DB44B380EB /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		83983110B0CE61D3E288F70A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EB91D7B577797968613D4235 /* AppStore.swift in Sources */,
+				5521D03A52BBD36A8464137E /* AreUWorkingTmrWatchApp.swift in Sources */,
+				844D0B586438C9FFB5FD8FF1 /* DisplayFormatter.swift in Sources */,
+				4B74A2C6F42EF85BEEC943B9 /* DomainModels.swift in Sources */,
+				B2CD788811A5DF56EA81572A /* DrinkParser.swift in Sources */,
+				2C5567B17142A38965E52F0C /* EstimationService.swift in Sources */,
+				B85088DC115B81262E9A9A1A /* LiveStatusView.swift in Sources */,
+				956FDEAACD7595C14BE6C241 /* PersistenceController.swift in Sources */,
+				3F3E1BAE8568E8EBFF163CBB /* QuickAddView.swift in Sources */,
+				4438E207250456DA1C8E85BE /* ReminderService.swift in Sources */,
+				FE6E4A7CF0BB3F944821C716 /* SwiftDataModels.swift in Sources */,
+				7CB518A5C337CE795D4AC984 /* TimelineView.swift in Sources */,
+				894CFDC0CC6B4C64FF379EE6 /* VoiceLogView.swift in Sources */,
+				7A8C9B77D3EF471712E5B997 /* WatchLocationMonitor.swift in Sources */,
+				65300875CB6C9A5A049133D1 /* WatchPermissionManager.swift in Sources */,
+				66E4F47D4369CD5C94AB03BD /* WatchRootView.swift in Sources */,
+				B03319810C4C7DCEFED619E1 /* WatchTheme.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87CC659CB05B5BA08D932BDE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E260BB59B1AD454D53275BFB /* AppStore.swift in Sources */,
+				7F2BBB0B4C68A144538B4340 /* DisplayFormatter.swift in Sources */,
+				B1B47A9A4A36F2179E373907 /* DomainModels.swift in Sources */,
+				62BF9748C10839272EE72E0F /* DrinkParser.swift in Sources */,
+				D207AB4207DAD5204AB2D812 /* DrinkParserTests.swift in Sources */,
+				B715B49B104C14D39CE60969 /* EstimationService.swift in Sources */,
+				48EA006C4FE0835ADCC72E13 /* EstimationServiceTests.swift in Sources */,
+				304F1B8B7690DBB33D199475 /* PersistenceController.swift in Sources */,
+				A587BBAF520DCCA7F762030A /* ReminderService.swift in Sources */,
+				A6F74530B65479B6BE5ADC7C /* ReminderServiceTests.swift in Sources */,
+				F9D27A6275B3F0360F52ECD5 /* SessionClockTests.swift in Sources */,
+				85D9A0A3551129DE46F7F5BB /* SwiftDataModels.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E176FB7925D597EE41F92DB4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BBAE7B9A4CA25557BD00F47A /* AppStore.swift in Sources */,
+				50C11B4137A236ED95C72E53 /* AreUWorkingTmrApp.swift in Sources */,
+				1EDB3D412EF1E149638AB558 /* DisplayFormatter.swift in Sources */,
+				415C498B93AB629BEF12C616 /* DomainModels.swift in Sources */,
+				D7B890045B2A5FE881B6DBCC /* DrinkParser.swift in Sources */,
+				FD315B68E5053140EA927FA4 /* EstimationService.swift in Sources */,
+				46D061EFD6916CBB803672F7 /* HistoryView.swift in Sources */,
+				7F7E74C17BD462007161C867 /* LocationMonitor.swift in Sources */,
+				ADD367165CB99BA6F04CCB58 /* OnboardingView.swift in Sources */,
+				F71375569C02BCA43BA00BD3 /* PermissionManager.swift in Sources */,
+				D948EC3A29A2C3A86B8BD2FC /* PersistenceController.swift in Sources */,
+				4DA5851922647F2ECAB10DE8 /* PrivacyView.swift in Sources */,
+				25C6CD585E058EB7BFD16CE9 /* ProfileView.swift in Sources */,
+				E5221CE5366292F008208238 /* ReminderService.swift in Sources */,
+				66EFF32A3EA5FE5A34EB016C /* RemindersView.swift in Sources */,
+				48656F907CF089F43DEFCE2C /* RootTabView.swift in Sources */,
+				D37E0B0F9D74DDDAE53201AE /* SwiftDataModels.swift in Sources */,
+				2F904501EE9394A3AC95BF5E /* Theme.swift in Sources */,
+				19D43EEF6759952F92C70486 /* TodayView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		04C51E57AC225FE11CA70976 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = WatchApp/AreUWorkingTmrWatch.entitlements;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight and biological sex improve estimate accuracy.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger missed-log and home-arrival reminders when available.";
+				INFOPLIST_KEY_WKApplication_WKSupportsRunningWithoutiOSApp = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.ryanlee.AreUWorkingTmr;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ryanlee.AreUWorkingTmr.watch;
+				PRODUCT_NAME = AreUWorkingTmrWatch;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		2CAA0034EFE9A1D33BE14B03 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = WatchApp/AreUWorkingTmrWatch.entitlements;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight and biological sex improve estimate accuracy.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger missed-log and home-arrival reminders when available.";
+				INFOPLIST_KEY_WKApplication_WKSupportsRunningWithoutiOSApp = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.ryanlee.AreUWorkingTmr;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ryanlee.AreUWorkingTmr.watch;
+				PRODUCT_NAME = AreUWorkingTmrWatch;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		3A7D4145931C822ECB1AABEF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ryanlee.AreUWorkingTmrTests;
+				PRODUCT_NAME = AreUWorkingTmrTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		517D8C16D4A8DAAE7CF7ABF0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = iOSApp/AreUWorkingTmr.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
+				INFOPLIST_KEY_ENABLE_HEALTHKIT_INTEGRATION = YES;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight and biological sex personalize your estimate.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders in the background.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders.";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ryanlee.AreUWorkingTmr;
+				PRODUCT_NAME = AreUWorkingTmr;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		6522EAB25D413966F07121D0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = iOSApp/AreUWorkingTmr.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
+				INFOPLIST_KEY_ENABLE_HEALTHKIT_INTEGRATION = YES;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight and biological sex personalize your estimate.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders in the background.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders.";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ryanlee.AreUWorkingTmr;
+				PRODUCT_NAME = AreUWorkingTmr;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		827D36593D92FCEA20144EFA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.1;
+			};
+			name = Release;
+		};
+		BBDC299FF53DCEC991D32C58 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ryanlee.AreUWorkingTmrTests;
+				PRODUCT_NAME = AreUWorkingTmrTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		DE1B6FF8EB357C3CD501FAF3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.1;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		56C4B6562454DD29F23F1CAD /* Build configuration list for PBXNativeTarget "AreUWorkingTmr" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				517D8C16D4A8DAAE7CF7ABF0 /* Debug */,
+				6522EAB25D413966F07121D0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		6623AADD84871AB1BC5A27CB /* Build configuration list for PBXNativeTarget "AreUWorkingTmrTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BBDC299FF53DCEC991D32C58 /* Debug */,
+				3A7D4145931C822ECB1AABEF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C3E49BE058A170700E7BBDC6 /* Build configuration list for PBXNativeTarget "AreUWorkingTmrWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				04C51E57AC225FE11CA70976 /* Debug */,
+				2CAA0034EFE9A1D33BE14B03 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CA674A2D2983C143F77526BE /* Build configuration list for PBXProject "AreUWorkingTmr" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DE1B6FF8EB357C3CD501FAF3 /* Debug */,
+				827D36593D92FCEA20144EFA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 82906091BABF32952ED2A43D /* Project object */;
+}
