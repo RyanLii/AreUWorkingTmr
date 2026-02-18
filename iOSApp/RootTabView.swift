@@ -3,6 +3,10 @@ import SwiftData
 import StoreKit
 
 struct RootTabView: View {
+    enum Tab: Hashable {
+        case today, history, profile, reminders, privacy
+    }
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.requestReview) private var requestReview
     @EnvironmentObject private var store: AppStore
@@ -13,34 +17,41 @@ struct RootTabView: View {
 
     @State private var didBind = false
     @State private var showOnboarding = false
+    @State private var selectedTab: Tab = .today
+    @State private var autoTabTask: Task<Void, Never>?
 
     var body: some View {
         ZStack {
-            TabView {
+            TabView(selection: $selectedTab) {
                 TodayView()
                     .tabItem {
                         Label("Today", systemImage: "moon.stars.fill")
                     }
+                    .tag(Tab.today)
 
                 HistoryView()
                     .tabItem {
                         Label("History", systemImage: "clock.arrow.circlepath")
                     }
+                    .tag(Tab.history)
 
                 ProfileView()
                     .tabItem {
                         Label("Profile", systemImage: "person.crop.circle")
                     }
+                    .tag(Tab.profile)
 
                 RemindersView()
                     .tabItem {
                         Label("Reminders", systemImage: "bell.badge")
                     }
+                    .tag(Tab.reminders)
 
                 PrivacyView()
                     .tabItem {
                         Label("Privacy", systemImage: "lock.shield")
                     }
+                    .tag(Tab.privacy)
             }
             .disabled(showOnboarding)
             .tint(NightTheme.accent)
@@ -63,6 +74,15 @@ struct RootTabView: View {
             store.bind(modelContext: modelContext)
             locationMonitor.homeLocation = store.profile.homeLocation?.coordinate
 
+            #if targetEnvironment(simulator)
+            if ProcessInfo.processInfo.environment["SKIP_ONBOARDING"] == "1" {
+                hasSeenOnboarding = true
+            }
+            if ProcessInfo.processInfo.environment["AUTO_TAB_DEMO"] == "1" {
+                startAutoTabDemo()
+            }
+            #endif
+
             if !hasSeenOnboarding {
                 showOnboarding = true
             }
@@ -73,6 +93,24 @@ struct RootTabView: View {
         .onChange(of: store.reviewRequestNonce) { _, _ in
             requestReview()
         }
+        .onDisappear {
+            autoTabTask?.cancel()
+            autoTabTask = nil
+        }
         .animation(.easeInOut(duration: 0.2), value: showOnboarding)
+    }
+
+    private func startAutoTabDemo() {
+        autoTabTask?.cancel()
+        autoTabTask = Task { @MainActor in
+            let tabs: [Tab] = [.today, .history, .profile, .reminders, .privacy]
+            var index = 0
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            while !Task.isCancelled {
+                selectedTab = tabs[index % tabs.count]
+                index += 1
+                try? await Task.sleep(nanoseconds: 1_600_000_000)
+            }
+        }
     }
 }
