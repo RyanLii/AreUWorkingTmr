@@ -78,6 +78,10 @@ struct RootTabView: View {
             if ProcessInfo.processInfo.environment["SKIP_ONBOARDING"] == "1" {
                 hasSeenOnboarding = true
             }
+            if let forced = ProcessInfo.processInfo.environment["START_TAB"], let tab = parseTab(forced) {
+                selectedTab = tab
+            }
+
             if ProcessInfo.processInfo.environment["AUTO_TAB_DEMO"] == "1" {
                 startAutoTabDemo()
             }
@@ -98,6 +102,17 @@ struct RootTabView: View {
             autoTabTask = nil
         }
         .animation(.easeInOut(duration: 0.2), value: showOnboarding)
+    }
+
+    private func parseTab(_ raw: String) -> Tab? {
+        switch raw.lowercased() {
+        case "today": return .today
+        case "history": return .history
+        case "profile": return .profile
+        case "reminders": return .reminders
+        case "privacy": return .privacy
+        default: return nil
+        }
     }
 
     private func startAutoTabDemo() {

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		09C19C87B64D647463B88695 /* AppScreenScaffold.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89CC4CF280B4C3D8F90F825A /* AppScreenScaffold.swift */; };
 		19D43EEF6759952F92C70486 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6BFF8F395727E210F82C200 /* TodayView.swift */; };
 		1EDB3D412EF1E149638AB558 /* DisplayFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F054CE612E2C81E5632656 /* DisplayFormatter.swift */; };
 		25C6CD585E058EB7BFD16CE9 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 984BA16F6A37E0812139F38E /* ProfileView.swift */; };
@@ -82,6 +83,7 @@
 		75FED9377F58DC4ADD1FA942 /* WatchPermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchPermissionManager.swift; sourceTree = "<group>"; };
 		7E6D7A2B7E0D5FF96E21D45C /* PrivacyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyView.swift; sourceTree = "<group>"; };
 		81B8E282AB31F06D4F8C9F16 /* DomainModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainModels.swift; sourceTree = "<group>"; };
+		89CC4CF280B4C3D8F90F825A /* AppScreenScaffold.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppScreenScaffold.swift; sourceTree = "<group>"; };
 		984BA16F6A37E0812139F38E /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		9AAA65E762E58D6B375DECC3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A83082139CD4379076104C0A /* DrinkParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkParserTests.swift; sourceTree = "<group>"; };
@@ -183,6 +185,7 @@
 				984BA16F6A37E0812139F38E /* ProfileView.swift */,
 				FDE9B7650854EC74EC8BB18B /* RemindersView.swift */,
 				D6BFF8F395727E210F82C200 /* TodayView.swift */,
+				EE444C5BA6A2CB8AF0AEEE94 /* Shared */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -244,6 +247,14 @@
 				4F946C3787103D86EB0D2AD1 /* Models */,
 				8D4A4B4BCD702C4C9FF10D33 /* Services */,
 				D1E6AE059A7F21B23F6108A4 /* Utilities */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		EE444C5BA6A2CB8AF0AEEE94 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				89CC4CF280B4C3D8F90F825A /* AppScreenScaffold.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -423,6 +434,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				09C19C87B64D647463B88695 /* AppScreenScaffold.swift in Sources */,
 				BBAE7B9A4CA25557BD00F47A /* AppStore.swift in Sources */,
 				50C11B4137A236ED95C72E53 /* AreUWorkingTmrApp.swift in Sources */,
 				1EDB3D412EF1E149638AB558 /* DisplayFormatter.swift in Sources */,
