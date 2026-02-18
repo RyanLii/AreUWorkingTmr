@@ -10,8 +10,8 @@ struct AppScreenScaffold<Content: View>: View {
     var body: some View {
         GeometryReader { proxy in
             let horizontalInset = max(16, max(proxy.safeAreaInsets.leading, proxy.safeAreaInsets.trailing) + 8)
-            let topInset = max(12, proxy.safeAreaInsets.top + 8)
-            let bottomInset = max(96, proxy.safeAreaInsets.bottom + 72)
+            let topInset = max(8, proxy.safeAreaInsets.top + 4)
+            let bottomInset = max(132, proxy.safeAreaInsets.bottom + 96)
 
             ZStack(alignment: .topLeading) {
                 NightBackdrop()

@@ -55,7 +55,7 @@ struct RootTabView: View {
             }
             .disabled(showOnboarding)
             .tint(NightTheme.accent)
-            .toolbarBackground(Color.black.opacity(0.45), for: .tabBar)
+            .toolbarBackground(.visible, for: .tabBar)
             .toolbarColorScheme(.dark, for: .tabBar)
 
             if showOnboarding {
