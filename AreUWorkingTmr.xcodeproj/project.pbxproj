@@ -509,6 +509,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Hydration guidance and recovery updates can be written to Health when you choose.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger missed-log and home-arrival reminders when available.";
@@ -531,6 +532,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Hydration guidance and recovery updates can be written to Health when you choose.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger missed-log and home-arrival reminders when available.";
@@ -573,6 +575,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
 				INFOPLIST_KEY_ENABLE_HEALTHKIT_INTEGRATION = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Hydration guidance and recovery updates can be written to Health when you choose.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders in the background.";
@@ -602,6 +605,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
 				INFOPLIST_KEY_ENABLE_HEALTHKIT_INTEGRATION = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Hydration guidance and recovery updates can be written to Health when you choose.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders in the background.";
