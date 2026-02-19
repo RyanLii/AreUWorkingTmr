@@ -50,10 +50,6 @@ struct NightBackdrop: View {
         ZStack {
             NightTheme.background.ignoresSafeArea()
 
-            AuroraFlowLayer()
-                .blendMode(.screen)
-                .opacity(0.52)
-
             ToastBackdropMotif()
                 .offset(x: 128, y: -214)
 
@@ -213,43 +209,6 @@ enum GlassProminence {
     case high
 }
 
-private struct AuroraFlowLayer: View {
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
-            let t = context.date.timeIntervalSinceReferenceDate
-
-            ZStack {
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [Color(red: 0.36, green: 0.49, blue: 1.0).opacity(0.42), .clear],
-                            center: .center,
-                            startRadius: 8,
-                            endRadius: 220
-                        )
-                    )
-                    .frame(width: 420, height: 420)
-                    .offset(x: CGFloat(sin(t * 0.22) * 88), y: CGFloat(cos(t * 0.18) * 54 - 160))
-
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [Color(red: 0.74, green: 0.34, blue: 1.0).opacity(0.40), .clear],
-                            center: .center,
-                            startRadius: 8,
-                            endRadius: 240
-                        )
-                    )
-                    .frame(width: 460, height: 460)
-                    .offset(x: CGFloat(cos(t * 0.16) * 96 + 80), y: CGFloat(sin(t * 0.21) * 62 - 40))
-            }
-            .blur(radius: 18)
-            .saturation(1.12)
-            .allowsHitTesting(false)
-        }
-    }
-}
-
 struct GlassCardModifier: ViewModifier {
     let prominence: GlassProminence
 
@@ -278,15 +237,6 @@ struct GlassCardModifier: ViewModifier {
                     )
                     .shadow(color: .black.opacity(0.25), radius: prominence == .high ? 16 : 10, y: 6)
             )
-    }
-}
-
-struct LiftOnPressButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.96 : 1)
-            .brightness(configuration.isPressed ? -0.03 : 0)
-            .animation(.spring(response: 0.22, dampingFraction: 0.72), value: configuration.isPressed)
     }
 }
 

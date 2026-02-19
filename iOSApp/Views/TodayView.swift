@@ -34,10 +34,6 @@ struct TodayView: View {
     @State private var rideConfirmed = false
     @State private var alarmConfirmed = false
 
-    @State private var toastMessage: String?
-    @State private var toastVisible = false
-    @State private var toastTask: Task<Void, Never>?
-
     private var allPresets: [DrinkPreset] {
         store.quickAddPresets()
     }
@@ -87,31 +83,6 @@ struct TodayView: View {
         .sheet(isPresented: $showDoneTonightSheet) {
             doneTonightSheet
         }
-        .overlay(alignment: .top) {
-            if let toastMessage, toastVisible {
-                toastPill(message: toastMessage)
-                    .padding(.top, 10)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-            }
-        }
-        .animation(.spring(response: 0.32, dampingFraction: 0.84), value: toastVisible)
-        .onDisappear {
-            toastTask?.cancel()
-        }
-    }
-
-    private func toastPill(message: String) -> some View {
-        Text(message)
-            .font(NightTheme.captionFont)
-            .foregroundStyle(.white)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 9)
-            .background(
-                Capsule()
-                    .fill(Color.black.opacity(0.62))
-                    .overlay(Capsule().stroke(Color.white.opacity(0.18), lineWidth: 1))
-            )
-            .shadow(color: .black.opacity(0.22), radius: 8, y: 3)
     }
 
     private var header: some View {
@@ -233,7 +204,6 @@ struct TodayView: View {
     private var undoCard: some View {
         Button {
             _ = store.undoLastDrink()
-            showToast("Removed last drink")
         } label: {
             Label("Undo Last Drink", systemImage: "arrow.uturn.backward.circle.fill")
                 .font(NightTheme.bodyFont.weight(.semibold))
@@ -243,7 +213,7 @@ struct TodayView: View {
                 .padding(.horizontal, 2)
                 .glassCard()
         }
-        .buttonStyle(LiftOnPressButtonStyle())
+        .buttonStyle(.plain)
     }
 
     private var quickAddCard: some View {
@@ -294,7 +264,7 @@ struct TodayView: View {
                         .font(.title3.weight(.bold))
                         .foregroundStyle(NightTheme.accentSoft)
                 }
-                .buttonStyle(LiftOnPressButtonStyle())
+                .buttonStyle(.plain)
                 .accessibilityLabel("Quick add default \(preset.category.title)")
 
             }
@@ -331,11 +301,6 @@ struct TodayView: View {
         .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .onTapGesture {
             openDetail(for: preset)
-        }
-        .scrollTransition(.animated.threshold(.visible(0.2))) { view, phase in
-            view
-                .opacity(phase.isIdentity ? 1 : 0.72)
-                .scaleEffect(phase.isIdentity ? 1 : 0.97)
         }
     }
 
@@ -919,19 +884,6 @@ struct TodayView: View {
             preset: preset,
             location: locationMonitor.currentLocation?.coordinate
         )
-        showToast("Added \(preset.category.title)")
-    }
-
-    private func showToast(_ message: String) {
-        toastTask?.cancel()
-        toastMessage = message
-        toastVisible = true
-
-        toastTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 1_300_000_000)
-            guard !Task.isCancelled else { return }
-            toastVisible = false
-        }
     }
 
     private func openDetail(for preset: DrinkPreset) {
