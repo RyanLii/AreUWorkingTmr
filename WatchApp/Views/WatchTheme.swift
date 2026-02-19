@@ -3,9 +3,9 @@ import SwiftUI
 enum WatchNightTheme {
     static let background = LinearGradient(
         colors: [
-            Color(red: 0.24, green: 0.20, blue: 0.28),
-            Color(red: 0.44, green: 0.32, blue: 0.34),
-            Color(red: 0.86, green: 0.62, blue: 0.39)
+            Color(red: 0.33, green: 0.16, blue: 0.14),
+            Color(red: 0.56, green: 0.24, blue: 0.18),
+            Color(red: 0.92, green: 0.68, blue: 0.33)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -87,17 +87,27 @@ struct WatchBackdrop: View {
 private struct WatchJapaneseKanpaiMotif: View {
     var body: some View {
         ZStack {
+            Circle()
+                .fill(Color(red: 0.95, green: 0.24, blue: 0.16).opacity(0.18))
+                .frame(width: 86, height: 86)
+                .offset(x: 40, y: -66)
+
             Text("乾杯！")
-                .font(.custom("HiraginoMinchoProN-W6", size: 42))
-                .foregroundStyle(Color.white.opacity(0.12))
-                .rotationEffect(.degrees(-6))
-                .offset(x: 28, y: -58)
+                .font(.custom("HiraginoKakuGothicStd-W8", size: 38))
+                .foregroundStyle(Color.white.opacity(0.14))
+                .rotationEffect(.degrees(-5))
+                .offset(x: 16, y: -52)
+
+            Text("生")
+                .font(.custom("HiraginoKakuGothicStd-W8", size: 26))
+                .foregroundStyle(Color(red: 1.0, green: 0.95, blue: 0.82).opacity(0.15))
+                .offset(x: -54, y: -18)
 
             Text("かんぱい！")
-                .font(.custom("HiraginoSans-W6", size: 18))
-                .foregroundStyle(Color.white.opacity(0.14))
+                .font(.custom("HiraginoSans-W7", size: 15))
+                .foregroundStyle(Color.white.opacity(0.13))
                 .rotationEffect(.degrees(10))
-                .offset(x: -8, y: -18)
+                .offset(x: -4, y: -14)
         }
     }
 }

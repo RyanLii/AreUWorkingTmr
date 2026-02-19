@@ -3,9 +3,9 @@ import SwiftUI
 enum NightTheme {
     static let background = LinearGradient(
         colors: [
-            Color(red: 0.24, green: 0.20, blue: 0.28),
-            Color(red: 0.44, green: 0.32, blue: 0.34),
-            Color(red: 0.86, green: 0.62, blue: 0.39)
+            Color(red: 0.33, green: 0.16, blue: 0.14),
+            Color(red: 0.56, green: 0.24, blue: 0.18),
+            Color(red: 0.92, green: 0.68, blue: 0.33)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -111,23 +111,36 @@ struct NightBackdrop: View {
 private struct JapaneseKanpaiMotif: View {
     var body: some View {
         ZStack {
+            Circle()
+                .fill(Color(red: 0.95, green: 0.24, blue: 0.16).opacity(0.18))
+                .frame(width: 220, height: 220)
+                .offset(x: 98, y: -210)
+
+            ForEach(0..<8, id: \.self) { i in
+                Rectangle()
+                    .fill(Color.white.opacity(0.06))
+                    .frame(width: 4, height: 180)
+                    .rotationEffect(.degrees(Double(i) * 12 - 22))
+                    .offset(x: 88, y: -220)
+            }
+
             Text("乾杯！")
-                .font(.custom("HiraginoMinchoProN-W6", size: 106))
-                .foregroundStyle(Color.white.opacity(0.12))
-                .rotationEffect(.degrees(-7))
-                .offset(x: 46, y: -170)
-
-            Text("かんぱい！")
-                .font(.custom("HiraginoMinchoProN-W3", size: 38))
+                .font(.custom("HiraginoKakuGothicStd-W8", size: 108))
                 .foregroundStyle(Color.white.opacity(0.14))
-                .rotationEffect(.degrees(11))
-                .offset(x: -12, y: -88)
+                .rotationEffect(.degrees(-6))
+                .offset(x: 36, y: -160)
 
-            Text("乾杯！！")
-                .font(.custom("HiraginoSans-W6", size: 54))
-                .foregroundStyle(Color.white.opacity(0.10))
-                .rotationEffect(.degrees(84))
-                .offset(x: -136, y: -38)
+            Text("生")
+                .font(.custom("HiraginoKakuGothicStd-W8", size: 78))
+                .foregroundStyle(Color(red: 1.0, green: 0.95, blue: 0.82).opacity(0.14))
+                .rotationEffect(.degrees(8))
+                .offset(x: -120, y: -50)
+
+            Text("かんぱい！！")
+                .font(.custom("HiraginoSans-W7", size: 34))
+                .foregroundStyle(Color.white.opacity(0.13))
+                .rotationEffect(.degrees(10))
+                .offset(x: -6, y: -78)
         }
     }
 }
