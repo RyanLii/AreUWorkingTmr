@@ -43,6 +43,7 @@ struct RootTabView: View {
             .tint(NightTheme.accent)
             .toolbarBackground(.visible, for: .tabBar)
             .toolbarColorScheme(.dark, for: .tabBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
 
             if showOnboarding {
                 OnboardingView {
@@ -88,6 +89,7 @@ struct RootTabView: View {
             autoTabTask = nil
         }
         .animation(.easeInOut(duration: 0.2), value: showOnboarding)
+        .preferredColorScheme(.dark)
     }
 
     private func parseTab(_ raw: String) -> Tab? {
