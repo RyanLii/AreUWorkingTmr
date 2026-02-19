@@ -10,11 +10,15 @@ struct VoiceLogView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Voice Log")
+                Text("Text Mate")
                     .font(WatchNightTheme.titleFont)
                     .foregroundStyle(.white)
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
+
+                Text("Type naturally. We parse and log.")
+                    .font(WatchNightTheme.captionFont)
+                    .foregroundStyle(WatchNightTheme.accentSoft)
 
                 TextField("2 beers 500ml 5%", text: $input)
                     .font(WatchNightTheme.bodyFont)
@@ -43,7 +47,7 @@ struct VoiceLogView: View {
                 } label: {
                     HStack {
                         Image(systemName: "mic.fill")
-                        Text("Parse & Log")
+                        Text("Text Mate Log")
                     }
                     .font(WatchNightTheme.bodyFont)
                     .frame(maxWidth: .infinity)

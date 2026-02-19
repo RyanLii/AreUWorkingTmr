@@ -343,6 +343,13 @@ final class AppStore: ObservableObject {
         recalculateSnapshot(now: .now)
     }
 
+    func deleteEntries(ids: Set<UUID>) {
+        guard !ids.isEmpty else { return }
+        entries.removeAll(where: { ids.contains($0.id) })
+        deletePersistedEntries(ids: ids)
+        recalculateSnapshot(now: .now)
+    }
+
     func markReminderAcknowledged(_ reminderID: UUID) {
         if let idx = reminders.firstIndex(where: { $0.id == reminderID }) {
             reminders[idx].acknowledged = true
@@ -581,7 +588,14 @@ final class AppStore: ObservableObject {
 
         do {
             let loaded = try persistence.load(modelContext: modelContext, fallbackProfile: profile)
-            profile = loaded.profile
+            if loaded.profile.biologicalSex == .other {
+                profile = loaded.profile
+            } else {
+                var migrated = loaded.profile
+                migrated.biologicalSex = .other
+                profile = migrated
+                persist(profile: migrated)
+            }
             entries = loaded.entries
             recalculateSnapshot(now: .now)
         } catch {

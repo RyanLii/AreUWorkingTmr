@@ -4,7 +4,7 @@ import StoreKit
 
 struct RootTabView: View {
     enum Tab: Hashable {
-        case today, history, profile, reminders, privacy
+        case today, settings
     }
 
     @Environment(\.modelContext) private var modelContext
@@ -23,35 +23,21 @@ struct RootTabView: View {
     var body: some View {
         ZStack {
             TabView(selection: $selectedTab) {
-                TodayView()
+                NavigationStack {
+                    TodayView()
+                }
                     .tabItem {
                         Label("Today", systemImage: "moon.stars.fill")
                     }
                     .tag(Tab.today)
 
-                HistoryView()
+                NavigationStack {
+                    SettingsHubView()
+                }
                     .tabItem {
-                        Label("History", systemImage: "clock.arrow.circlepath")
+                        Label("Settings", systemImage: "slider.horizontal.3")
                     }
-                    .tag(Tab.history)
-
-                ProfileView()
-                    .tabItem {
-                        Label("Profile", systemImage: "person.crop.circle")
-                    }
-                    .tag(Tab.profile)
-
-                RemindersView()
-                    .tabItem {
-                        Label("Reminders", systemImage: "bell.badge")
-                    }
-                    .tag(Tab.reminders)
-
-                PrivacyView()
-                    .tabItem {
-                        Label("Privacy", systemImage: "lock.shield")
-                    }
-                    .tag(Tab.privacy)
+                    .tag(Tab.settings)
             }
             .disabled(showOnboarding)
             .tint(NightTheme.accent)
@@ -107,10 +93,7 @@ struct RootTabView: View {
     private func parseTab(_ raw: String) -> Tab? {
         switch raw.lowercased() {
         case "today": return .today
-        case "history": return .history
-        case "profile": return .profile
-        case "reminders": return .reminders
-        case "privacy": return .privacy
+        case "settings", "history", "profile", "reminders", "privacy": return .settings
         default: return nil
         }
     }
@@ -118,7 +101,7 @@ struct RootTabView: View {
     private func startAutoTabDemo() {
         autoTabTask?.cancel()
         autoTabTask = Task { @MainActor in
-            let tabs: [Tab] = [.today, .history, .profile, .reminders, .privacy]
+            let tabs: [Tab] = [.today, .settings]
             var index = 0
             try? await Task.sleep(nanoseconds: 800_000_000)
             while !Task.isCancelled {

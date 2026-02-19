@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -14,6 +14,7 @@
 		2C5567B17142A38965E52F0C /* EstimationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0D2809A0D5A478DE450294 /* EstimationService.swift */; };
 		2F904501EE9394A3AC95BF5E /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38784054EA12747F620E058D /* Theme.swift */; };
 		304F1B8B7690DBB33D199475 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5614B0440491A76516A2A69A /* PersistenceController.swift */; };
+		39BFD3B3829EECFFA3FD6E94 /* SettingsHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229336DE8B915506FC4616F5 /* SettingsHubView.swift */; };
 		3F3E1BAE8568E8EBFF163CBB /* QuickAddView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25E490B26863E63F1AACA368 /* QuickAddView.swift */; };
 		415C498B93AB629BEF12C616 /* DomainModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B8E282AB31F06D4F8C9F16 /* DomainModels.swift */; };
 		4438E207250456DA1C8E85BE /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFEDB9F8ED0255803A65F93E /* ReminderService.swift */; };
@@ -67,6 +68,7 @@
 		11D7CDD37617C6A38D28A1E1 /* LocationMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationMonitor.swift; sourceTree = "<group>"; };
 		1A61C3149EBB796A7238C563 /* DrinkParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkParser.swift; sourceTree = "<group>"; };
 		1C62F8E844D4DC07A640BAE4 /* EstimationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EstimationServiceTests.swift; sourceTree = "<group>"; };
+		229336DE8B915506FC4616F5 /* SettingsHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsHubView.swift; sourceTree = "<group>"; };
 		2538157D4B06C4869E3F2B9D /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		25E490B26863E63F1AACA368 /* QuickAddView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddView.swift; sourceTree = "<group>"; };
 		28A99D3BB1FD2F24D4C40298 /* AreUWorkingTmrWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AreUWorkingTmrWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -74,7 +76,7 @@
 		3358E82BED9408F78908DF40 /* ReminderServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderServiceTests.swift; sourceTree = "<group>"; };
 		38784054EA12747F620E058D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		4236A3CD907EE833E02E68EB /* SessionClockTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionClockTests.swift; sourceTree = "<group>"; };
-		42776EAFA9A2351E2666C5DB /* AreUWorkingTmr.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AreUWorkingTmr.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		42776EAFA9A2351E2666C5DB /* AreUWorkingTmr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AreUWorkingTmr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5614B0440491A76516A2A69A /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		5722B75F3F0CBD40B642C755 /* LiveStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveStatusView.swift; sourceTree = "<group>"; };
 		5E0D2809A0D5A478DE450294 /* EstimationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EstimationService.swift; sourceTree = "<group>"; };
@@ -184,6 +186,7 @@
 				7E6D7A2B7E0D5FF96E21D45C /* PrivacyView.swift */,
 				984BA16F6A37E0812139F38E /* ProfileView.swift */,
 				FDE9B7650854EC74EC8BB18B /* RemindersView.swift */,
+				229336DE8B915506FC4616F5 /* SettingsHubView.swift */,
 				D6BFF8F395727E210F82C200 /* TodayView.swift */,
 				EE444C5BA6A2CB8AF0AEEE94 /* Shared */,
 			);
@@ -335,9 +338,6 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
-					28064BF416DE6C07BA8798E8 = {
-						DevelopmentTeam = "";
-					};
 					30044BDB545EB07DDF4F6622 = {
 						DevelopmentTeam = "";
 					};
@@ -356,7 +356,6 @@
 			);
 			mainGroup = FAD8AA136E6662FC41A2E194;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -451,6 +450,7 @@
 				E5221CE5366292F008208238 /* ReminderService.swift in Sources */,
 				66EFF32A3EA5FE5A34EB016C /* RemindersView.swift in Sources */,
 				48656F907CF089F43DEFCE2C /* RootTabView.swift in Sources */,
+				39BFD3B3829EECFFA3FD6E94 /* SettingsHubView.swift in Sources */,
 				D37E0B0F9D74DDDAE53201AE /* SwiftDataModels.swift in Sources */,
 				2F904501EE9394A3AC95BF5E /* Theme.swift in Sources */,
 				19D43EEF6759952F92C70486 /* TodayView.swift in Sources */,
@@ -467,11 +467,11 @@
 				CODE_SIGN_ENTITLEMENTS = WatchApp/AreUWorkingTmrWatch.entitlements;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight and biological sex improve estimate accuracy.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger missed-log and home-arrival reminders when available.";
 				INFOPLIST_KEY_WKApplication_WKSupportsRunningWithoutiOSApp = YES;
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.ryanlee.AreUWorkingTmr;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ryanlee.AreUWorkingTmr.watch;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.nestroundlabs.AreUWorkingTmr;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nestroundlabs.AreUWorkingTmr.watch;
 				PRODUCT_NAME = AreUWorkingTmrWatch;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -487,11 +487,11 @@
 				CODE_SIGN_ENTITLEMENTS = WatchApp/AreUWorkingTmrWatch.entitlements;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight and biological sex improve estimate accuracy.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger missed-log and home-arrival reminders when available.";
 				INFOPLIST_KEY_WKApplication_WKSupportsRunningWithoutiOSApp = YES;
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.ryanlee.AreUWorkingTmr;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ryanlee.AreUWorkingTmr.watch;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.nestroundlabs.AreUWorkingTmr;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nestroundlabs.AreUWorkingTmr.watch;
 				PRODUCT_NAME = AreUWorkingTmrWatch;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -511,7 +511,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.ryanlee.AreUWorkingTmrTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nestroundlabs.AreUWorkingTmrTests;
 				PRODUCT_NAME = AreUWorkingTmrTests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -523,11 +523,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = iOSApp/AreUWorkingTmr.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = D5HJ4LX2DA;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
 				INFOPLIST_KEY_ENABLE_HEALTHKIT_INTEGRATION = YES;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight and biological sex personalize your estimate.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders in the background.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -537,8 +539,9 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.ryanlee.AreUWorkingTmr;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nestroundlabs.AreUWorkingTmr;
 				PRODUCT_NAME = AreUWorkingTmr;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -549,11 +552,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = iOSApp/AreUWorkingTmr.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = D5HJ4LX2DA;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
 				INFOPLIST_KEY_ENABLE_HEALTHKIT_INTEGRATION = YES;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight and biological sex personalize your estimate.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders in the background.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -563,8 +568,9 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.ryanlee.AreUWorkingTmr;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nestroundlabs.AreUWorkingTmr;
 				PRODUCT_NAME = AreUWorkingTmr;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -638,7 +644,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.ryanlee.AreUWorkingTmrTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nestroundlabs.AreUWorkingTmrTests;
 				PRODUCT_NAME = AreUWorkingTmrTests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";

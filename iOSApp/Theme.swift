@@ -3,39 +3,39 @@ import SwiftUI
 enum NightTheme {
     static let background = LinearGradient(
         colors: [
-            Color(red: 0.06, green: 0.08, blue: 0.12),
-            Color(red: 0.13, green: 0.18, blue: 0.23),
-            Color(red: 0.24, green: 0.18, blue: 0.14)
+            Color(red: 0.04, green: 0.12, blue: 0.26),
+            Color(red: 0.11, green: 0.24, blue: 0.41),
+            Color(red: 0.60, green: 0.39, blue: 0.23)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
     static let hazeWarm = RadialGradient(
-        colors: [Color(red: 0.99, green: 0.62, blue: 0.45).opacity(0.30), .clear],
+        colors: [Color(red: 0.94, green: 0.63, blue: 0.38).opacity(0.46), .clear],
         center: .center,
         startRadius: 12,
-        endRadius: 340
+        endRadius: 380
     )
 
     static let hazeCool = RadialGradient(
-        colors: [Color(red: 0.42, green: 0.86, blue: 0.80).opacity(0.22), .clear],
+        colors: [Color(red: 0.55, green: 0.86, blue: 0.78).opacity(0.24), .clear],
         center: .center,
         startRadius: 10,
-        endRadius: 320
+        endRadius: 360
     )
 
-    static let accent = Color(red: 0.99, green: 0.53, blue: 0.36)
-    static let accentSoft = Color(red: 0.98, green: 0.77, blue: 0.47)
-    static let mint = Color(red: 0.47, green: 0.90, blue: 0.82)
-    static let warning = Color(red: 0.99, green: 0.53, blue: 0.36)
-    static let success = Color(red: 0.53, green: 0.86, blue: 0.70)
+    static let accent = Color(red: 0.95, green: 0.45, blue: 0.25)
+    static let accentSoft = Color(red: 0.96, green: 0.75, blue: 0.39)
+    static let mint = Color(red: 0.58, green: 0.87, blue: 0.78)
+    static let warning = Color(red: 0.97, green: 0.53, blue: 0.30)
+    static let success = Color(red: 0.70, green: 0.88, blue: 0.66)
 
-    static let card = Color.black.opacity(0.24)
-    static let cardStrong = Color.black.opacity(0.34)
-    static let cardStroke = Color.white.opacity(0.14)
-    static let label = Color.white.opacity(0.86)
-    static let labelSoft = Color.white.opacity(0.66)
+    static let card = Color(red: 0.04, green: 0.07, blue: 0.12).opacity(0.52)
+    static let cardStrong = Color(red: 0.03, green: 0.05, blue: 0.09).opacity(0.70)
+    static let cardStroke = Color.white.opacity(0.20)
+    static let label = Color.white.opacity(0.95)
+    static let labelSoft = Color.white.opacity(0.78)
 
     static let titleFont = Font.system(size: 38, weight: .black, design: .rounded)
     static let subtitleFont = Font.system(size: 13, weight: .semibold, design: .rounded)
@@ -50,28 +50,106 @@ struct NightBackdrop: View {
         ZStack {
             NightTheme.background.ignoresSafeArea()
 
+            ToastBackdropMotif()
+                .offset(x: 128, y: -214)
+
             Circle()
                 .fill(NightTheme.hazeWarm)
-                .frame(width: 420, height: 420)
-                .offset(x: 220, y: -340)
+                .frame(width: 470, height: 470)
+                .offset(x: 210, y: -300)
 
             Circle()
                 .fill(NightTheme.hazeCool)
-                .frame(width: 360, height: 360)
-                .offset(x: -220, y: 360)
+                .frame(width: 410, height: 410)
+                .offset(x: -220, y: 330)
+
+            Circle()
+                .fill(Color(red: 0.96, green: 0.82, blue: 0.62).opacity(0.18))
+                .frame(width: 210, height: 210)
+                .offset(x: -150, y: -280)
+
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.06), .clear],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .blendMode(.screen)
 
             RoundedRectangle(cornerRadius: 120, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color.white.opacity(0.12), Color.white.opacity(0.02)],
+                        colors: [Color(red: 1.0, green: 0.92, blue: 0.80).opacity(0.14), Color.white.opacity(0.03)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
                 .frame(width: 520, height: 92)
                 .rotationEffect(.degrees(-9))
-                .offset(x: -54, y: 290)
+                .offset(x: -54, y: 292)
         }
+    }
+}
+
+private struct ToastBackdropMotif: View {
+    var body: some View {
+        ZStack {
+            glass(rotation: -16, handleOnLeft: false)
+                .offset(x: -42, y: 8)
+
+            glass(rotation: 16, handleOnLeft: true)
+                .offset(x: 42, y: -8)
+
+            Circle()
+                .fill(Color.white.opacity(0.14))
+                .frame(width: 10, height: 10)
+                .offset(y: -56)
+
+            Circle()
+                .fill(NightTheme.accentSoft.opacity(0.20))
+                .frame(width: 26, height: 26)
+                .blur(radius: 1.4)
+                .offset(x: 6, y: -40)
+        }
+        .frame(width: 220, height: 180)
+        .opacity(0.74)
+        .blendMode(.screen)
+    }
+
+    private func glass(rotation: Double, handleOnLeft: Bool) -> some View {
+        ZStack(alignment: .top) {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.98, green: 0.74, blue: 0.43).opacity(0.30),
+                            Color(red: 0.86, green: 0.47, blue: 0.28).opacity(0.10)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: 72, height: 120)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(Color.white.opacity(0.16), lineWidth: 1)
+                )
+
+            Capsule()
+                .fill(Color.white.opacity(0.20))
+                .frame(width: 52, height: 8)
+                .offset(y: 10)
+
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .stroke(Color.white.opacity(0.14), lineWidth: 2)
+                .frame(width: 18, height: 42)
+                .offset(x: handleOnLeft ? -43 : 43, y: 18)
+        }
+        .rotationEffect(.degrees(rotation))
+        .shadow(color: .black.opacity(0.16), radius: 8, y: 4)
     }
 }
 

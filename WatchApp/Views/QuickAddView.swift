@@ -81,13 +81,6 @@ struct QuickAddView: View {
                     quickSessionStatusCard
                 }
 
-                if !hasSessionDrinks {
-                    Label("Start with your first drink.", systemImage: "sparkles")
-                        .font(WatchNightTheme.captionFont)
-                        .foregroundStyle(WatchNightTheme.label)
-                        .watchCard()
-                }
-
                 if store.canUndoLastDrink() {
                     Button {
                         _ = store.undoLastDrink()
@@ -215,11 +208,11 @@ struct QuickAddView: View {
             }
 
             HStack(alignment: .firstTextBaseline) {
-                Text("Back to normal")
+                Text("Drive lower-risk")
                     .font(WatchNightTheme.captionFont)
                     .foregroundStyle(WatchNightTheme.labelSoft)
                 Spacer(minLength: 8)
-                Text(DisplayFormatter.eta(store.sessionSnapshot.saferDriveTime))
+                Text(driveReadinessText(for: store.sessionSnapshot))
                     .font(WatchNightTheme.bodyStrong)
                     .foregroundStyle(.white)
                     .lineLimit(2)
@@ -227,7 +220,7 @@ struct QuickAddView: View {
                     .multilineTextAlignment(.trailing)
             }
 
-            Text(DisplayFormatter.remaining(store.sessionSnapshot.remainingToSaferDrive))
+            Text(driveRemainingText(for: store.sessionSnapshot.remainingToSaferDrive))
                 .font(WatchNightTheme.bodyFont)
                 .foregroundStyle(store.sessionSnapshot.remainingToSaferDrive <= 0 ? WatchNightTheme.mint : WatchNightTheme.warning)
 
@@ -358,23 +351,25 @@ struct QuickAddView: View {
                         }
                         .buttonStyle(.plain)
 
-                        Button {
-                            sendBuddyText()
-                        } label: {
-                            Label("Text a mate", systemImage: "message.fill")
-                                .font(WatchNightTheme.bodyFont)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 6)
-                                .foregroundStyle(.white)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                        .fill(Color.white.opacity(0.12))
-                                )
-                        }
-                        .buttonStyle(.plain)
                     }
                     .watchCard(highlighted: true)
                 }
+
+                Button {
+                    sendBuddyText()
+                } label: {
+                    Label("Text Mate", systemImage: "message.fill")
+                        .font(WatchNightTheme.bodyFont)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                        .foregroundStyle(.white)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(Color.white.opacity(0.12))
+                        )
+                }
+                .buttonStyle(.plain)
+                .watchCard()
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Before sleep")
@@ -392,25 +387,6 @@ struct QuickAddView: View {
                     }
                 }
                 .watchCard()
-
-                Button {
-                    refreshDoneTonightMessage()
-                } label: {
-                    Label("Another line", systemImage: "shuffle")
-                        .font(WatchNightTheme.bodyFont)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .foregroundStyle(.white)
-                        .background(
-                            RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                .fill(Color.white.opacity(0.14))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                        .stroke(Color.white.opacity(0.20), lineWidth: 1)
-                                )
-                        )
-                }
-                .buttonStyle(.plain)
 
                 Button {
                     showDoneTonightSheet = false
@@ -645,16 +621,16 @@ struct QuickAddView: View {
                         .foregroundStyle(WatchNightTheme.label)
 
                     HStack {
-                        Text("Back to normal around")
+                        Text("Drive lower-risk")
                             .font(WatchNightTheme.captionFont)
                             .foregroundStyle(WatchNightTheme.label)
                         Spacer()
-                        Text(DisplayFormatter.eta(projectedSnapshot.saferDriveTime))
+                        Text(driveReadinessText(for: projectedSnapshot))
                             .font(WatchNightTheme.bodyFont)
                             .foregroundStyle(.white)
                     }
 
-                    Text(DisplayFormatter.remaining(projectedSnapshot.remainingToSaferDrive))
+                    Text(driveRemainingText(for: projectedSnapshot.remainingToSaferDrive))
                         .font(WatchNightTheme.captionFont)
                         .foregroundStyle(projectedSnapshot.remainingToSaferDrive <= 0 ? WatchNightTheme.mint : WatchNightTheme.warning)
 
@@ -763,6 +739,20 @@ struct QuickAddView: View {
         }
 
         return "Adds around \(hours)h \(minutes)m to your estimate."
+    }
+
+    private func driveReadinessText(for snapshot: SessionSnapshot) -> String {
+        if snapshot.remainingToSaferDrive <= 0 {
+            return "Likely under local limit now"
+        }
+        return DisplayFormatter.eta(snapshot.saferDriveTime)
+    }
+
+    private func driveRemainingText(for interval: TimeInterval) -> String {
+        if interval <= 0 {
+            return "No wait estimated"
+        }
+        return DisplayFormatter.remaining(interval)
     }
 
     private func openDetail(for preset: DrinkPreset) {

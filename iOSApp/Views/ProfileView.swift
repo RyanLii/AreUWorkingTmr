@@ -5,88 +5,74 @@ struct ProfileView: View {
 
     @State private var weightText = ""
     @State private var heightText = ""
-    @State private var sex: BiologicalSex = .other
     @State private var unit: UnitPreference = .metric
     @State private var region: RegionStandard = .defaultForCurrentLocale()
-    @State private var homeLatText = ""
-    @State private var homeLonText = ""
 
     var body: some View {
-        NavigationStack {
-            AppScreenScaffold {
-                ScreenIntroCard(
-                    title: "Profile Tuning",
-                    subtitle: "These inputs only improve estimate accuracy and quick-add defaults."
-                )
+        AppScreenScaffold {
+            ScreenIntroCard(
+                title: "Profile Tuning",
+                subtitle: "These inputs only improve estimate accuracy and quick-add defaults."
+            )
 
-                SectionCard("Personalized Estimate") {
-                    inputField(weightFieldTitle, text: $weightText, keyboard: .decimalPad)
-                    inputField(heightFieldTitle, text: $heightText, keyboard: .decimalPad)
+            SectionCard("Personalized Estimate") {
+                inputField(weightFieldTitle, text: $weightText, keyboard: .decimalPad)
+                inputField(heightFieldTitle, text: $heightText, keyboard: .decimalPad)
 
-                    Picker("Biological sex", selection: $sex) {
-                        ForEach(BiologicalSex.allCases, id: \.rawValue) { option in
-                            Text(option.rawValue.capitalized).tag(option)
-                        }
+                Picker("Units", selection: $unit) {
+                    ForEach(UnitPreference.allCases, id: \.rawValue) { option in
+                        Text(option.rawValue.capitalized).tag(option)
                     }
-                    .pickerStyle(.menu)
-                    .tint(NightTheme.accent)
-
-                    Picker("Units", selection: $unit) {
-                        ForEach(UnitPreference.allCases, id: \.rawValue) { option in
-                            Text(option.rawValue.capitalized).tag(option)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .tint(NightTheme.accent)
-
-                    Picker("Standard drink", selection: $region) {
-                        ForEach(RegionStandard.allCases, id: \.rawValue) { option in
-                            Text(option.label).tag(option)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .tint(NightTheme.accent)
-
-                    Text("Region controls serving standards (for example AU schooner vs US tallboy/can).")
-                        .font(.footnote)
-                        .foregroundStyle(NightTheme.labelSoft)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
+                .pickerStyle(.menu)
+                .tint(NightTheme.accent)
 
-                SectionCard("Quick Add Defaults") {
-                    VStack(spacing: 10) {
-                        ForEach(DrinkCategory.allCases, id: \.rawValue) { category in
-                            defaultRow(for: category)
-                        }
+                Picker("Standard drink", selection: $region) {
+                    ForEach(RegionStandard.allCases, id: \.rawValue) { option in
+                        Text(option.label).tag(option)
                     }
-
-                    Text("Change defaults on Watch detail screens using 'Set As Default'.")
-                        .font(.footnote)
-                        .foregroundStyle(NightTheme.labelSoft)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
+                .pickerStyle(.menu)
+                .tint(NightTheme.accent)
 
-                SectionCard("Home Location (optional)") {
-                    inputField("Latitude", text: $homeLatText, keyboard: .numbersAndPunctuation)
-                    inputField("Longitude", text: $homeLonText, keyboard: .numbersAndPunctuation)
-                }
+                Text("Region controls serving standards (for example AU schooner vs US tallboy/can).")
+                    .font(.footnote)
+                    .foregroundStyle(NightTheme.labelSoft)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                SectionCard("Actions") {
-                    Button("Save profile") {
-                        saveProfile()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(NightTheme.accent)
-                }
+                Text("Changes auto-save when you leave this screen.")
+                    .font(.footnote)
+                    .foregroundStyle(NightTheme.labelSoft)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .navigationTitle("Profile")
-            .onAppear {
-                loadFromStore()
+
+            SectionCard("Quick Add Defaults") {
+                VStack(spacing: 10) {
+                    ForEach(DrinkCategory.allCases, id: \.rawValue) { category in
+                        defaultRow(for: category)
+                    }
+                }
+
+                Text("Change defaults on Watch detail screens using 'Set As Default'.")
+                    .font(.footnote)
+                    .foregroundStyle(NightTheme.labelSoft)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .onChange(of: unit) { _, _ in
-                weightText = formattedWeightForInput(store.profile.weightKg)
-                heightText = formattedHeightForInput(store.profile.heightCm)
-            }
+        }
+        .navigationTitle("Profile")
+        .onAppear {
+            loadFromStore()
+        }
+        .onChange(of: unit) { oldUnit, _ in
+            saveProfile(usingInputUnit: oldUnit)
+            weightText = formattedWeightForInput(store.profile.weightKg)
+            heightText = formattedHeightForInput(store.profile.heightCm)
+        }
+        .onChange(of: region) { _, _ in
+            saveProfile()
+        }
+        .onDisappear {
+            saveProfile()
         }
     }
 
@@ -139,47 +125,29 @@ struct ProfileView: View {
     }
 
     private func loadFromStore() {
-        sex = store.profile.biologicalSex
         unit = store.profile.unitPreference
         region = store.profile.regionStandard
 
         weightText = formattedWeightForInput(store.profile.weightKg)
         heightText = formattedHeightForInput(store.profile.heightCm)
-
-        if let home = store.profile.homeLocation {
-            homeLatText = String(home.latitude)
-            homeLonText = String(home.longitude)
-        } else {
-            homeLatText = ""
-            homeLonText = ""
-        }
     }
 
-    private func saveProfile() {
+    private func saveProfile(usingInputUnit inputUnit: UnitPreference? = nil) {
         let weightInput = Double(weightText)
         let heightInput = Double(heightText)
+        let unitForInput = inputUnit ?? unit
 
-        let weightKg = normalizedWeightKg(from: weightInput) ?? store.profile.weightKg
-        let heightCm = normalizedHeightCm(from: heightInput) ?? store.profile.heightCm
-
-        let lat = Double(homeLatText)
-        let lon = Double(homeLonText)
-
-        let location: LocationSnapshot?
-        if let lat, let lon {
-            location = LocationSnapshot(latitude: lat, longitude: lon)
-        } else {
-            location = nil
-        }
+        let weightKg = normalizedWeightKg(from: weightInput, using: unitForInput) ?? store.profile.weightKg
+        let heightCm = normalizedHeightCm(from: heightInput, using: unitForInput) ?? store.profile.heightCm
 
         let profile = UserProfile(
             weightKg: min(max(weightKg, 35), 220),
             heightCm: min(max(heightCm, 130), 220),
-            biologicalSex: sex,
+            biologicalSex: store.profile.biologicalSex,
             unitPreference: unit,
             regionStandard: region,
             workingTomorrow: store.profile.workingTomorrow,
-            homeLocation: location,
+            homeLocation: store.profile.homeLocation,
             drinkPreferences: store.profile.drinkPreferences
         )
 
@@ -200,17 +168,17 @@ struct ProfileView: View {
         }
     }
 
-    private func normalizedWeightKg(from input: Double?) -> Double? {
+    private func normalizedWeightKg(from input: Double?, using unitPreference: UnitPreference) -> Double? {
         guard let input else { return nil }
-        switch unit {
+        switch unitPreference {
         case .metric: return input
         case .imperial: return input * 0.45359237
         }
     }
 
-    private func normalizedHeightCm(from input: Double?) -> Double? {
+    private func normalizedHeightCm(from input: Double?, using unitPreference: UnitPreference) -> Double? {
         guard let input else { return nil }
-        switch unit {
+        switch unitPreference {
         case .metric: return input
         case .imperial: return input * 2.54
         }

@@ -78,7 +78,9 @@ struct DefaultEstimationService: EstimationService {
             samples: samples,
             now: now,
             threshold: legalThreshold,
-            conservativeBuffer: legalBuffer
+            conservativeBuffer: legalBuffer,
+            profile: profile,
+            entries: sorted
         )
         let remainingSeconds = max(0, saferDriveTime.timeIntervalSince(now))
 
@@ -108,7 +110,9 @@ struct DefaultEstimationService: EstimationService {
         samples: [BACSample],
         now: Date,
         threshold: Double,
-        conservativeBuffer: TimeInterval
+        conservativeBuffer: TimeInterval,
+        profile: UserProfile,
+        entries: [DrinkEntry]
     ) -> Date {
         guard !samples.isEmpty else {
             return now
@@ -124,6 +128,16 @@ struct DefaultEstimationService: EstimationService {
             futureMaxBAC[index] = runningMax
         }
 
+        // If we're already below threshold now and the projected near/far future
+        // also stays below threshold, don't add extra buffer minutes.
+        if let current = samples.first,
+           current.bac <= threshold,
+           (futureMaxBAC.first ?? 0) <= threshold {
+            let settlingBuffer = immediateSafeSettlingBuffer(for: profile, entries: entries, now: now)
+            guard settlingBuffer > 0 else { return now }
+            return min(maxDate, now.addingTimeInterval(settlingBuffer))
+        }
+
         if let firstStableSafeIndex = samples.indices.first(where: { idx in
             samples[idx].bac <= threshold && futureMaxBAC[idx] <= threshold
         }) {
@@ -132,6 +146,29 @@ struct DefaultEstimationService: EstimationService {
         }
 
         return maxDate
+    }
+
+    // In stricter regions, keep a short post-log settling window so
+    // "just logged" drinks do not look instantly fully settled.
+    private func immediateSafeSettlingBuffer(
+        for profile: UserProfile,
+        entries: [DrinkEntry],
+        now: Date
+    ) -> TimeInterval {
+        guard let latestEntry = entries.last else { return 0 }
+        let timeSinceLastDrink = max(0, now.timeIntervalSince(latestEntry.timestamp))
+
+        // Only apply when the latest drink is recent.
+        guard timeSinceLastDrink < 45 * 60 else { return 0 }
+
+        switch profile.regionStandard {
+        case .au10g:
+            return 20 * 60
+        case .uk8g:
+            return 10 * 60
+        case .us14g:
+            return 0
+        }
     }
 
     // Short-horizon peak BAC helps avoid under-reporting state when many drinks are

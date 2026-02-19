@@ -29,6 +29,7 @@ struct AppScreenScaffold<Content: View>: View {
             }
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
         }
+        .toolbarColorScheme(.dark, for: .navigationBar)
     }
 }
 

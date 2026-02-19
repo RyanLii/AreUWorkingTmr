@@ -1,83 +1,36 @@
 import SwiftUI
 
 struct RemindersView: View {
-    @EnvironmentObject private var store: AppStore
     @EnvironmentObject private var permissionManager: PermissionManager
 
     var body: some View {
-        NavigationStack {
-            AppScreenScaffold {
-                ScreenIntroCard(
-                    title: "Reminder Control",
-                    subtitle: "Permissions + smart nudges that help your night land clean."
-                )
+        AppScreenScaffold {
+            ScreenIntroCard(
+                title: "Reminder Control",
+                subtitle: "Only the essentials: permission switches and core reminder logic."
+            )
 
-                SectionCard("Permissions") {
-                    permissionRow("Notifications", enabled: permissionManager.notificationAuthorized)
-                    permissionRow("Location", enabled: permissionManager.locationAuthorized)
-                    permissionRow("HealthKit Read", enabled: permissionManager.healthKitAuthorized)
+            SectionCard("Permissions") {
+                permissionRow("Notifications", enabled: permissionManager.notificationAuthorized)
+                permissionRow("Location", enabled: permissionManager.locationAuthorized)
+                permissionRow("HealthKit Read", enabled: permissionManager.healthKitAuthorized)
 
-                    Button("Request all permissions") {
-                        permissionManager.requestAllAtLaunch()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(NightTheme.accent)
+                Button("Request all permissions") {
+                    permissionManager.requestAllAtLaunch()
                 }
-
-                SectionCard("Smart Reminders") {
-                    bullet("Missed-log trigger: stay >= 20m, move > 200m, no drink in last 15m.")
-                    bullet("Home recovery trigger: one notification, 20m after home arrival.")
-                    bullet("Morning check-in: one gentle nudge next morning after you tap Done Tonight.")
-                }
-
-                SectionCard("Timeline") {
-                    if store.reminders.isEmpty {
-                        Text("No reminders yet.")
-                            .font(NightTheme.bodyFont)
-                            .foregroundStyle(NightTheme.label)
-                    } else {
-                        VStack(spacing: 10) {
-                            ForEach(store.reminders.reversed()) { reminder in
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(reminderLabel(for: reminder.type))
-                                        .font(NightTheme.sectionFont)
-                                        .foregroundStyle(.white)
-
-                                    Text(reminder.context)
-                                        .font(NightTheme.bodyFont)
-                                        .foregroundStyle(NightTheme.label)
-                                        .fixedSize(horizontal: false, vertical: true)
-
-                                    Text(reminder.triggerTime, style: .time)
-                                        .font(NightTheme.captionFont)
-                                        .foregroundStyle(NightTheme.labelSoft)
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(12)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                        .fill(Color.white.opacity(0.08))
-                                )
-                            }
-                        }
-                    }
-                }
+                .buttonStyle(.borderedProminent)
+                .tint(NightTheme.accent)
             }
-            .navigationTitle("Reminders")
-            .onAppear {
-                permissionManager.refreshStatus()
+
+            SectionCard("Smart Reminders") {
+                bullet("Missed-log nudge: after extended idle + movement.")
+                bullet("Home recovery: one nudge shortly after arriving home.")
+                bullet("Morning check-in: one gentle follow-up after Done Tonight.")
             }
         }
-    }
-
-    private func reminderLabel(for type: ReminderType) -> String {
-        switch type {
-        case .missedLog:
-            return "Missed Log"
-        case .homeHydration:
-            return "Home Recovery"
-        case .morningCheckIn:
-            return "Morning Check-In"
+        .navigationTitle("Reminders")
+        .onAppear {
+            permissionManager.refreshStatus()
         }
     }
 

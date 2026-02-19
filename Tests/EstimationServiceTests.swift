@@ -36,7 +36,7 @@ final class EstimationServiceTests: XCTestCase {
             source: .quick,
             timestamp: firstDrink,
             locationSnapshot: nil,
-            region: .us14g
+            region: .au10g
         )
         let two = service.makeEntry(
             category: .shot,
@@ -46,18 +46,28 @@ final class EstimationServiceTests: XCTestCase {
             source: .quick,
             timestamp: firstDrink.addingTimeInterval(60),
             locationSnapshot: nil,
-            region: .us14g
+            region: .au10g
+        )
+        let three = service.makeEntry(
+            category: .shot,
+            servingName: "Classic",
+            volumeMl: 44,
+            abvPercent: 40,
+            source: .quick,
+            timestamp: firstDrink.addingTimeInterval(120),
+            locationSnapshot: nil,
+            region: .au10g
         )
 
         let profile = UserProfile(
             weightKg: 60,
             biologicalSex: .female,
             unitPreference: .metric,
-            regionStandard: .us14g,
+            regionStandard: .au10g,
             homeLocation: nil
         )
 
-        let snapshot = service.recalculate(entries: [one, two], profile: profile, now: now)
+        let snapshot = service.recalculate(entries: [one, two, three], profile: profile, now: now)
 
         XCTAssertGreaterThan(snapshot.estimatedBAC, 0.03)
         XCTAssertGreaterThan(snapshot.remainingToSaferDrive, 0)
@@ -113,7 +123,7 @@ final class EstimationServiceTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(auSnapshot.remainingToSaferDrive, usSnapshot.remainingToSaferDrive)
     }
 
-    func testNewDrinkStillRequiresWaitingDueToAbsorption() {
+    func testNewDrinkBelowThresholdCanBeImmediatelyLowerRisk() {
         let now = Date()
 
         let freshBeer = service.makeEntry(
@@ -137,11 +147,40 @@ final class EstimationServiceTests: XCTestCase {
 
         let snapshot = service.recalculate(entries: [freshBeer], profile: profile, now: now)
 
-        XCTAssertGreaterThan(snapshot.saferDriveTime, now)
-        XCTAssertGreaterThan(snapshot.remainingToSaferDrive, 0)
+        XCTAssertLessThanOrEqual(snapshot.estimatedBAC, profile.regionStandard.legalDriveBACLimit)
+        XCTAssertEqual(snapshot.remainingToSaferDrive, 0, accuracy: 1)
+        XCTAssertLessThanOrEqual(snapshot.saferDriveTime.timeIntervalSince(now), 1)
     }
 
-    func testAlreadySafeStateKeepsLegalBuffer() {
+    func testFreshAUSchoonerAppliesShortSettlingBufferEvenWhenBelowLimit() {
+        let now = Date()
+
+        let freshSchooner = service.makeEntry(
+            category: .beer,
+            servingName: "Schooner",
+            volumeMl: 425,
+            abvPercent: 4.8,
+            source: .quick,
+            timestamp: now,
+            locationSnapshot: nil,
+            region: .au10g
+        )
+
+        let profile = UserProfile(
+            weightKg: 80,
+            biologicalSex: .male,
+            unitPreference: .metric,
+            regionStandard: .au10g,
+            homeLocation: nil
+        )
+
+        let snapshot = service.recalculate(entries: [freshSchooner], profile: profile, now: now)
+
+        XCTAssertGreaterThan(snapshot.saferDriveTime.timeIntervalSince(now), 15 * 60)
+        XCTAssertGreaterThan(snapshot.remainingToSaferDrive, 15 * 60)
+    }
+
+    func testAlreadySafeStateDoesNotAddExtraWaitingBuffer() {
         let now = Date()
 
         let oldSmallDrink = service.makeEntry(
@@ -166,7 +205,8 @@ final class EstimationServiceTests: XCTestCase {
         let snapshot = service.recalculate(entries: [oldSmallDrink], profile: profile, now: now)
 
         XCTAssertLessThanOrEqual(snapshot.estimatedBAC, profile.regionStandard.legalDriveBACLimit)
-        XCTAssertGreaterThanOrEqual(snapshot.remainingToSaferDrive, 4 * 60)
+        XCTAssertEqual(snapshot.remainingToSaferDrive, 0, accuracy: 1)
+        XCTAssertLessThanOrEqual(snapshot.saferDriveTime.timeIntervalSince(now), 1)
         XCTAssertEqual(snapshot.intoxicationState, .clear)
     }
 
@@ -477,8 +517,8 @@ final class EstimationServiceTests: XCTestCase {
         let preview = store.projectedSnapshot(adding: preset, count: 2, now: now)
 
         XCTAssertGreaterThan(preview.totalStandardDrinks, 0)
-        XCTAssertGreaterThan(preview.saferDriveTime, now)
-        XCTAssertGreaterThan(preview.remainingToSaferDrive, 0)
+        XCTAssertGreaterThanOrEqual(preview.saferDriveTime, now)
+        XCTAssertGreaterThanOrEqual(preview.remainingToSaferDrive, 0)
     }
 
     @MainActor

@@ -87,19 +87,15 @@ final class WatchPermissionManager: NSObject, ObservableObject {
         }
 
         async let weightKg = latestBodyMassKg()
-        let biologicalSex = latestBiologicalSex()
-        return (await weightKg, biologicalSex)
+        return (await weightKg, nil)
     }
 
     private var healthReadTypes: Set<HKObjectType>? {
-        guard
-            let bodyMassType = HKObjectType.quantityType(forIdentifier: .bodyMass),
-            let biologicalSexType = HKObjectType.characteristicType(forIdentifier: .biologicalSex)
-        else {
+        guard let bodyMassType = HKObjectType.quantityType(forIdentifier: .bodyMass) else {
             return nil
         }
 
-        return [bodyMassType, biologicalSexType]
+        return [bodyMassType]
     }
 
     private func latestBodyMassKg() async -> Double? {
@@ -128,18 +124,6 @@ final class WatchPermissionManager: NSObject, ObservableObject {
         }
     }
 
-    private func latestBiologicalSex() -> BiologicalSex? {
-        do {
-            let healthSex = try healthStore.biologicalSex().biologicalSex
-            switch healthSex {
-            case .male: return .male
-            case .female: return .female
-            default: return nil
-            }
-        } catch {
-            return nil
-        }
-    }
 }
 
 extension WatchPermissionManager: CLLocationManagerDelegate {

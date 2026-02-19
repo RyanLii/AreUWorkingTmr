@@ -20,7 +20,7 @@ targets:
       - path: iOSApp/Resources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.ryanlee.AreUWorkingTmr
+        PRODUCT_BUNDLE_IDENTIFIER: com.nestroundlabs.AreUWorkingTmr
         GENERATE_INFOPLIST_FILE: YES
         PRODUCT_NAME: AreUWorkingTmr
         CODE_SIGN_ENTITLEMENTS: iOSApp/AreUWorkingTmr.entitlements
@@ -28,7 +28,7 @@ targets:
         INFOPLIST_KEY_ENABLE_HEALTHKIT_INTEGRATION: YES
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Location helps trigger drink-log and home-hydration reminders."
         INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription: "Location helps trigger drink-log and home-hydration reminders in the background."
-        INFOPLIST_KEY_NSHealthShareUsageDescription: "Weight and biological sex personalize your estimate."
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "Weight data improves estimate accuracy."
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         TARGETED_DEVICE_FAMILY: 1,2
@@ -44,15 +44,15 @@ targets:
       - path: WatchApp/Resources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.ryanlee.AreUWorkingTmr.watch
+        PRODUCT_BUNDLE_IDENTIFIER: com.nestroundlabs.AreUWorkingTmr.watch
         GENERATE_INFOPLIST_FILE: YES
         PRODUCT_NAME: AreUWorkingTmrWatch
         CODE_SIGN_ENTITLEMENTS: WatchApp/AreUWorkingTmrWatch.entitlements
         INFOPLIST_KEY_CFBundleDisplayName: "Last Round?"
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Location helps trigger missed-log and home-arrival reminders when available."
-        INFOPLIST_KEY_NSHealthShareUsageDescription: "Weight and biological sex improve estimate accuracy."
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "Weight data improves estimate accuracy."
         INFOPLIST_KEY_WKApplication_WKSupportsRunningWithoutiOSApp: YES
-        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.ryanlee.AreUWorkingTmr
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.nestroundlabs.AreUWorkingTmr
 
   AreUWorkingTmrTests:
     type: bundle.unit-test
@@ -63,7 +63,7 @@ targets:
       - path: Tests
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.ryanlee.AreUWorkingTmrTests
+        PRODUCT_BUNDLE_IDENTIFIER: com.nestroundlabs.AreUWorkingTmrTests
         PRODUCT_NAME: AreUWorkingTmrTests
         GENERATE_INFOPLIST_FILE: YES
 

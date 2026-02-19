@@ -29,11 +29,11 @@ struct LiveStatusView: View {
                 VStack(spacing: 6) {
                     metricRow("State", store.sessionSnapshot.intoxicationState.title)
                     metricRow("BAC", String(format: "%.3f", store.sessionSnapshot.estimatedBAC))
-                    metricRow("Back to normal", DisplayFormatter.eta(store.sessionSnapshot.saferDriveTime))
+                    metricRow("Drive lower-risk", driveReadinessText(for: store.sessionSnapshot))
                 }
                 .watchCard(highlighted: true)
 
-                Text(DisplayFormatter.remaining(store.sessionSnapshot.remainingToSaferDrive))
+                Text(driveRemainingText(for: store.sessionSnapshot.remainingToSaferDrive))
                     .font(WatchNightTheme.bodyFont)
                     .foregroundStyle(store.sessionSnapshot.remainingToSaferDrive <= 0 ? WatchNightTheme.mint : WatchNightTheme.warning)
 
@@ -112,5 +112,19 @@ struct LiveStatusView: View {
                 .minimumScaleFactor(0.74)
                 .multilineTextAlignment(.trailing)
         }
+    }
+
+    private func driveReadinessText(for snapshot: SessionSnapshot) -> String {
+        if snapshot.remainingToSaferDrive <= 0 {
+            return "Likely under local limit now"
+        }
+        return DisplayFormatter.eta(snapshot.saferDriveTime)
+    }
+
+    private func driveRemainingText(for interval: TimeInterval) -> String {
+        if interval <= 0 {
+            return "No wait estimated"
+        }
+        return DisplayFormatter.remaining(interval)
     }
 }
