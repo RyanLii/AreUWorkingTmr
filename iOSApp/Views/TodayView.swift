@@ -267,17 +267,6 @@ struct TodayView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Quick add default \(preset.category.title)")
 
-                Button {
-                    openDetail(for: preset)
-                } label: {
-                    Image(systemName: "slider.horizontal.3")
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(.white.opacity(0.92))
-                        .frame(width: 24, height: 24)
-                        .background(Circle().fill(Color.white.opacity(0.13)))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Customize \(preset.category.title)")
             }
 
             Text(preset.category.title)
