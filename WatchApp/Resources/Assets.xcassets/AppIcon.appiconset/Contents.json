@@ -3,8 +3,8 @@
     { "size" : "24x24", "idiom" : "watch", "role" : "notificationCenter", "subtype" : "38mm", "scale" : "2x", "filename" : "icon-watch-notification-38mm@2x.png" },
     { "size" : "27.5x27.5", "idiom" : "watch", "role" : "notificationCenter", "subtype" : "42mm", "scale" : "2x", "filename" : "icon-watch-notification-42mm@2x.png" },
 
-    { "size" : "29x29", "idiom" : "iphone", "scale" : "2x", "filename" : "icon-watch-settings-iphone@2x.png" },
-    { "size" : "29x29", "idiom" : "iphone", "scale" : "3x", "filename" : "icon-watch-settings-iphone@3x.png" },
+    { "size" : "29x29", "idiom" : "watch", "role" : "companionSettings", "scale" : "2x", "filename" : "icon-watch-settings-iphone@2x.png" },
+    { "size" : "29x29", "idiom" : "watch", "role" : "companionSettings", "scale" : "3x", "filename" : "icon-watch-settings-iphone@3x.png" },
 
     { "size" : "40x40", "idiom" : "watch", "role" : "appLauncher", "subtype" : "38mm", "scale" : "2x", "filename" : "icon-watch-app-38mm@2x.png" },
     { "size" : "44x44", "idiom" : "watch", "role" : "appLauncher", "subtype" : "40mm", "scale" : "2x", "filename" : "icon-watch-app-40mm@2x.png" },

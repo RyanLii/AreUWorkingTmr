@@ -6,13 +6,16 @@ settings:
     SWIFT_VERSION: 5.10
     CURRENT_PROJECT_VERSION: 1
     MARKETING_VERSION: 0.1.0
-    DEVELOPMENT_TEAM: ""
+    DEVELOPMENT_TEAM: D5HJ4LX2DA
 
 targets:
   AreUWorkingTmr:
     type: application
     platform: iOS
     deploymentTarget: "17.0"
+    dependencies:
+      - target: AreUWorkingTmrWatch
+        embed: true
     sources:
       - path: iOSApp
       - path: Shared
@@ -23,12 +26,15 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.nestroundlabs.AreUWorkingTmr
         GENERATE_INFOPLIST_FILE: YES
         PRODUCT_NAME: AreUWorkingTmr
+        CODE_SIGN_STYLE: Automatic
         CODE_SIGN_ENTITLEMENTS: iOSApp/AreUWorkingTmr.entitlements
         INFOPLIST_KEY_CFBundleDisplayName: "Last Round?"
         INFOPLIST_KEY_ENABLE_HEALTHKIT_INTEGRATION: YES
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Location helps trigger drink-log and home-hydration reminders."
         INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription: "Location helps trigger drink-log and home-hydration reminders in the background."
         INFOPLIST_KEY_NSHealthShareUsageDescription: "Weight data improves estimate accuracy."
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "Hydration guidance and recovery updates can be written to Health when you choose."
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         TARGETED_DEVICE_FAMILY: 1,2
@@ -47,10 +53,12 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.nestroundlabs.AreUWorkingTmr.watch
         GENERATE_INFOPLIST_FILE: YES
         PRODUCT_NAME: AreUWorkingTmrWatch
+        CODE_SIGN_STYLE: Automatic
         CODE_SIGN_ENTITLEMENTS: WatchApp/AreUWorkingTmrWatch.entitlements
         INFOPLIST_KEY_CFBundleDisplayName: "Last Round?"
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Location helps trigger missed-log and home-arrival reminders when available."
         INFOPLIST_KEY_NSHealthShareUsageDescription: "Weight data improves estimate accuracy."
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "Hydration guidance and recovery updates can be written to Health when you choose."
         INFOPLIST_KEY_WKApplication_WKSupportsRunningWithoutiOSApp: YES
         INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.nestroundlabs.AreUWorkingTmr
 

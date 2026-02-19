@@ -3,11 +3,12 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		09C19C87B64D647463B88695 /* AppScreenScaffold.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89CC4CF280B4C3D8F90F825A /* AppScreenScaffold.swift */; };
+		191AE0B9280A130F031BB854 /* AreUWorkingTmrWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 28A99D3BB1FD2F24D4C40298 /* AreUWorkingTmrWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		19D43EEF6759952F92C70486 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6BFF8F395727E210F82C200 /* TodayView.swift */; };
 		1EDB3D412EF1E149638AB558 /* DisplayFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F054CE612E2C81E5632656 /* DisplayFormatter.swift */; };
 		25C6CD585E058EB7BFD16CE9 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 984BA16F6A37E0812139F38E /* ProfileView.swift */; };
@@ -61,6 +62,30 @@
 		FE6E4A7CF0BB3F944821C716 /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 065D72303F83C17078FA0A00 /* SwiftDataModels.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		70E156FE6B5A3744673F9D92 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 82906091BABF32952ED2A43D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 54D2B0DDE5A6CAAC239A176D;
+			remoteInfo = AreUWorkingTmrWatch;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		DB361F18C475F4508CFECFBF /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				191AE0B9280A130F031BB854 /* AreUWorkingTmrWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		04AC2023EBDABA6D80DD16E2 /* WatchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRootView.swift; sourceTree = "<group>"; };
 		065D72303F83C17078FA0A00 /* SwiftDataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataModels.swift; sourceTree = "<group>"; };
@@ -76,7 +101,7 @@
 		3358E82BED9408F78908DF40 /* ReminderServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderServiceTests.swift; sourceTree = "<group>"; };
 		38784054EA12747F620E058D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		4236A3CD907EE833E02E68EB /* SessionClockTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionClockTests.swift; sourceTree = "<group>"; };
-		42776EAFA9A2351E2666C5DB /* AreUWorkingTmr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AreUWorkingTmr.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		42776EAFA9A2351E2666C5DB /* AreUWorkingTmr.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AreUWorkingTmr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5614B0440491A76516A2A69A /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		5722B75F3F0CBD40B642C755 /* LiveStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveStatusView.swift; sourceTree = "<group>"; };
 		5E0D2809A0D5A478DE450294 /* EstimationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EstimationService.swift; sourceTree = "<group>"; };
@@ -282,10 +307,12 @@
 			buildPhases = (
 				E176FB7925D597EE41F92DB4 /* Sources */,
 				6A23FB09AE801149CE131EB3 /* Resources */,
+				DB361F18C475F4508CFECFBF /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				4E4E5175C0D9B8B677706BEA /* PBXTargetDependency */,
 			);
 			name = AreUWorkingTmr;
 			packageProductDependencies = (
@@ -338,11 +365,16 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					28064BF416DE6C07BA8798E8 = {
+						DevelopmentTeam = D5HJ4LX2DA;
+						ProvisioningStyle = Automatic;
+					};
 					30044BDB545EB07DDF4F6622 = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = D5HJ4LX2DA;
 					};
 					54D2B0DDE5A6CAAC239A176D = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = D5HJ4LX2DA;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -356,6 +388,7 @@
 			);
 			mainGroup = FAD8AA136E6662FC41A2E194;
 			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -459,15 +492,25 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		4E4E5175C0D9B8B677706BEA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 54D2B0DDE5A6CAAC239A176D /* AreUWorkingTmrWatch */;
+			targetProxy = 70E156FE6B5A3744673F9D92 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
 		04C51E57AC225FE11CA70976 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = WatchApp/AreUWorkingTmrWatch.entitlements;
+				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Hydration guidance and recovery updates can be written to Health when you choose.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger missed-log and home-arrival reminders when available.";
 				INFOPLIST_KEY_WKApplication_WKSupportsRunningWithoutiOSApp = YES;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.nestroundlabs.AreUWorkingTmr;
@@ -485,9 +528,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = WatchApp/AreUWorkingTmrWatch.entitlements;
+				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Hydration guidance and recovery updates can be written to Health when you choose.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger missed-log and home-arrival reminders when available.";
 				INFOPLIST_KEY_WKApplication_WKSupportsRunningWithoutiOSApp = YES;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.nestroundlabs.AreUWorkingTmr;
@@ -523,17 +568,18 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = iOSApp/AreUWorkingTmr.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = D5HJ4LX2DA;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
 				INFOPLIST_KEY_ENABLE_HEALTHKIT_INTEGRATION = YES;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Hydration guidance and recovery updates can be written to Health when you choose.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders in the background.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -541,7 +587,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.nestroundlabs.AreUWorkingTmr;
 				PRODUCT_NAME = AreUWorkingTmr;
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -552,17 +597,18 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = iOSApp/AreUWorkingTmr.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = D5HJ4LX2DA;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
 				INFOPLIST_KEY_ENABLE_HEALTHKIT_INTEGRATION = YES;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Hydration guidance and recovery updates can be written to Health when you choose.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders in the background.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -570,7 +616,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.nestroundlabs.AreUWorkingTmr;
 				PRODUCT_NAME = AreUWorkingTmr;
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -612,7 +657,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = D5HJ4LX2DA;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -687,7 +732,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = D5HJ4LX2DA;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
