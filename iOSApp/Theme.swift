@@ -3,9 +3,9 @@ import SwiftUI
 enum NightTheme {
     static let background = LinearGradient(
         colors: [
-            Color(red: 0.04, green: 0.12, blue: 0.26),
-            Color(red: 0.11, green: 0.24, blue: 0.41),
-            Color(red: 0.60, green: 0.39, blue: 0.23)
+            Color(red: 0.10, green: 0.20, blue: 0.38),
+            Color(red: 0.17, green: 0.33, blue: 0.52),
+            Color(red: 0.73, green: 0.50, blue: 0.30)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -90,6 +90,44 @@ struct NightBackdrop: View {
                 .frame(width: 520, height: 92)
                 .rotationEffect(.degrees(-9))
                 .offset(x: -54, y: 292)
+
+            JapaneseKanpaiMotif()
+                .allowsHitTesting(false)
+
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        colors: [Color.black.opacity(0.08), .clear, Color.black.opacity(0.10)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+        }
+    }
+}
+
+private struct JapaneseKanpaiMotif: View {
+    var body: some View {
+        ZStack {
+            Text("乾杯")
+                .font(.custom("HiraginoMinchoProN-W6", size: 118))
+                .foregroundStyle(Color.white.opacity(0.10))
+                .rotationEffect(.degrees(-8))
+                .offset(x: 118, y: -262)
+
+            Text("かんぱい")
+                .font(.custom("HiraginoMinchoProN-W3", size: 42))
+                .foregroundStyle(Color.white.opacity(0.12))
+                .rotationEffect(.degrees(16))
+                .offset(x: -122, y: 250)
+
+            Text("乾杯")
+                .font(.custom("HiraginoSans-W6", size: 74))
+                .foregroundStyle(Color.white.opacity(0.08))
+                .rotationEffect(.degrees(90))
+                .offset(x: -182, y: -24)
         }
     }
 }
