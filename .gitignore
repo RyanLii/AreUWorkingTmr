@@ -23,5 +23,6 @@ fastlane/screenshots/**/*.png
 
 # Local artifacts and temp outputs
 artifacts/
+build/
 *.log
 tmp/
