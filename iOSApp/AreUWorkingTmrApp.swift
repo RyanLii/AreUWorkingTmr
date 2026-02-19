@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 @main
 struct AreUWorkingTmrApp: App {
@@ -11,6 +12,7 @@ struct AreUWorkingTmrApp: App {
 
     init() {
         self.modelContainer = PersistenceController.makeModelContainer()
+        configureNavigationBarAppearance()
     }
 
     var body: some Scene {
@@ -59,5 +61,18 @@ struct AreUWorkingTmrApp: App {
                 )
             }
         }
+    }
+
+    private func configureNavigationBarAppearance() {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = .clear
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
+
+        UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+        UINavigationBar.appearance().compactAppearance = appearance
+        UINavigationBar.appearance().tintColor = .white
     }
 }
