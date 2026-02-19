@@ -3,9 +3,9 @@ import SwiftUI
 enum NightTheme {
     static let background = LinearGradient(
         colors: [
-            Color(red: 0.10, green: 0.20, blue: 0.38),
-            Color(red: 0.17, green: 0.33, blue: 0.52),
-            Color(red: 0.73, green: 0.50, blue: 0.30)
+            Color(red: 0.24, green: 0.20, blue: 0.28),
+            Color(red: 0.44, green: 0.32, blue: 0.34),
+            Color(red: 0.86, green: 0.62, blue: 0.39)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -111,23 +111,23 @@ struct NightBackdrop: View {
 private struct JapaneseKanpaiMotif: View {
     var body: some View {
         ZStack {
-            Text("乾杯")
-                .font(.custom("HiraginoMinchoProN-W6", size: 118))
-                .foregroundStyle(Color.white.opacity(0.10))
-                .rotationEffect(.degrees(-8))
-                .offset(x: 118, y: -262)
-
-            Text("かんぱい")
-                .font(.custom("HiraginoMinchoProN-W3", size: 42))
+            Text("乾杯！")
+                .font(.custom("HiraginoMinchoProN-W6", size: 106))
                 .foregroundStyle(Color.white.opacity(0.12))
-                .rotationEffect(.degrees(16))
-                .offset(x: -122, y: 250)
+                .rotationEffect(.degrees(-7))
+                .offset(x: 46, y: -170)
 
-            Text("乾杯")
-                .font(.custom("HiraginoSans-W6", size: 74))
-                .foregroundStyle(Color.white.opacity(0.08))
-                .rotationEffect(.degrees(90))
-                .offset(x: -182, y: -24)
+            Text("かんぱい！")
+                .font(.custom("HiraginoMinchoProN-W3", size: 38))
+                .foregroundStyle(Color.white.opacity(0.14))
+                .rotationEffect(.degrees(11))
+                .offset(x: -12, y: -88)
+
+            Text("乾杯！！")
+                .font(.custom("HiraginoSans-W6", size: 54))
+                .foregroundStyle(Color.white.opacity(0.10))
+                .rotationEffect(.degrees(84))
+                .offset(x: -136, y: -38)
         }
     }
 }

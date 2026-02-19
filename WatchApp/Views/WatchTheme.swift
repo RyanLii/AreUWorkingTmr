@@ -3,9 +3,9 @@ import SwiftUI
 enum WatchNightTheme {
     static let background = LinearGradient(
         colors: [
-            Color(red: 0.10, green: 0.20, blue: 0.38),
-            Color(red: 0.17, green: 0.33, blue: 0.52),
-            Color(red: 0.73, green: 0.50, blue: 0.30)
+            Color(red: 0.24, green: 0.20, blue: 0.28),
+            Color(red: 0.44, green: 0.32, blue: 0.34),
+            Color(red: 0.86, green: 0.62, blue: 0.39)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -87,17 +87,17 @@ struct WatchBackdrop: View {
 private struct WatchJapaneseKanpaiMotif: View {
     var body: some View {
         ZStack {
-            Text("乾杯")
-                .font(.custom("HiraginoMinchoProN-W6", size: 46))
-                .foregroundStyle(Color.white.opacity(0.11))
-                .rotationEffect(.degrees(-8))
-                .offset(x: 56, y: -84)
-
-            Text("かんぱい")
-                .font(.custom("HiraginoSans-W6", size: 20))
+            Text("乾杯！")
+                .font(.custom("HiraginoMinchoProN-W6", size: 42))
                 .foregroundStyle(Color.white.opacity(0.12))
-                .rotationEffect(.degrees(16))
-                .offset(x: -58, y: 68)
+                .rotationEffect(.degrees(-6))
+                .offset(x: 28, y: -58)
+
+            Text("かんぱい！")
+                .font(.custom("HiraginoSans-W6", size: 18))
+                .foregroundStyle(Color.white.opacity(0.14))
+                .rotationEffect(.degrees(10))
+                .offset(x: -8, y: -18)
         }
     }
 }
