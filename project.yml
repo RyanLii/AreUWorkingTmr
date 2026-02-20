@@ -8,6 +8,11 @@ settings:
     MARKETING_VERSION: 0.1.0
     DEVELOPMENT_TEAM: D5HJ4LX2DA
 
+packages:
+  Shimmer:
+    url: https://github.com/markiv/SwiftUI-Shimmer
+    from: 1.5.1
+
 targets:
   AreUWorkingTmr:
     type: application
@@ -16,6 +21,8 @@ targets:
     dependencies:
       - target: AreUWorkingTmrWatch
         embed: true
+      - package: Shimmer
+        product: Shimmer
     sources:
       - path: iOSApp
       - path: Shared

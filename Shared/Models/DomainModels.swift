@@ -283,6 +283,7 @@ struct LocationStayContext {
     let stayedDuration: TimeInterval
     let movedDistanceMeters: Double
     let lastDrinkLoggedAt: Date?
+    let lastMissedLogReminderAt: Date?
     let now: Date
 }
 

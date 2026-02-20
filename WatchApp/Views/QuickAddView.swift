@@ -55,6 +55,10 @@ struct QuickAddView: View {
         store.sessionSnapshot.effectiveStandardDrinks
     }
 
+    private var buzzStatus: BuzzStatusDescriptor {
+        BuzzStatusDescriptor.from(snapshot: store.sessionSnapshot)
+    }
+
     private var isCleared: Bool {
         store.sessionSnapshot.state == .cleared
     }
@@ -204,11 +208,11 @@ struct QuickAddView: View {
     private var quickSessionStatusCard: some View {
         VStack(alignment: .leading, spacing: 7) {
             HStack {
-                Text("Time to clear")
+                Text("Back to zero-ish in")
                     .font(WatchNightTheme.captionFont)
                     .foregroundStyle(WatchNightTheme.labelSoft)
                 Spacer()
-                Text(store.sessionSnapshot.state.title)
+                Text(buzzStatus.title)
                     .font(WatchNightTheme.captionFont)
                     .foregroundStyle(.white)
                     .lineLimit(1)
@@ -221,25 +225,26 @@ struct QuickAddView: View {
                     )
             }
 
-            Text(isCleared ? "Cleared" : DisplayFormatter.remaining(store.sessionSnapshot.remainingToZero))
+            Text(isCleared ? "Zero-ish now" : DisplayFormatter.countdown(store.sessionSnapshot.remainingToZero))
                 .font(WatchNightTheme.bodyStrong)
                 .foregroundStyle(.white)
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
 
             Text(
-                "Estimated Clear Time (Model): "
-                    + (isCleared ? "Now" : DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime))
+                isCleared
+                    ? "Probably back to normal now."
+                    : "Probably back to normal by \(DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime))."
             )
                 .font(WatchNightTheme.bodyFont)
                 .foregroundStyle(isCleared ? WatchNightTheme.mint : WatchNightTheme.warning)
 
-            Text(store.sessionSnapshot.state.supportiveCopy)
+            Text(statusMoodCopy)
                 .font(WatchNightTheme.captionFont)
                 .foregroundStyle(WatchNightTheme.label)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text("Represents modeled final clearing of effective standard drinks only.")
+            Text("Nerd math only. Estimate, not legal or medical advice.")
                 .font(WatchNightTheme.captionFont)
                 .foregroundStyle(WatchNightTheme.labelSoft)
                 .fixedSize(horizontal: false, vertical: true)
@@ -248,16 +253,30 @@ struct QuickAddView: View {
     }
 
     private var statusBadgeColor: Color {
-        switch store.sessionSnapshot.state {
-        case .preAbsorption:
+        switch buzzStatus.level {
+        case .nightJustBegan:
+            return WatchNightTheme.mint
+        case .goodVibes:
+            return Color(red: 0.76, green: 0.91, blue: 0.52)
+        case .buzzin:
             return WatchNightTheme.accentSoft
-        case .absorbing:
+        case .wavy:
             return WatchNightTheme.warning
-        case .clearing:
-            return WatchNightTheme.mint
-        case .cleared:
-            return WatchNightTheme.mint
+        case .onFire:
+            return Color(red: 0.98, green: 0.48, blue: 0.23)
+        case .tooLit:
+            return Color(red: 0.95, green: 0.30, blue: 0.24)
+        case .takeItEasyZone:
+            return Color(red: 0.78, green: 0.18, blue: 0.20)
         }
+    }
+
+    private var statusMoodCopy: String {
+        if store.sessionSnapshot.state == .clearing && !isCleared {
+            return "\(buzzStatus.description) Cooling down now."
+        }
+
+        return buzzStatus.description
     }
 
     private var doneTonightSheet: some View {

@@ -1,4 +1,5 @@
 import SwiftUI
+import Shimmer
 
 private struct TodayServingOption: Identifiable, Hashable {
     let id: String
@@ -23,6 +24,8 @@ struct TodayView: View {
     @Environment(\.openURL) private var openURL
 
     @State private var statusDetailsExpanded = false
+    @State private var clearTrendPulse = false
+    @State private var runnerBounce = false
 
     @State private var activeCategory: DrinkCategory?
     @State private var selectedServing: TodayServingOption?
@@ -43,12 +46,24 @@ struct TodayView: View {
         store.sessionSnapshot.totalStandardDrinks > 0.001
     }
 
+    private var statusSnapshot: SessionSnapshot {
+        store.sessionSnapshot
+    }
+
+    private var statusEffectiveStandardDrinks: Double {
+        statusSnapshot.effectiveStandardDrinks
+    }
+
+    private var statusIsCleared: Bool {
+        statusSnapshot.state == .cleared
+    }
+
     private var currentEffectiveStandardDrinks: Double {
         store.sessionSnapshot.effectiveStandardDrinks
     }
 
-    private var isCleared: Bool {
-        store.sessionSnapshot.state == .cleared
+    private var buzzStatus: BuzzStatusDescriptor {
+        BuzzStatusDescriptor.from(snapshot: statusSnapshot)
     }
 
     private var isHeavyLoad: Bool {
@@ -113,7 +128,7 @@ struct TodayView: View {
     }
 
     private var statusCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text("Status")
                     .font(NightTheme.sectionFont)
@@ -121,78 +136,65 @@ struct TodayView: View {
 
                 Spacer()
 
-                Text(store.sessionSnapshot.state.title)
-                    .font(NightTheme.captionFont)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Capsule().fill(statusBadgeColor.opacity(0.34)))
+                statusBadgePill
             }
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Time to clear")
-                    .font(NightTheme.captionFont)
-                    .foregroundStyle(NightTheme.label)
-
-                Text(isCleared ? "Cleared" : DisplayFormatter.remaining(store.sessionSnapshot.remainingToZero))
-                    .font(NightTheme.statFont)
-                    .foregroundStyle(.white)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.72)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Text(
-                    "Estimated Clear Time (Model): "
-                    + (isCleared ? "Now" : DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime))
-                )
-                .font(NightTheme.bodyFont)
-                .foregroundStyle(isCleared ? NightTheme.success : NightTheme.warning)
-            }
-
-            Text(store.sessionSnapshot.state.supportiveCopy)
+            Text(statusMoodCopy)
                 .font(NightTheme.bodyFont)
                 .foregroundStyle(NightTheme.label)
+                .fixedSize(horizontal: false, vertical: true)
+
+            statusRecoveryBlock
 
             DisclosureGroup(isExpanded: $statusDetailsExpanded) {
                 VStack(alignment: .leading, spacing: 8) {
+                    Text("STD means one standard drink.")
+                        .font(NightTheme.captionFont)
+                        .foregroundStyle(NightTheme.label)
+
                     statusDetailRow(
-                        "Current estimated SD in body",
-                        DisplayFormatter.standardDrinks(currentEffectiveStandardDrinks)
+                        "Total logged standard drinks",
+                        DisplayFormatter.standardDrinks(statusSnapshot.totalStandardDrinks)
                     )
                     statusDetailRow(
-                        "Pending absorption SD",
-                        DisplayFormatter.standardDrinks(store.sessionSnapshot.pendingAbsorptionStandardDrinks)
+                        "Current standard drinks in body",
+                        DisplayFormatter.standardDrinks(statusEffectiveStandardDrinks)
                     )
                     statusDetailRow(
-                        "Estimated peak SD",
-                        "\(DisplayFormatter.standardDrinks(store.sessionSnapshot.estimatedPeakStandardDrinks)) at \(DisplayFormatter.eta(store.sessionSnapshot.estimatedPeakTime))"
+                        "Still absorbing",
+                        DisplayFormatter.standardDrinks(statusSnapshot.pendingAbsorptionStandardDrinks)
+                    )
+                    statusDetailRow(
+                        "Estimated peak",
+                        "\(DisplayFormatter.standardDrinks(statusSnapshot.estimatedPeakStandardDrinks)) at \(DisplayFormatter.eta(statusSnapshot.estimatedPeakTime))"
                     )
 
-                    if let lastDrink = store.sessionSnapshot.lastDrinkTime {
+                    if let lastDrink = statusSnapshot.lastDrinkTime {
                         statusDetailRow("Last drink", DisplayFormatter.eta(lastDrink))
                     }
 
-                    if store.sessionSnapshot.clearingElapsed > 1,
-                       (store.sessionSnapshot.state == .clearing || store.sessionSnapshot.state == .cleared) {
+                    if statusSnapshot.clearingElapsed > 1,
+                       (statusSnapshot.state == .clearing || statusSnapshot.state == .cleared) {
                         statusDetailRow(
                             "Elapsed clearing duration",
-                            DisplayFormatter.duration(store.sessionSnapshot.clearingElapsed)
+                            DisplayFormatter.duration(statusSnapshot.clearingElapsed)
                         )
                     }
 
-                    Text("Represents modeled final clearing of effective standard drinks only.")
+                    Text("Nerd math only. Estimate, not legal or medical advice.")
                         .font(NightTheme.captionFont)
                         .foregroundStyle(NightTheme.label)
                 }
                 .padding(.top, 4)
             } label: {
-                Text("Model details")
+                Text("Nerd stuff")
                     .font(NightTheme.captionFont)
                     .foregroundStyle(NightTheme.label)
             }
             .tint(NightTheme.accent)
         }
         .glassCard(.high)
+        .animation(.spring(response: 0.5, dampingFraction: 0.82), value: buzzStatus.level)
     }
 
     private var undoCard: some View {
@@ -756,21 +758,200 @@ struct TodayView: View {
                     .tint(NightTheme.accent)
                 }
             }
+    }
+    .presentationDetents([.large])
+    .presentationDragIndicator(.visible)
+    }
+
+    private var statusBadgePill: some View {
+        Text(buzzStatus.title)
+            .font(NightTheme.captionFont.weight(.bold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                statusBadgeColor.opacity(0.50),
+                                statusBadgeColor.opacity(0.28)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay(
+                        Capsule()
+                            .stroke(Color.white.opacity(0.25), lineWidth: 1)
+                    )
+            )
+            .shimmering(
+                active: true,
+                animation: .linear(duration: 1.6).repeatForever(autoreverses: false),
+                gradient: Gradient(colors: [
+                    Color.white.opacity(0.15),
+                    Color.white.opacity(0.70),
+                    Color.white.opacity(0.15)
+                ]),
+                bandSize: 0.38
+            )
+            .shadow(color: statusBadgeColor.opacity(0.25), radius: 6, y: 1)
+    }
+
+    private var statusRecoveryBlock: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Chill ETA")
+                        .font(NightTheme.captionFont)
+                        .foregroundStyle(NightTheme.label)
+
+                    Text(statusRecoveryHeadline)
+                        .font(NightTheme.bodyFont)
+                        .foregroundStyle(statusIsCleared ? NightTheme.success : NightTheme.warning)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.80)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 8)
+
+                Text(statusRecoveryCountdown)
+                    .font(NightTheme.sectionFont.weight(.heavy))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+            }
+
+            HStack {
+                Text("Nerd meter")
+                    .font(NightTheme.captionFont)
+                    .foregroundStyle(NightTheme.label)
+                Spacer()
+                Text("\(Int((remainingLoadProgress * 100).rounded()))% still in system")
+                    .font(NightTheme.captionFont.weight(.bold))
+                    .foregroundStyle(.white)
+            }
+
+            remainingLoadBar
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     private var statusBadgeColor: Color {
-        switch store.sessionSnapshot.state {
-        case .preAbsorption:
-            return NightTheme.accentSoft
-        case .absorbing:
-            return NightTheme.warning
-        case .clearing:
+        switch buzzStatus.level {
+        case .nightJustBegan:
             return NightTheme.mint
-        case .cleared:
-            return NightTheme.success
+        case .goodVibes:
+            return Color(red: 0.76, green: 0.91, blue: 0.52)
+        case .buzzin:
+            return NightTheme.accentSoft
+        case .wavy:
+            return NightTheme.warning
+        case .onFire:
+            return Color(red: 0.98, green: 0.48, blue: 0.23)
+        case .tooLit:
+            return Color(red: 0.95, green: 0.30, blue: 0.24)
+        case .takeItEasyZone:
+            return Color(red: 0.78, green: 0.18, blue: 0.20)
+        }
+    }
+
+    private var statusMoodCopy: String {
+        if statusSnapshot.state == .clearing && !statusIsCleared {
+            return "\(buzzStatus.description) Cooling down now."
+        }
+
+        return buzzStatus.description
+    }
+
+    private var statusRecoveryHeadline: String {
+        if statusIsCleared {
+            return "Back in human mode now."
+        }
+
+        return "Likely back in human mode around \(DisplayFormatter.eta(statusSnapshot.projectedZeroTime))."
+    }
+
+    private var statusRecoveryCountdown: String {
+        if statusIsCleared {
+            return "All good"
+        }
+
+        return "\(DisplayFormatter.countdown(statusSnapshot.remainingToZero)) left"
+    }
+
+    private var metabolizedProgress: Double {
+        let total = max(statusSnapshot.totalStandardDrinks, 0.001)
+        let metabolized = max(0, min(statusSnapshot.metabolizedStandardDrinks, total))
+        return min(max(metabolized / total, 0), 1)
+    }
+
+    private var remainingLoadProgress: Double {
+        min(max(1 - metabolizedProgress, 0), 1)
+    }
+
+    private var remainingLoadBar: some View {
+        GeometryReader { proxy in
+            let clamped = min(max(remainingLoadProgress, 0), 1)
+            let width = max(0, proxy.size.width * clamped)
+            let runnerX = min(max(10, proxy.size.width * clamped), max(10, proxy.size.width - 10))
+
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(Color.white.opacity(0.15))
+                    .frame(height: 14)
+
+                if width > 0 {
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    statusBadgeColor,
+                                    NightTheme.accentSoft.opacity(0.92),
+                                    NightTheme.mint.opacity(0.85)
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: width, height: 14)
+                        .animation(.easeInOut(duration: 0.45), value: clamped)
+                }
+
+                Image(systemName: statusIsCleared ? "figure.walk" : "figure.run")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.white)
+                    .offset(x: runnerX - 10, y: runnerBounce ? -13 : -10)
+                    .animation(.easeInOut(duration: 0.22), value: runnerBounce)
+                    .animation(.easeInOut(duration: 0.45), value: clamped)
+            }
+            .overlay(
+                Capsule()
+                    .stroke(Color.white.opacity(clearTrendPulse ? 0.34 : 0.16), lineWidth: 1)
+                    .blendMode(.screen)
+                    .frame(height: 14)
+            )
+        }
+        .frame(height: 24)
+        .onAppear {
+            startClearTrendPulseIfNeeded()
+            startRunnerAnimationIfNeeded()
+        }
+    }
+
+    private func startRunnerAnimationIfNeeded() {
+        if !runnerBounce {
+            withAnimation(.easeInOut(duration: 0.22).repeatForever(autoreverses: true)) {
+                runnerBounce = true
+            }
+        }
+    }
+
+    private func startClearTrendPulseIfNeeded() {
+        guard !clearTrendPulse else { return }
+        withAnimation(.easeInOut(duration: 1.3).repeatForever(autoreverses: true)) {
+            clearTrendPulse = true
         }
     }
 

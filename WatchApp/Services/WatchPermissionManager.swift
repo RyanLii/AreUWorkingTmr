@@ -20,7 +20,12 @@ final class WatchPermissionManager: NSObject, ObservableObject {
 
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             Task { @MainActor in
-                self.notificationAuthorized = settings.authorizationStatus == .authorized
+                switch settings.authorizationStatus {
+                case .authorized, .provisional, .ephemeral:
+                    self.notificationAuthorized = true
+                default:
+                    self.notificationAuthorized = false
+                }
             }
         }
     }

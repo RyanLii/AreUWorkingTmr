@@ -3,6 +3,11 @@ import SwiftUI
 struct LiveStatusView: View {
     @EnvironmentObject private var store: AppStore
     @State private var showDetails = false
+    @State private var clearTrendPulse = false
+
+    private var buzzStatus: BuzzStatusDescriptor {
+        BuzzStatusDescriptor.from(snapshot: store.sessionSnapshot)
+    }
 
     private var currentEffectiveStandardDrinks: Double {
         store.sessionSnapshot.effectiveStandardDrinks
@@ -22,7 +27,7 @@ struct LiveStatusView: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.85)
                     Spacer()
-                    Text(store.sessionSnapshot.state.title)
+                    Text(buzzStatus.title)
                         .font(WatchNightTheme.captionFont)
                         .foregroundStyle(.white)
                         .lineLimit(1)
@@ -37,19 +42,33 @@ struct LiveStatusView: View {
 
                 VStack(spacing: 6) {
                     metricRow(
-                        "Time to clear",
-                        isCleared ? "Cleared" : DisplayFormatter.remaining(store.sessionSnapshot.remainingToZero)
+                        "Back to zero-ish in",
+                        isCleared ? "Zero-ish now" : DisplayFormatter.countdown(store.sessionSnapshot.remainingToZero)
                     )
                     metricRow(
-                        "Estimated clear time",
-                        isCleared ? "Now" : DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime)
+                        "Back to normal by",
+                        isCleared ? "Now-ish" : DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime)
                     )
-                    metricRow("Current SD in body", DisplayFormatter.standardDrinks(currentEffectiveStandardDrinks))
-                    metricRow("Pending absorption SD", DisplayFormatter.standardDrinks(store.sessionSnapshot.pendingAbsorptionStandardDrinks))
+                    metricRow("STD in your body", DisplayFormatter.standardDrinks(currentEffectiveStandardDrinks))
                 }
                 .watchCard(highlighted: true)
 
-                Text(store.sessionSnapshot.state.supportiveCopy)
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("Buzz trend")
+                            .font(WatchNightTheme.captionFont)
+                            .foregroundStyle(WatchNightTheme.label)
+                        Spacer()
+                        Text("\(Int((clearTrendProgress * 100).rounded()))% to zero-ish")
+                            .font(WatchNightTheme.captionFont.weight(.bold))
+                            .foregroundStyle(.white)
+                    }
+
+                    clearTrendBar
+                }
+                .watchCard()
+
+                Text(statusMoodCopy)
                     .font(WatchNightTheme.bodyFont)
                     .foregroundStyle(isCleared ? WatchNightTheme.mint : WatchNightTheme.warning)
 
@@ -70,9 +89,18 @@ struct LiveStatusView: View {
 
                 if showDetails {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Model details")
+                        Text("Nerd stuff")
                             .font(WatchNightTheme.captionFont)
                             .foregroundStyle(WatchNightTheme.labelSoft)
+
+                        Text("STD means one standard drink.")
+                            .font(WatchNightTheme.captionFont)
+                            .foregroundStyle(WatchNightTheme.label)
+
+                        metricRow(
+                            "Total logged STD",
+                            DisplayFormatter.standardDrinks(store.sessionSnapshot.totalStandardDrinks)
+                        )
 
                         metricRow(
                             "Estimated peak SD",
@@ -88,7 +116,7 @@ struct LiveStatusView: View {
                             metricRow("Elapsed clearing", DisplayFormatter.duration(store.sessionSnapshot.clearingElapsed))
                         }
 
-                        Text("Represents modeled final clearing of effective standard drinks only.")
+                        Text("Nerd math only. Estimate, not legal or medical advice.")
                             .font(WatchNightTheme.captionFont)
                             .foregroundStyle(WatchNightTheme.label)
                             .fixedSize(horizontal: false, vertical: true)
@@ -109,15 +137,74 @@ struct LiveStatusView: View {
     }
 
     private var liveChipColor: Color {
-        switch store.sessionSnapshot.state {
-        case .preAbsorption:
+        switch buzzStatus.level {
+        case .nightJustBegan:
+            return WatchNightTheme.mint
+        case .goodVibes:
+            return Color(red: 0.76, green: 0.91, blue: 0.52)
+        case .buzzin:
             return WatchNightTheme.accentSoft
-        case .absorbing:
+        case .wavy:
             return WatchNightTheme.warning
-        case .clearing:
-            return WatchNightTheme.mint
-        case .cleared:
-            return WatchNightTheme.mint
+        case .onFire:
+            return Color(red: 0.98, green: 0.48, blue: 0.23)
+        case .tooLit:
+            return Color(red: 0.95, green: 0.30, blue: 0.24)
+        case .takeItEasyZone:
+            return Color(red: 0.78, green: 0.18, blue: 0.20)
+        }
+    }
+
+    private var statusMoodCopy: String {
+        if store.sessionSnapshot.state == .clearing && !isCleared {
+            return "\(buzzStatus.description) Cooling down now."
+        }
+
+        return buzzStatus.description
+    }
+
+    private var clearTrendProgress: Double {
+        let total = max(store.sessionSnapshot.totalStandardDrinks, 0.001)
+        let metabolized = max(0, min(store.sessionSnapshot.metabolizedStandardDrinks, total))
+        return min(max(metabolized / total, 0), 1)
+    }
+
+    private var clearTrendBar: some View {
+        GeometryReader { proxy in
+            let width = max(0, proxy.size.width * clearTrendProgress)
+
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(Color.white.opacity(0.14))
+
+                if width > 0 {
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [liveChipColor, WatchNightTheme.mint.opacity(0.95)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: width)
+                        .animation(.easeInOut(duration: 0.45), value: clearTrendProgress)
+                }
+            }
+            .overlay(
+                Capsule()
+                    .stroke(Color.white.opacity(clearTrendPulse ? 0.32 : 0.15), lineWidth: 1)
+            )
+        }
+        .frame(height: 10)
+        .onAppear {
+            startClearTrendPulseIfNeeded()
+        }
+    }
+
+    private func startClearTrendPulseIfNeeded() {
+        guard !clearTrendPulse else { return }
+        withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
+            clearTrendPulse = true
         }
     }
 

@@ -34,6 +34,16 @@ enum DisplayFormatter {
         return "\(hours)h \(minutes)m remaining"
     }
 
+    static func countdown(_ interval: TimeInterval) -> String {
+        let seconds = max(0, Int(interval))
+        let hours = seconds / 3600
+        let minutes = (seconds % 3600) / 60
+        if hours == 0 {
+            return "\(minutes)m"
+        }
+        return "\(hours)h \(minutes)m"
+    }
+
     static func duration(_ interval: TimeInterval) -> String {
         let seconds = max(0, Int(interval))
         let hours = seconds / 3600

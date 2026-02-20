@@ -21,6 +21,7 @@ let package = Package(
                 "Services/DrinkParser.swift",
                 "Services/EstimationService.swift",
                 "Services/ReminderService.swift",
+                "Utilities/BuzzStatus.swift",
                 "Utilities/DisplayFormatter.swift"
             ]
         ),

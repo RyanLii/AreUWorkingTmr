@@ -18,7 +18,7 @@ struct RemindersView: View {
 
             SectionCard("Smart Reminders") {
                 bullet("Missed-log nudge: after extended idle + movement.")
-                bullet("Home recovery: one nudge shortly after arriving home.")
+                bullet("Landing hydration: scheduled about 20 minutes after arrival/done.")
                 bullet("Morning check-in: one gentle follow-up after Done Tonight.")
             }
         }

@@ -14,6 +14,7 @@
 		2C5567B17142A38965E52F0C /* EstimationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0D2809A0D5A478DE450294 /* EstimationService.swift */; };
 		2F904501EE9394A3AC95BF5E /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38784054EA12747F620E058D /* Theme.swift */; };
 		304F1B8B7690DBB33D199475 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5614B0440491A76516A2A69A /* PersistenceController.swift */; };
+		32588EBFDC944847D9F9D23A /* Shimmer in Frameworks */ = {isa = PBXBuildFile; productRef = 02D9C122C7575D26E52AB97E /* Shimmer */; };
 		39BFD3B3829EECFFA3FD6E94 /* SettingsHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229336DE8B915506FC4616F5 /* SettingsHubView.swift */; };
 		3F3E1BAE8568E8EBFF163CBB /* QuickAddView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25E490B26863E63F1AACA368 /* QuickAddView.swift */; };
 		415C498B93AB629BEF12C616 /* DomainModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B8E282AB31F06D4F8C9F16 /* DomainModels.swift */; };
@@ -23,6 +24,7 @@
 		48EA006C4FE0835ADCC72E13 /* EstimationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C62F8E844D4DC07A640BAE4 /* EstimationServiceTests.swift */; };
 		4B74A2C6F42EF85BEEC943B9 /* DomainModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B8E282AB31F06D4F8C9F16 /* DomainModels.swift */; };
 		4DA5851922647F2ECAB10DE8 /* PrivacyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E6D7A2B7E0D5FF96E21D45C /* PrivacyView.swift */; };
+		5027F5003BDE3659F456BBF9 /* BuzzStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A4D763FB8769DCAC94F0F6D /* BuzzStatus.swift */; };
 		50C11B4137A236ED95C72E53 /* AreUWorkingTmrApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63CDAEA51FA9DEE0271F7368 /* AreUWorkingTmrApp.swift */; };
 		5521D03A52BBD36A8464137E /* AreUWorkingTmrWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB521D2D3E07474E345C759 /* AreUWorkingTmrWatchApp.swift */; };
 		62BF9748C10839272EE72E0F /* DrinkParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A61C3149EBB796A7238C563 /* DrinkParser.swift */; };
@@ -38,9 +40,11 @@
 		85D9A0A3551129DE46F7F5BB /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 065D72303F83C17078FA0A00 /* SwiftDataModels.swift */; };
 		894CFDC0CC6B4C64FF379EE6 /* VoiceLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EBC278ABE286C1A4A07B8F /* VoiceLogView.swift */; };
 		956FDEAACD7595C14BE6C241 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5614B0440491A76516A2A69A /* PersistenceController.swift */; };
+		A39F261438271588F0B7480A /* BuzzStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A4D763FB8769DCAC94F0F6D /* BuzzStatus.swift */; };
 		A587BBAF520DCCA7F762030A /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFEDB9F8ED0255803A65F93E /* ReminderService.swift */; };
 		A62773078471C9DB44B380EB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C110590027DD105351C1BC94 /* Assets.xcassets */; };
 		A6F74530B65479B6BE5ADC7C /* ReminderServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3358E82BED9408F78908DF40 /* ReminderServiceTests.swift */; };
+		ABC779DD67C56E7F456A2450 /* BuzzStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A4D763FB8769DCAC94F0F6D /* BuzzStatus.swift */; };
 		ADD367165CB99BA6F04CCB58 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E4846124C3BCE913296FAF4 /* OnboardingView.swift */; };
 		B03319810C4C7DCEFED619E1 /* WatchTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F73567E4C42BFAE5B51EE7E3 /* WatchTheme.swift */; };
 		B1B47A9A4A36F2179E373907 /* DomainModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B8E282AB31F06D4F8C9F16 /* DomainModels.swift */; };
@@ -101,6 +105,7 @@
 		38784054EA12747F620E058D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		4236A3CD907EE833E02E68EB /* SessionClockTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionClockTests.swift; sourceTree = "<group>"; };
 		42776EAFA9A2351E2666C5DB /* AreUWorkingTmr.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AreUWorkingTmr.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4A4D763FB8769DCAC94F0F6D /* BuzzStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuzzStatus.swift; sourceTree = "<group>"; };
 		5614B0440491A76516A2A69A /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		5722B75F3F0CBD40B642C755 /* LiveStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveStatusView.swift; sourceTree = "<group>"; };
 		5E0D2809A0D5A478DE450294 /* EstimationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EstimationService.swift; sourceTree = "<group>"; };
@@ -127,6 +132,17 @@
 		FBCD03B4EE69C1EC9EBF6925 /* AreUWorkingTmr.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AreUWorkingTmr.entitlements; sourceTree = "<group>"; };
 		FDE9B7650854EC74EC8BB18B /* RemindersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1859525B112942ED191DDB98 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				32588EBFDC944847D9F9D23A /* Shimmer in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		2F35FB26B3D2322AA1B4A47B /* WatchApp */ = {
@@ -261,6 +277,7 @@
 		D1E6AE059A7F21B23F6108A4 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				4A4D763FB8769DCAC94F0F6D /* BuzzStatus.swift */,
 				F3F054CE612E2C81E5632656 /* DisplayFormatter.swift */,
 			);
 			path = Utilities;
@@ -304,6 +321,7 @@
 			buildPhases = (
 				E176FB7925D597EE41F92DB4 /* Sources */,
 				6A23FB09AE801149CE131EB3 /* Resources */,
+				1859525B112942ED191DDB98 /* Frameworks */,
 				DB361F18C475F4508CFECFBF /* Embed Watch Content */,
 			);
 			buildRules = (
@@ -313,6 +331,7 @@
 			);
 			name = AreUWorkingTmr;
 			packageProductDependencies = (
+				02D9C122C7575D26E52AB97E /* Shimmer */,
 			);
 			productName = AreUWorkingTmr;
 			productReference = 42776EAFA9A2351E2666C5DB /* AreUWorkingTmr.app */;
@@ -385,6 +404,9 @@
 			);
 			mainGroup = FAD8AA136E6662FC41A2E194;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A3C4754F09E9A78CD6C3977D /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */,
+			);
 			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
@@ -422,6 +444,7 @@
 			files = (
 				EB91D7B577797968613D4235 /* AppStore.swift in Sources */,
 				5521D03A52BBD36A8464137E /* AreUWorkingTmrWatchApp.swift in Sources */,
+				5027F5003BDE3659F456BBF9 /* BuzzStatus.swift in Sources */,
 				844D0B586438C9FFB5FD8FF1 /* DisplayFormatter.swift in Sources */,
 				4B74A2C6F42EF85BEEC943B9 /* DomainModels.swift in Sources */,
 				B2CD788811A5DF56EA81572A /* DrinkParser.swift in Sources */,
@@ -445,6 +468,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E260BB59B1AD454D53275BFB /* AppStore.swift in Sources */,
+				A39F261438271588F0B7480A /* BuzzStatus.swift in Sources */,
 				7F2BBB0B4C68A144538B4340 /* DisplayFormatter.swift in Sources */,
 				B1B47A9A4A36F2179E373907 /* DomainModels.swift in Sources */,
 				62BF9748C10839272EE72E0F /* DrinkParser.swift in Sources */,
@@ -466,6 +490,7 @@
 				09C19C87B64D647463B88695 /* AppScreenScaffold.swift in Sources */,
 				BBAE7B9A4CA25557BD00F47A /* AppStore.swift in Sources */,
 				50C11B4137A236ED95C72E53 /* AreUWorkingTmrApp.swift in Sources */,
+				ABC779DD67C56E7F456A2450 /* BuzzStatus.swift in Sources */,
 				1EDB3D412EF1E149638AB558 /* DisplayFormatter.swift in Sources */,
 				415C498B93AB629BEF12C616 /* DomainModels.swift in Sources */,
 				D7B890045B2A5FE881B6DBCC /* DrinkParser.swift in Sources */,
@@ -790,6 +815,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A3C4754F09E9A78CD6C3977D /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/markiv/SwiftUI-Shimmer";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		02D9C122C7575D26E52AB97E /* Shimmer */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3C4754F09E9A78CD6C3977D /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */;
+			productName = Shimmer;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 82906091BABF32952ED2A43D /* Project object */;
 }

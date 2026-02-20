@@ -378,6 +378,8 @@ final class AppStore: ObservableObject {
         refreshSessionStateIfNeeded(now: now)
         hasMarkedDoneTonight = true
         doneTonightAt = now
+        // Fallback schedule so hydration support still works even when home-location detection is unavailable.
+        handleHomeArrival(arrivedAt: now, now: now)
         scheduleMorningCheckInIfNeeded(now: now)
         registerDoneSessionForReview()
     }
@@ -396,6 +398,7 @@ final class AppStore: ObservableObject {
         isWorkingTomorrowAuto = true
         reviewRequestNonce = 0
         UserDefaults.standard.removeObject(forKey: reviewSessionsCountKey)
+        cancelAllScheduledReminders()
         recalculateSnapshot(now: .now)
         clearPersistedModels()
     }
@@ -409,6 +412,7 @@ final class AppStore: ObservableObject {
             stayedDuration: stayedDuration,
             movedDistanceMeters: movedDistanceMeters,
             lastDrinkLoggedAt: currentSession.last?.timestamp,
+            lastMissedLogReminderAt: currentSessionLastReminderTime(type: .missedLog, now: now),
             now: now
         )
 
@@ -485,6 +489,7 @@ final class AppStore: ObservableObject {
     private func refreshSessionStateIfNeeded(now: Date) {
         let key = sessionPolicy.sessionKey(for: now)
         guard key != activeSessionKey else { return }
+        let hasExistingSession = activeSessionKey != nil
 
         activeSessionKey = key
         hasMarkedDoneTonight = false
@@ -495,6 +500,9 @@ final class AppStore: ObservableObject {
 
         let window = sessionPolicy.sessionInterval(containing: now)
         reminders.removeAll(where: { !window.contains($0.triggerTime) })
+        if hasExistingSession {
+            cancelAllScheduledReminders()
+        }
     }
 
     private func scheduleMorningCheckInIfNeeded(now: Date) {
@@ -638,6 +646,20 @@ final class AppStore: ObservableObject {
 
         if reviewPromptMilestones.contains(nextCount) {
             reviewRequestNonce += 1
+        }
+    }
+
+    private func currentSessionLastReminderTime(type: ReminderType, now: Date) -> Date? {
+        let window = sessionPolicy.sessionInterval(containing: now)
+        return reminders
+            .filter { $0.type == type && window.contains($0.triggerTime) }
+            .map(\.triggerTime)
+            .max()
+    }
+
+    private func cancelAllScheduledReminders() {
+        Task {
+            await reminderService.cancelAllScheduledNotifications()
         }
     }
 }
