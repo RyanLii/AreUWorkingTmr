@@ -24,6 +24,8 @@ struct TodayView: View {
 
     @State private var statusDetailsExpanded = false
     @State private var statusChipPulse = false
+    @State private var clearBarSweep: CGFloat = -0.35
+    @State private var clearBarSweepActive = false
     @State private var progressAnchorToken: String = ""
     @State private var progressAnchorSessionStart: Date?
     @State private var progressAnchorProjectedZero: Date = .now
@@ -854,7 +856,7 @@ struct TodayView: View {
                                 .monospacedDigit()
                                 .contentTransition(.numericText(value: cooledProgress * 100))
                         }
-                        remainingLoadBar(progress: cooledProgress, now: context.date)
+                        remainingLoadBar(progress: cooledProgress)
                         Text(cooldownFlavorCopy(progress: remainingProgress))
                             .font(.system(size: 11, weight: .semibold, design: .rounded))
                             .foregroundStyle(NightTheme.label)
@@ -943,13 +945,11 @@ struct TodayView: View {
         return "Home stretch. You are almost all good."
     }
 
-    private func remainingLoadBar(progress: Double, now: Date) -> some View {
+    private func remainingLoadBar(progress: Double) -> some View {
         GeometryReader { proxy in
             let clamped = min(max(progress, 0), 1)
             let width = max(0, proxy.size.width * clamped)
-            let glowWidth = max(24, width * 0.28)
-            let phase = CGFloat((now.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1.35)) / 1.35)
-            let pulse = 0.86 + 0.14 * sin(now.timeIntervalSinceReferenceDate * 5.2)
+            let glowWidth = max(22, width * 0.24)
 
             ZStack(alignment: .leading) {
                 Capsule()
@@ -975,24 +975,17 @@ struct TodayView: View {
                             .fill(
                                 LinearGradient(
                                     colors: [
-                                        Color.white.opacity(0.03),
-                                        Color.white.opacity(0.40),
-                                        Color.white.opacity(0.03)
+                                        Color.white.opacity(0.02),
+                                        Color.white.opacity(0.36),
+                                        Color.white.opacity(0.02)
                                     ],
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 )
                             )
                             .frame(width: glowWidth, height: 14)
-                            .offset(x: (width + glowWidth) * phase - glowWidth)
+                            .offset(x: (width + glowWidth) * clearBarSweep - glowWidth)
                             .blendMode(.screen)
-
-                        Circle()
-                            .fill(Color.white.opacity(0.46))
-                            .frame(width: 8, height: 8)
-                            .scaleEffect(pulse)
-                            .offset(x: max(0, width - 8), y: 0)
-                            .blur(radius: 0.3)
                     }
                     .frame(width: width, height: 14)
                     .clipShape(Capsule())
@@ -1003,6 +996,9 @@ struct TodayView: View {
                 Capsule()
                     .stroke(Color.white.opacity(0.24), lineWidth: 1)
             )
+            .onAppear {
+                startClearBarSweepIfNeeded()
+            }
         }
         .frame(height: 18)
     }
