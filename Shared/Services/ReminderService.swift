@@ -25,7 +25,7 @@ struct DefaultReminderService: ReminderService {
         let event = ReminderEvent(
             type: .missedLog,
             triggerTime: context.now,
-            context: "Quick check: want to add your last drink so tonight's ETA stays accurate?"
+            context: "Quick check: want to add your last drink so tonight's live standard-drink trend stays accurate?"
         )
         return [event]
     }

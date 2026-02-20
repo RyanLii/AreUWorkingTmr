@@ -5,15 +5,9 @@ struct RemindersView: View {
 
     var body: some View {
         AppScreenScaffold {
-            ScreenIntroCard(
-                title: "Reminder Control",
-                subtitle: "Only the essentials: permission switches and core reminder logic."
-            )
-
             SectionCard("Permissions") {
                 permissionRow("Notifications", enabled: permissionManager.notificationAuthorized)
                 permissionRow("Location", enabled: permissionManager.locationAuthorized)
-                permissionRow("HealthKit Read", enabled: permissionManager.healthKitAuthorized)
 
                 Button("Request all permissions") {
                     permissionManager.requestAllAtLaunch()
@@ -28,7 +22,14 @@ struct RemindersView: View {
                 bullet("Morning check-in: one gentle follow-up after Done Tonight.")
             }
         }
-        .navigationTitle("Reminders")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("Reminders")
+                    .font(NightTheme.sectionFont.weight(.bold))
+                    .foregroundStyle(.white)
+            }
+        }
         .onAppear {
             permissionManager.refreshStatus()
         }

@@ -136,15 +136,17 @@ final class AppStore: ObservableObject {
     @Published var profile: UserProfile = .default
     @Published private(set) var reminders: [ReminderEvent] = []
     @Published private(set) var hasMarkedDoneTonight = false
+    @Published private(set) var doneTonightAt: Date?
     @Published private(set) var effectiveWorkingTomorrow = false
     @Published private(set) var isWorkingTomorrowAuto = true
     @Published private(set) var sessionSnapshot: SessionSnapshot = SessionSnapshot(
         date: .now,
         totalStandardDrinks: 0,
-        estimatedBAC: 0,
-        intoxicationState: .clear,
-        saferDriveTime: .now,
-        remainingToSaferDrive: 0,
+        effectiveStandardDrinks: 0,
+        absorbedStandardDrinks: 0,
+        metabolizedStandardDrinks: 0,
+        projectedZeroTime: .now,
+        remainingToZero: 0,
         hydrationPlanMl: 600,
         recommendElectrolytes: false
     )
@@ -165,7 +167,7 @@ final class AppStore: ObservableObject {
     private let reviewPromptMilestones: Set<Int> = [3, 8, 15]
 
     private static let customBasePreset = DrinkPreset(
-        id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
+        id: "custom",
         name: "Custom",
         category: .custom,
         defaultVolumeMl: 180,
@@ -269,6 +271,7 @@ final class AppStore: ObservableObject {
         guard count > 0 else { return }
         refreshSessionStateIfNeeded(now: .now)
         hasMarkedDoneTonight = false
+        doneTonightAt = nil
 
         for _ in 0..<count {
             let entry = estimationService.makeEntry(
@@ -294,6 +297,7 @@ final class AppStore: ObservableObject {
         let fallbackPreset = preset(for: parsed.category)
         let quantity = max(parsed.quantity, 1)
         hasMarkedDoneTonight = false
+        doneTonightAt = nil
 
         for _ in 0..<quantity {
             let volume = parsed.volumeMl ?? fallbackPreset.defaultVolumeMl
@@ -356,6 +360,10 @@ final class AppStore: ObservableObject {
         }
     }
 
+    func refreshSnapshot(now: Date = .now) {
+        recalculateSnapshot(now: now)
+    }
+
     func updateProfile(_ newProfile: UserProfile) {
         if newProfile.workingTomorrow != profile.workingTomorrow {
             hasManualWorkingTomorrowForSession = true
@@ -366,35 +374,11 @@ final class AppStore: ObservableObject {
         recalculateSnapshot(now: .now)
     }
 
-    // Prefer Health-provided metrics when available, but keep manual values as fallback.
-    func updateProfileFromHealth(weightKg: Double?, biologicalSex: BiologicalSex?) {
-        var next = profile
-        var didChange = false
-
-        if let weightKg {
-            let clampedWeight = min(max(weightKg, 35), 220)
-            if abs(clampedWeight - next.weightKg) > 0.01 {
-                next.weightKg = clampedWeight
-                didChange = true
-            }
-        }
-
-        if let biologicalSex, biologicalSex != next.biologicalSex {
-            next.biologicalSex = biologicalSex
-            didChange = true
-        }
-
-        guard didChange else { return }
-
-        profile = next
-        persist(profile: next)
-        recalculateSnapshot(now: .now)
-    }
-
-    func markDoneTonight() {
-        refreshSessionStateIfNeeded(now: .now)
+    func markDoneTonight(now: Date = .now) {
+        refreshSessionStateIfNeeded(now: now)
         hasMarkedDoneTonight = true
-        scheduleMorningCheckInIfNeeded(now: .now)
+        doneTonightAt = now
+        scheduleMorningCheckInIfNeeded(now: now)
         registerDoneSessionForReview()
     }
 
@@ -402,6 +386,7 @@ final class AppStore: ObservableObject {
         entries = []
         reminders = []
         hasMarkedDoneTonight = false
+        doneTonightAt = nil
         hasHomeHydrationReminderBeenSent = false
         hasMorningCheckInScheduled = false
         hasManualWorkingTomorrowForSession = false
@@ -503,6 +488,7 @@ final class AppStore: ObservableObject {
 
         activeSessionKey = key
         hasMarkedDoneTonight = false
+        doneTonightAt = nil
         hasHomeHydrationReminderBeenSent = false
         hasMorningCheckInScheduled = false
         hasManualWorkingTomorrowForSession = false
@@ -588,14 +574,7 @@ final class AppStore: ObservableObject {
 
         do {
             let loaded = try persistence.load(modelContext: modelContext, fallbackProfile: profile)
-            if loaded.profile.biologicalSex == .other {
-                profile = loaded.profile
-            } else {
-                var migrated = loaded.profile
-                migrated.biologicalSex = .other
-                profile = migrated
-                persist(profile: migrated)
-            }
+            profile = loaded.profile
             entries = loaded.entries
             recalculateSnapshot(now: .now)
         } catch {

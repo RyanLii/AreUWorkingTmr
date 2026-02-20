@@ -11,7 +11,6 @@
 		191AE0B9280A130F031BB854 /* AreUWorkingTmrWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 28A99D3BB1FD2F24D4C40298 /* AreUWorkingTmrWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		19D43EEF6759952F92C70486 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6BFF8F395727E210F82C200 /* TodayView.swift */; };
 		1EDB3D412EF1E149638AB558 /* DisplayFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F054CE612E2C81E5632656 /* DisplayFormatter.swift */; };
-		25C6CD585E058EB7BFD16CE9 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 984BA16F6A37E0812139F38E /* ProfileView.swift */; };
 		2C5567B17142A38965E52F0C /* EstimationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0D2809A0D5A478DE450294 /* EstimationService.swift */; };
 		2F904501EE9394A3AC95BF5E /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38784054EA12747F620E058D /* Theme.swift */; };
 		304F1B8B7690DBB33D199475 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5614B0440491A76516A2A69A /* PersistenceController.swift */; };
@@ -111,7 +110,6 @@
 		7E6D7A2B7E0D5FF96E21D45C /* PrivacyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyView.swift; sourceTree = "<group>"; };
 		81B8E282AB31F06D4F8C9F16 /* DomainModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainModels.swift; sourceTree = "<group>"; };
 		89CC4CF280B4C3D8F90F825A /* AppScreenScaffold.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppScreenScaffold.swift; sourceTree = "<group>"; };
-		984BA16F6A37E0812139F38E /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		9AAA65E762E58D6B375DECC3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A83082139CD4379076104C0A /* DrinkParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkParserTests.swift; sourceTree = "<group>"; };
 		A9E7068AFCC1F70E81B421F9 /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
@@ -209,7 +207,6 @@
 				2538157D4B06C4869E3F2B9D /* HistoryView.swift */,
 				2E4846124C3BCE913296FAF4 /* OnboardingView.swift */,
 				7E6D7A2B7E0D5FF96E21D45C /* PrivacyView.swift */,
-				984BA16F6A37E0812139F38E /* ProfileView.swift */,
 				FDE9B7650854EC74EC8BB18B /* RemindersView.swift */,
 				229336DE8B915506FC4616F5 /* SettingsHubView.swift */,
 				D6BFF8F395727E210F82C200 /* TodayView.swift */,
@@ -479,7 +476,6 @@
 				F71375569C02BCA43BA00BD3 /* PermissionManager.swift in Sources */,
 				D948EC3A29A2C3A86B8BD2FC /* PersistenceController.swift in Sources */,
 				4DA5851922647F2ECAB10DE8 /* PrivacyView.swift in Sources */,
-				25C6CD585E058EB7BFD16CE9 /* ProfileView.swift in Sources */,
 				E5221CE5366292F008208238 /* ReminderService.swift in Sources */,
 				66EFF32A3EA5FE5A34EB016C /* RemindersView.swift in Sources */,
 				48656F907CF089F43DEFCE2C /* RootTabView.swift in Sources */,
@@ -510,8 +506,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Hydration guidance and recovery updates can be written to Health when you choose.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger missed-log and home-arrival reminders when available.";
 				INFOPLIST_KEY_WKApplication_WKSupportsRunningWithoutiOSApp = YES;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.nestroundlabs.AreUWorkingTmr;
@@ -533,8 +527,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Hydration guidance and recovery updates can be written to Health when you choose.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger missed-log and home-arrival reminders when available.";
 				INFOPLIST_KEY_WKApplication_WKSupportsRunningWithoutiOSApp = YES;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.nestroundlabs.AreUWorkingTmr;
@@ -574,10 +566,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
-				INFOPLIST_KEY_ENABLE_HEALTHKIT_INTEGRATION = YES;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Hydration guidance and recovery updates can be written to Health when you choose.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders in the background.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -604,10 +593,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
-				INFOPLIST_KEY_ENABLE_HEALTHKIT_INTEGRATION = YES;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Hydration guidance and recovery updates can be written to Health when you choose.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders in the background.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

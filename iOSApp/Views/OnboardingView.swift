@@ -24,26 +24,26 @@ struct OnboardingView: View {
                             .minimumScaleFactor(0.72)
                             .fixedSize(horizontal: false, vertical: true)
 
-                        Text("Safer night, cleaner tomorrow")
+                        Text("Track tonight, protect tomorrow")
                             .font(NightTheme.subtitleFont)
                             .foregroundStyle(NightTheme.accentSoft)
                             .lineLimit(2)
                             .minimumScaleFactor(0.85)
 
-                        Text("Built for watch-first logging and low-friction safety checks while you're out.")
+                        Text("Built for watch-first logging and live standard-drink tracking while you're out.")
                             .font(NightTheme.bodyFont)
                             .foregroundStyle(.white)
                             .fixedSize(horizontal: false, vertical: true)
 
                         VStack(alignment: .leading, spacing: 10) {
                             featureRow(icon: "applewatch", title: "3-second logging", detail: "Size + ABV + count in one fast flow.")
-                            featureRow(icon: "gauge.with.dots.needle.33percent", title: "Live recovery ETA", detail: "Helpful estimate only, never legal advice.")
+                            featureRow(icon: "waveform.path.ecg", title: "Live in-body standard drinks", detail: "Dynamic estimate that trends down over time.")
                             featureRow(icon: "drop.fill", title: "Landing support", detail: "Hydration and morning check-in to protect tomorrow.")
                         }
                         .glassCard()
 
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("I understand this app gives guidance only, not legal advice.")
+                            Text("I understand this app gives behavior guidance only.")
                                 .font(NightTheme.bodyFont)
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -65,7 +65,7 @@ struct OnboardingView: View {
                             Button {
                                 permissionManager.requestAllAtLaunch()
                             } label: {
-                                Label("Enable Notifications, Location, Health", systemImage: "checkmark.shield.fill")
+                                Label("Enable Notifications, Location", systemImage: "checkmark.shield.fill")
                                     .font(NightTheme.bodyFont.weight(.semibold))
                                     .multilineTextAlignment(.center)
                                     .lineLimit(3)

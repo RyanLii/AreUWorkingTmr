@@ -1,26 +1,13 @@
 import Foundation
 import CoreLocation
 import UserNotifications
-import HealthKit
 
 @MainActor
 final class PermissionManager: NSObject, ObservableObject {
     @Published private(set) var notificationAuthorized = false
     @Published private(set) var locationAuthorized = false
-    @Published private(set) var healthKitAuthorized = false
 
     private let locationManager = CLLocationManager()
-    private let healthStore = HKHealthStore()
-
-    // Default OFF unless explicitly enabled in Info.plist.
-    // This avoids launch-time errors when the target has no HealthKit entitlement.
-    private let healthKitIntegrationEnabled: Bool = {
-        guard HKHealthStore.isHealthDataAvailable() else {
-            return false
-        }
-
-        return (Bundle.main.object(forInfoDictionaryKey: "ENABLE_HEALTHKIT_INTEGRATION") as? Bool) ?? true
-    }()
 
     override init() {
         super.init()
@@ -36,28 +23,11 @@ final class PermissionManager: NSObject, ObservableObject {
                 self.notificationAuthorized = settings.authorizationStatus == .authorized
             }
         }
-
-        guard healthKitIntegrationEnabled else {
-            healthKitAuthorized = false
-            return
-        }
-
-        guard let types = healthReadTypes else {
-            healthKitAuthorized = false
-            return
-        }
-
-        healthStore.getRequestStatusForAuthorization(toShare: [], read: types) { status, _ in
-            Task { @MainActor in
-                self.healthKitAuthorized = status == .unnecessary
-            }
-        }
     }
 
     func requestAllAtLaunch() {
         requestNotifications()
         requestLocation()
-        requestHealthKitRead()
     }
 
     func requestNotifications() {
@@ -71,70 +41,6 @@ final class PermissionManager: NSObject, ObservableObject {
     func requestLocation() {
         locationManager.requestAlwaysAuthorization()
     }
-
-    func requestHealthKitRead() {
-        guard healthKitIntegrationEnabled else {
-            healthKitAuthorized = false
-            return
-        }
-
-        guard let types = healthReadTypes else {
-            healthKitAuthorized = false
-            return
-        }
-
-        healthStore.requestAuthorization(toShare: [], read: types) { success, _ in
-            Task { @MainActor in
-                self.healthKitAuthorized = success
-            }
-        }
-    }
-
-    func loadLatestHealthProfile() async -> (weightKg: Double?, biologicalSex: BiologicalSex?) {
-        guard healthKitIntegrationEnabled, healthKitAuthorized else {
-            return (nil, nil)
-        }
-
-        async let weightKg = latestBodyMassKg()
-        return (await weightKg, nil)
-    }
-
-    private var healthReadTypes: Set<HKObjectType>? {
-        guard let bodyMassType = HKObjectType.quantityType(forIdentifier: .bodyMass) else {
-            return nil
-        }
-
-        return [bodyMassType]
-    }
-
-    private func latestBodyMassKg() async -> Double? {
-        guard let bodyMassType = HKObjectType.quantityType(forIdentifier: .bodyMass) else {
-            return nil
-        }
-
-        return await withCheckedContinuation { continuation in
-            let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
-            let query = HKSampleQuery(
-                sampleType: bodyMassType,
-                predicate: nil,
-                limit: 1,
-                sortDescriptors: [sortDescriptor]
-            ) { _, samples, _ in
-                guard
-                    let sample = samples?.first as? HKQuantitySample
-                else {
-                    continuation.resume(returning: nil)
-                    return
-                }
-
-                let kg = sample.quantity.doubleValue(for: HKUnit.gramUnit(with: .kilo))
-                continuation.resume(returning: kg > 0 ? kg : nil)
-            }
-
-            self.healthStore.execute(query)
-        }
-    }
-
 }
 
 extension PermissionManager: CLLocationManagerDelegate {

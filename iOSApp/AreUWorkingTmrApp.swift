@@ -23,7 +23,6 @@ struct AreUWorkingTmrApp: App {
                 .environmentObject(locationMonitor)
                 .onAppear {
                     permissionManager.refreshStatus()
-                    syncHealthProfileIfAvailable()
 
                     if permissionManager.locationAuthorized {
                         locationMonitor.start()
@@ -43,24 +42,8 @@ struct AreUWorkingTmrApp: App {
                         locationMonitor.stop()
                     }
                 }
-                .onChange(of: permissionManager.healthKitAuthorized) { _, authorized in
-                    guard authorized else { return }
-                    syncHealthProfileIfAvailable()
-                }
         }
         .modelContainer(modelContainer)
-    }
-
-    private func syncHealthProfileIfAvailable() {
-        Task {
-            let healthProfile = await permissionManager.loadLatestHealthProfile()
-            await MainActor.run {
-                store.updateProfileFromHealth(
-                    weightKg: healthProfile.weightKg,
-                    biologicalSex: healthProfile.biologicalSex
-                )
-            }
-        }
     }
 
     private func configureNavigationBarAppearance() {

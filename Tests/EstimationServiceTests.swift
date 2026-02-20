@@ -8,467 +8,175 @@ import CoreLocation
 final class EstimationServiceTests: XCTestCase {
     private let service = DefaultEstimationService()
 
-    func testEthanolAndStandardDrinkCalculation_US() {
-        let entry = service.makeEntry(
+    private func makeProfile(
+        region: RegionStandard = .au10g
+    ) -> UserProfile {
+        UserProfile(
+            unitPreference: .metric,
+            regionStandard: region,
+            workingTomorrow: false
+        )
+    }
+
+    private func makeOneStandardBeer(at timestamp: Date, region: RegionStandard = .us14g) -> DrinkEntry {
+        service.makeEntry(
             category: .beer,
             servingName: "Can",
             volumeMl: 355,
             abvPercent: 5,
             source: .quick,
-            timestamp: .now,
+            timestamp: timestamp,
+            locationSnapshot: nil,
+            region: region
+        )
+    }
+
+    func testModelConfigDefaultsMatchSpecV14() {
+        let config = DrinkingModelConfig.v14
+        XCTAssertEqual(config.defaultDrinkDurationMinutes, 30, accuracy: 0.0001)
+        XCTAssertEqual(config.metabolismRateSDPerHour, 0.8, accuracy: 0.0001)
+        XCTAssertEqual(config.absorptionLagMinutes, 15, accuracy: 0.0001)
+        XCTAssertEqual(config.minAbsorptionDurationMinutes, 20, accuracy: 0.0001)
+        XCTAssertEqual(config.burstMergeWindowMinutes, 2, accuracy: 0.0001)
+        XCTAssertEqual(config.hydrationBaseMl, 600, accuracy: 0.0001)
+        XCTAssertEqual(config.hydrationPerStandardDrinkMl, 250, accuracy: 0.0001)
+        XCTAssertEqual(config.hydrationWorkingTomorrowBoostMl, 250, accuracy: 0.0001)
+        XCTAssertEqual(config.hydrationMinMl, 300, accuracy: 0.0001)
+        XCTAssertEqual(config.hydrationMaxMl, 3000, accuracy: 0.0001)
+    }
+
+    func testCustomConfigCanBeInjectedWithoutTouchingAlgorithmCode() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let tuned = DrinkingModelConfig(
+            defaultDrinkDurationMinutes: 30,
+            metabolismRateSDPerHour: 0.0,
+            absorptionLagMinutes: 0,
+            minAbsorptionDurationMinutes: 20,
+            burstMergeWindowMinutes: 2,
+            projectionStepSeconds: 60,
+            minProjectionHours: 2,
+            maxProjectionHours: 48,
+            projectionTailHours: 1,
+            hydrationBaseMl: 600,
+            hydrationPerStandardDrinkMl: 250,
+            hydrationWorkingTomorrowBoostMl: 250,
+            hydrationMinMl: 300,
+            hydrationMaxMl: 3000
+        )
+        let tunedService = DefaultEstimationService(config: tuned)
+        let entry = tunedService.makeEntry(
+            category: .beer,
+            servingName: "Can",
+            volumeMl: 355,
+            abvPercent: 5,
+            source: .quick,
+            timestamp: now.addingTimeInterval(-10 * 60),
             locationSnapshot: nil,
             region: .us14g
         )
 
+        let snapshot = tunedService.recalculate(entries: [entry], profile: makeProfile(region: .us14g), now: now)
+
+        XCTAssertEqual(snapshot.state, .absorbing)
+        XCTAssertGreaterThan(snapshot.effectiveStandardDrinks, 0)
+    }
+
+    func testEthanolAndStandardDrinkCalculationUS() {
+        let entry = makeOneStandardBeer(at: .now, region: .us14g)
         XCTAssertEqual(entry.ethanolGrams, 14.0, accuracy: 0.2)
         XCTAssertEqual(entry.standardDrinks, 1.0, accuracy: 0.05)
     }
 
-    func testSaferDriveETAUsesLegalLimit() {
-        let now = Date()
-        let firstDrink = now.addingTimeInterval(-30 * 60)
+    func testLagSingleDrinkIsPreAbsorption() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let entry = makeOneStandardBeer(at: now.addingTimeInterval(-10 * 60), region: .us14g)
 
-        let one = service.makeEntry(
-            category: .shot,
-            servingName: "Classic",
-            volumeMl: 44,
-            abvPercent: 40,
-            source: .quick,
-            timestamp: firstDrink,
-            locationSnapshot: nil,
-            region: .au10g
-        )
-        let two = service.makeEntry(
-            category: .shot,
-            servingName: "Classic",
-            volumeMl: 44,
-            abvPercent: 40,
-            source: .quick,
-            timestamp: firstDrink.addingTimeInterval(60),
-            locationSnapshot: nil,
-            region: .au10g
-        )
-        let three = service.makeEntry(
-            category: .shot,
-            servingName: "Classic",
-            volumeMl: 44,
-            abvPercent: 40,
-            source: .quick,
-            timestamp: firstDrink.addingTimeInterval(120),
-            locationSnapshot: nil,
-            region: .au10g
-        )
+        let snapshot = service.recalculate(entries: [entry], profile: makeProfile(region: .us14g), now: now)
 
-        let profile = UserProfile(
-            weightKg: 60,
-            biologicalSex: .female,
-            unitPreference: .metric,
-            regionStandard: .au10g,
-            homeLocation: nil
-        )
-
-        let snapshot = service.recalculate(entries: [one, two, three], profile: profile, now: now)
-
-        XCTAssertGreaterThan(snapshot.estimatedBAC, 0.03)
-        XCTAssertGreaterThan(snapshot.remainingToSaferDrive, 0)
-        XCTAssertGreaterThan(snapshot.saferDriveTime, now)
-        XCTAssertNotEqual(snapshot.intoxicationState, .clear)
+        XCTAssertEqual(snapshot.state, .preAbsorption)
+        XCTAssertEqual(snapshot.absorbedStandardDrinks, 0, accuracy: 0.0001)
+        XCTAssertEqual(snapshot.effectiveStandardDrinks, 0, accuracy: 0.0001)
+        XCTAssertEqual(snapshot.pendingAbsorptionStandardDrinks, entry.standardDrinks, accuracy: 0.0001)
+        XCTAssertGreaterThan(snapshot.projectedZeroTime, now)
     }
 
-    func testAULegalLimitIsStricterThanUSForSameSession() {
-        let now = Date()
+    func testAfterLagBodyEntersAbsorbingState() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let entry = makeOneStandardBeer(at: now.addingTimeInterval(-20 * 60), region: .us14g)
+
+        let snapshot = service.recalculate(entries: [entry], profile: makeProfile(region: .us14g), now: now)
+
+        let expectedAbsorbed = entry.standardDrinks * (5.0 / 30.0)
+        let inRate = entry.standardDrinks / 0.5
+        let expectedStock = max(0, (inRate - 0.8) * (5.0 / 60.0))
+        let expectedMetabolized = max(0, expectedAbsorbed - expectedStock)
+
+        XCTAssertEqual(snapshot.state, .absorbing)
+        XCTAssertEqual(snapshot.absorbedStandardDrinks, expectedAbsorbed, accuracy: 0.0001)
+        XCTAssertEqual(snapshot.effectiveStandardDrinks, expectedStock, accuracy: 0.0001)
+        XCTAssertEqual(snapshot.metabolizedStandardDrinks, expectedMetabolized, accuracy: 0.0001)
+        XCTAssertGreaterThan(snapshot.pendingAbsorptionStandardDrinks, 0)
+    }
+
+    func testAbsorptionFinishedTransitionsToClearing() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let entry = makeOneStandardBeer(at: now.addingTimeInterval(-50 * 60), region: .us14g)
+
+        let snapshot = service.recalculate(entries: [entry], profile: makeProfile(region: .us14g), now: now)
+
+        XCTAssertEqual(snapshot.state, .clearing)
+        XCTAssertGreaterThan(snapshot.effectiveStandardDrinks, 0)
+        XCTAssertEqual(snapshot.pendingAbsorptionStandardDrinks, 0, accuracy: 0.0001)
+    }
+
+    func testTwoDrinksThenFiveHoursThenOneDoesNotUseNegativeDebt() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
         let entries = [
-            service.makeEntry(
-                category: .shot,
-                servingName: "Classic",
-                volumeMl: 44,
-                abvPercent: 40,
-                source: .quick,
-                timestamp: now.addingTimeInterval(-20 * 60),
-                locationSnapshot: nil,
-                region: .au10g
-            ),
-            service.makeEntry(
-                category: .shot,
-                servingName: "Classic",
-                volumeMl: 44,
-                abvPercent: 40,
-                source: .quick,
-                timestamp: now.addingTimeInterval(-10 * 60),
-                locationSnapshot: nil,
-                region: .au10g
-            )
+            makeOneStandardBeer(at: now.addingTimeInterval(-6 * 3600), region: .us14g),
+            makeOneStandardBeer(at: now.addingTimeInterval(-5 * 3600 - 50 * 60), region: .us14g),
+            makeOneStandardBeer(at: now, region: .us14g)
         ]
 
-        let auProfile = UserProfile(
-            weightKg: 75,
-            biologicalSex: .male,
-            unitPreference: .metric,
-            regionStandard: .au10g,
-            homeLocation: nil
-        )
+        let snapshot = service.recalculate(entries: entries, profile: makeProfile(region: .us14g), now: now)
 
-        let usProfile = UserProfile(
-            weightKg: 75,
-            biologicalSex: .male,
-            unitPreference: .metric,
-            regionStandard: .us14g,
-            homeLocation: nil
-        )
-
-        let auSnapshot = service.recalculate(entries: entries, profile: auProfile, now: now)
-        let usSnapshot = service.recalculate(entries: entries, profile: usProfile, now: now)
-
-        XCTAssertGreaterThanOrEqual(auSnapshot.saferDriveTime, usSnapshot.saferDriveTime)
-        XCTAssertGreaterThanOrEqual(auSnapshot.remainingToSaferDrive, usSnapshot.remainingToSaferDrive)
+        XCTAssertEqual(snapshot.state, .preAbsorption)
+        XCTAssertEqual(snapshot.effectiveStandardDrinks, 0, accuracy: 0.0001)
+        XCTAssertGreaterThan(snapshot.pendingAbsorptionStandardDrinks, 0.9)
     }
 
-    func testNewDrinkBelowThresholdCanBeImmediatelyLowerRisk() {
-        let now = Date()
+    func testOneMinuteFiveDrinksBurstStartsFromPreAbsorption() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let offsets: [TimeInterval] = [0, 10, 20, 30, 50].map { -$0 }
+        let entries = offsets.map { makeOneStandardBeer(at: now.addingTimeInterval($0), region: .us14g) }
 
-        let freshBeer = service.makeEntry(
-            category: .beer,
-            servingName: "Can",
-            volumeMl: 355,
-            abvPercent: 5,
-            source: .quick,
-            timestamp: now,
-            locationSnapshot: nil,
-            region: .us14g
-        )
+        let snapshot = service.recalculate(entries: entries, profile: makeProfile(region: .us14g), now: now)
 
-        let profile = UserProfile(
-            weightKg: 75,
-            biologicalSex: .male,
-            unitPreference: .metric,
-            regionStandard: .us14g,
-            homeLocation: nil
-        )
-
-        let snapshot = service.recalculate(entries: [freshBeer], profile: profile, now: now)
-
-        XCTAssertLessThanOrEqual(snapshot.estimatedBAC, profile.regionStandard.legalDriveBACLimit)
-        XCTAssertEqual(snapshot.remainingToSaferDrive, 0, accuracy: 1)
-        XCTAssertLessThanOrEqual(snapshot.saferDriveTime.timeIntervalSince(now), 1)
+        XCTAssertEqual(snapshot.state, .preAbsorption)
+        XCTAssertEqual(snapshot.effectiveStandardDrinks, 0, accuracy: 0.0001)
+        XCTAssertGreaterThan(snapshot.pendingAbsorptionStandardDrinks, 4.5)
+        XCTAssertGreaterThan(snapshot.estimatedPeakStandardDrinks, 0)
+        XCTAssertGreaterThan(snapshot.estimatedPeakTime, now)
     }
 
-    func testFreshAUSchoonerAppliesShortSettlingBufferEvenWhenBelowLimit() {
-        let now = Date()
+    func testTimeToClearUsesFinalClearDefinitionNotTouchZeroInstant() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let entry = makeOneStandardBeer(at: now, region: .us14g)
 
-        let freshSchooner = service.makeEntry(
-            category: .beer,
-            servingName: "Schooner",
-            volumeMl: 425,
-            abvPercent: 4.8,
-            source: .quick,
-            timestamp: now,
-            locationSnapshot: nil,
-            region: .au10g
-        )
+        let snapshot = service.recalculate(entries: [entry], profile: makeProfile(region: .us14g), now: now)
 
-        let profile = UserProfile(
-            weightKg: 80,
-            biologicalSex: .male,
-            unitPreference: .metric,
-            regionStandard: .au10g,
-            homeLocation: nil
-        )
-
-        let snapshot = service.recalculate(entries: [freshSchooner], profile: profile, now: now)
-
-        XCTAssertGreaterThan(snapshot.saferDriveTime.timeIntervalSince(now), 15 * 60)
-        XCTAssertGreaterThan(snapshot.remainingToSaferDrive, 15 * 60)
+        XCTAssertGreaterThan(snapshot.remainingToZero, 15 * 60)
+        XCTAssertGreaterThan(snapshot.projectedZeroTime, now.addingTimeInterval(15 * 60))
     }
 
-    func testAlreadySafeStateDoesNotAddExtraWaitingBuffer() {
-        let now = Date()
-
-        let oldSmallDrink = service.makeEntry(
-            category: .beer,
-            servingName: "Can",
-            volumeMl: 180,
-            abvPercent: 4,
-            source: .quick,
-            timestamp: now.addingTimeInterval(-4 * 3600),
-            locationSnapshot: nil,
-            region: .us14g
-        )
-
-        let profile = UserProfile(
-            weightKg: 80,
-            biologicalSex: .male,
-            unitPreference: .metric,
-            regionStandard: .us14g,
-            homeLocation: nil
-        )
-
-        let snapshot = service.recalculate(entries: [oldSmallDrink], profile: profile, now: now)
-
-        XCTAssertLessThanOrEqual(snapshot.estimatedBAC, profile.regionStandard.legalDriveBACLimit)
-        XCTAssertEqual(snapshot.remainingToSaferDrive, 0, accuracy: 1)
-        XCTAssertLessThanOrEqual(snapshot.saferDriveTime.timeIntervalSince(now), 1)
-        XCTAssertEqual(snapshot.intoxicationState, .clear)
-    }
-
-    func testHydrationPlanIsBounded() {
-        let profile = UserProfile(
-            weightKg: 120,
-            biologicalSex: .male,
-            unitPreference: .metric,
-            regionStandard: .us14g,
-            homeLocation: nil
-        )
-
-        let heavyEntries = (0..<20).map { i in
-            service.makeEntry(
-                category: .beer,
-                servingName: "Pint",
-                volumeMl: 500,
-                abvPercent: 8,
-                source: .quick,
-                timestamp: Date().addingTimeInterval(TimeInterval(-i * 600)),
-                locationSnapshot: nil,
-                region: .us14g
-            )
-        }
-
-        let snapshot = service.recalculate(entries: heavyEntries, profile: profile, now: .now)
-        XCTAssertLessThanOrEqual(snapshot.hydrationPlanMl, 3000)
-    }
-
-    func testHighIntakeShowsHighRiskState() {
-        let now = Date()
-        let entries = (0..<6).map { i in
-            service.makeEntry(
-                category: .shot,
-                servingName: "Classic",
-                volumeMl: 44,
-                abvPercent: 40,
-                source: .quick,
-                timestamp: now.addingTimeInterval(TimeInterval(-i * 180)),
-                locationSnapshot: nil,
-                region: .us14g
-            )
-        }
-
-        let profile = UserProfile(
-            weightKg: 55,
-            biologicalSex: .female,
-            unitPreference: .metric,
-            regionStandard: .us14g,
-            homeLocation: nil
-        )
-
-        let snapshot = service.recalculate(entries: entries, profile: profile, now: now)
-        XCTAssertGreaterThan(snapshot.estimatedBAC, 0.015)
-        XCTAssertNotEqual(snapshot.intoxicationState, .clear)
-    }
-
-    func testInstantBackToBackShotsAreNotFlat() {
-        let now = Date()
-        let entries = (0..<5).map { _ in
-            service.makeEntry(
-                category: .shot,
-                servingName: "Classic",
-                volumeMl: 44,
-                abvPercent: 40,
-                source: .quick,
-                timestamp: now,
-                locationSnapshot: nil,
-                region: .us14g
-            )
-        }
-
-        let profile = UserProfile(
-            weightKg: 55,
-            biologicalSex: .female,
-            unitPreference: .metric,
-            regionStandard: .us14g,
-            homeLocation: nil
-        )
-
-        let snapshot = service.recalculate(entries: entries, profile: profile, now: now)
-        XCTAssertGreaterThan(snapshot.estimatedBAC, 0.02)
-        XCTAssertNotEqual(snapshot.intoxicationState, .light)
-        XCTAssertNotEqual(snapshot.intoxicationState, .clear)
-    }
-
-    func testRapidShotsDoNotStayInLightState() {
-        let now = Date()
-        let entries = (0..<6).map { i in
-            service.makeEntry(
-                category: .shot,
-                servingName: "Classic",
-                volumeMl: 44,
-                abvPercent: 40,
-                source: .quick,
-                timestamp: now.addingTimeInterval(TimeInterval(-i * 180)),
-                locationSnapshot: nil,
-                region: .us14g
-            )
-        }
-
-        let profile = UserProfile(
-            weightKg: 55,
-            biologicalSex: .female,
-            unitPreference: .metric,
-            regionStandard: .us14g,
-            homeLocation: nil
-        )
-
-        let snapshot = service.recalculate(entries: entries, profile: profile, now: now)
-        XCTAssertGreaterThanOrEqual(snapshot.estimatedBAC, 0.03)
-        XCTAssertNotEqual(snapshot.intoxicationState, .light)
-        XCTAssertNotEqual(snapshot.intoxicationState, .clear)
-    }
-
-    func testRapidAUSchoonersDoNotStayInLightState() {
-        let now = Date()
-        let entries = (0..<5).map { _ in
-            service.makeEntry(
-                category: .beer,
-                servingName: "Schooner",
-                volumeMl: 425,
-                abvPercent: 4.8,
-                source: .quick,
-                timestamp: now,
-                locationSnapshot: nil,
-                region: .au10g
-            )
-        }
-
-        let profile = UserProfile(
-            weightKg: 70,
-            biologicalSex: .other,
-            unitPreference: .metric,
-            regionStandard: .au10g,
-            homeLocation: nil
-        )
-
-        let snapshot = service.recalculate(entries: entries, profile: profile, now: now)
-        XCTAssertLessThan(snapshot.estimatedBAC, 0.03)
-        XCTAssertNotEqual(snapshot.intoxicationState, .light)
-        XCTAssertNotEqual(snapshot.intoxicationState, .clear)
-    }
-
-    func testHeavierWeightLowersBACForSameSession() {
-        let now = Date()
-        let entries = (0..<3).map { i in
-            service.makeEntry(
-                category: .beer,
-                servingName: "Schooner",
-                volumeMl: 425,
-                abvPercent: 4.8,
-                source: .quick,
-                timestamp: now.addingTimeInterval(TimeInterval(-i * 12 * 60)),
-                locationSnapshot: nil,
-                region: .au10g
-            )
-        }
-
-        let lightProfile = UserProfile(
-            weightKg: 55,
-            biologicalSex: .other,
-            unitPreference: .metric,
-            regionStandard: .au10g,
-            homeLocation: nil
-        )
-        let heavyProfile = UserProfile(
-            weightKg: 95,
-            biologicalSex: .other,
-            unitPreference: .metric,
-            regionStandard: .au10g,
-            homeLocation: nil
-        )
-
-        let lightSnapshot = service.recalculate(entries: entries, profile: lightProfile, now: now)
-        let heavySnapshot = service.recalculate(entries: entries, profile: heavyProfile, now: now)
-
-        XCTAssertLessThan(heavySnapshot.estimatedBAC, lightSnapshot.estimatedBAC)
-        XCTAssertLessThanOrEqual(heavySnapshot.remainingToSaferDrive, lightSnapshot.remainingToSaferDrive)
-    }
-
-    func testFemaleProfileHigherBACThanMaleForSameSession() {
-        let now = Date()
-        let entries = (0..<3).map { i in
-            service.makeEntry(
-                category: .shot,
-                servingName: "Classic",
-                volumeMl: 44,
-                abvPercent: 40,
-                source: .quick,
-                timestamp: now.addingTimeInterval(TimeInterval(-i * 7 * 60)),
-                locationSnapshot: nil,
-                region: .au10g
-            )
-        }
-
-        let maleProfile = UserProfile(
-            weightKg: 70,
-            biologicalSex: .male,
-            unitPreference: .metric,
-            regionStandard: .au10g,
-            homeLocation: nil
-        )
-        let femaleProfile = UserProfile(
-            weightKg: 70,
-            biologicalSex: .female,
-            unitPreference: .metric,
-            regionStandard: .au10g,
-            homeLocation: nil
-        )
-
-        let maleSnapshot = service.recalculate(entries: entries, profile: maleProfile, now: now)
-        let femaleSnapshot = service.recalculate(entries: entries, profile: femaleProfile, now: now)
-
-        XCTAssertGreaterThan(femaleSnapshot.estimatedBAC, maleSnapshot.estimatedBAC)
-        XCTAssertGreaterThanOrEqual(femaleSnapshot.remainingToSaferDrive, maleSnapshot.remainingToSaferDrive)
-    }
-
-    func testBACDecreasesAfterSixHoursWithoutNewDrinks() {
-        let now = Date()
-        let entries = (0..<4).map { i in
-            service.makeEntry(
-                category: .wine,
-                servingName: "Standard",
-                volumeMl: 150,
-                abvPercent: 12.5,
-                source: .quick,
-                timestamp: now.addingTimeInterval(TimeInterval(-i * 20 * 60)),
-                locationSnapshot: nil,
-                region: .au10g
-            )
-        }
-
-        let profile = UserProfile(
-            weightKg: 70,
-            biologicalSex: .other,
-            unitPreference: .metric,
-            regionStandard: .au10g,
-            homeLocation: nil
-        )
-
-        let currentSnapshot = service.recalculate(entries: entries, profile: profile, now: now)
-        let muchLaterSnapshot = service.recalculate(
-            entries: entries,
-            profile: profile,
-            now: now.addingTimeInterval(6 * 3600)
-        )
-
-        XCTAssertLessThan(muchLaterSnapshot.estimatedBAC, currentSnapshot.estimatedBAC)
-        XCTAssertLessThanOrEqual(muchLaterSnapshot.remainingToSaferDrive, currentSnapshot.remainingToSaferDrive)
-    }
-
-    func testExtraDrinkCannotImproveSaferDriveETA() {
-        let now = Date()
-
+    func testMoreDrinksPushProjectedZeroLater() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
         let first = service.makeEntry(
             category: .beer,
             servingName: "Schooner",
             volumeMl: 425,
             abvPercent: 4.8,
             source: .quick,
-            timestamp: now.addingTimeInterval(-12 * 60),
+            timestamp: now.addingTimeInterval(-40 * 60),
             locationSnapshot: nil,
             region: .au10g
         )
@@ -479,24 +187,81 @@ final class EstimationServiceTests: XCTestCase {
             volumeMl: 425,
             abvPercent: 4.8,
             source: .quick,
-            timestamp: now,
+            timestamp: now.addingTimeInterval(-5 * 60),
             locationSnapshot: nil,
             region: .au10g
         )
 
-        let profile = UserProfile(
-            weightKg: 72,
-            biologicalSex: .male,
+        let oneDrink = service.recalculate(entries: [first], profile: makeProfile(), now: now)
+        let twoDrinks = service.recalculate(entries: [first, second], profile: makeProfile(), now: now)
+
+        XCTAssertGreaterThanOrEqual(twoDrinks.projectedZeroTime, oneDrink.projectedZeroTime)
+        XCTAssertGreaterThanOrEqual(twoDrinks.remainingToZero, oneDrink.remainingToZero)
+        XCTAssertGreaterThanOrEqual(twoDrinks.effectiveStandardDrinks, oneDrink.effectiveStandardDrinks)
+    }
+
+    func testEffectiveLoadDoesNotDependOnWorkingTomorrowToggle() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let entries = [
+            service.makeEntry(
+                category: .wine,
+                servingName: "Standard",
+                volumeMl: 150,
+                abvPercent: 12.5,
+                source: .quick,
+                timestamp: now.addingTimeInterval(-25 * 60),
+                locationSnapshot: nil,
+                region: .au10g
+            ),
+            service.makeEntry(
+                category: .shot,
+                servingName: "Classic",
+                volumeMl: 45,
+                abvPercent: 40,
+                source: .quick,
+                timestamp: now.addingTimeInterval(-8 * 60),
+                locationSnapshot: nil,
+                region: .au10g
+            )
+        ]
+
+        let standard = makeProfile()
+        let workingTomorrow = UserProfile(
             unitPreference: .metric,
             regionStandard: .au10g,
-            homeLocation: nil
+            workingTomorrow: true
         )
 
-        let oneDrinkSnapshot = service.recalculate(entries: [first], profile: profile, now: now)
-        let twoDrinkSnapshot = service.recalculate(entries: [first, second], profile: profile, now: now)
+        let left = service.recalculate(entries: entries, profile: standard, now: now)
+        let right = service.recalculate(entries: entries, profile: workingTomorrow, now: now)
 
-        XCTAssertGreaterThanOrEqual(twoDrinkSnapshot.remainingToSaferDrive, oneDrinkSnapshot.remainingToSaferDrive)
-        XCTAssertGreaterThanOrEqual(twoDrinkSnapshot.saferDriveTime, oneDrinkSnapshot.saferDriveTime)
+        XCTAssertEqual(left.effectiveStandardDrinks, right.effectiveStandardDrinks, accuracy: 0.0001)
+        XCTAssertEqual(left.absorbedStandardDrinks, right.absorbedStandardDrinks, accuracy: 0.0001)
+        XCTAssertEqual(left.metabolizedStandardDrinks, right.metabolizedStandardDrinks, accuracy: 0.0001)
+        XCTAssertEqual(left.projectedZeroTime.timeIntervalSince1970, right.projectedZeroTime.timeIntervalSince1970, accuracy: 0.0001)
+    }
+
+    func testHydrationPlanIsBoundedBetweenFloorAndCeiling() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+
+        let baseline = service.recalculate(entries: [], profile: makeProfile(), now: now)
+        XCTAssertEqual(baseline.hydrationPlanMl, 600)
+
+        let heavyEntries = (0..<20).map { i in
+            service.makeEntry(
+                category: .beer,
+                servingName: "Pint",
+                volumeMl: 500,
+                abvPercent: 8,
+                source: .quick,
+                timestamp: now.addingTimeInterval(TimeInterval(-i * 600)),
+                locationSnapshot: nil,
+                region: .us14g
+            )
+        }
+
+        let heavy = service.recalculate(entries: heavyEntries, profile: makeProfile(), now: now)
+        XCTAssertLessThanOrEqual(heavy.hydrationPlanMl, 3000)
     }
 
     func testDefaultRegionUsesLocaleMapping() {
@@ -511,33 +276,15 @@ final class EstimationServiceTests: XCTestCase {
     @MainActor
     func testProjectedSnapshotIncludesPendingDrinkSelection() {
         let store = AppStore()
-        let now = Date()
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
         let preset = DrinkPreset(name: "Schooner", category: .beer, defaultVolumeMl: 425, defaultABV: 5)
 
         let preview = store.projectedSnapshot(adding: preset, count: 2, now: now)
 
         XCTAssertGreaterThan(preview.totalStandardDrinks, 0)
-        XCTAssertGreaterThanOrEqual(preview.saferDriveTime, now)
-        XCTAssertGreaterThanOrEqual(preview.remainingToSaferDrive, 0)
-    }
-
-    @MainActor
-    func testProjectedSnapshotGetsMoreConservativeWhenWorkingTomorrowOn() {
-        let store = AppStore()
-        let seedPreset = DrinkPreset(name: "Beer", category: .beer, defaultVolumeMl: 355, defaultABV: 5)
-        let extraPreset = DrinkPreset(name: "Shot", category: .shot, defaultVolumeMl: 44, defaultABV: 40)
-
-        store.addQuickDrink(preset: seedPreset)
-        let now = Date()
-
-        store.setWorkingTomorrowForCurrentSession(false)
-        let offSnapshot = store.projectedSnapshot(adding: extraPreset, count: 1, now: now)
-
-        store.setWorkingTomorrowForCurrentSession(true)
-        let onSnapshot = store.projectedSnapshot(adding: extraPreset, count: 1, now: now)
-
-        XCTAssertGreaterThanOrEqual(onSnapshot.saferDriveTime, offSnapshot.saferDriveTime)
-        XCTAssertGreaterThanOrEqual(onSnapshot.remainingToSaferDrive, offSnapshot.remainingToSaferDrive)
+        XCTAssertGreaterThanOrEqual(preview.effectiveStandardDrinks, 0)
+        XCTAssertGreaterThanOrEqual(preview.projectedZeroTime, now)
+        XCTAssertGreaterThanOrEqual(preview.remainingToZero, 0)
     }
 
     @MainActor
@@ -563,27 +310,6 @@ final class EstimationServiceTests: XCTestCase {
         store.addQuickDrink(preset: preset, location: nil)
 
         XCTAssertNil(store.entries.last?.locationSnapshot)
-    }
-
-    @MainActor
-    func testHealthProfileUpdateFallsBackWhenDataMissing() {
-        let store = AppStore()
-        let initial = store.profile
-
-        store.updateProfileFromHealth(weightKg: nil, biologicalSex: nil)
-
-        XCTAssertEqual(store.profile.weightKg, initial.weightKg, accuracy: 0.001)
-        XCTAssertEqual(store.profile.biologicalSex, initial.biologicalSex)
-    }
-
-    @MainActor
-    func testHealthProfileUpdateAppliesAndClampsWeight() {
-        let store = AppStore()
-
-        store.updateProfileFromHealth(weightKg: 500, biologicalSex: .female)
-
-        XCTAssertEqual(store.profile.weightKg, 220, accuracy: 0.001)
-        XCTAssertEqual(store.profile.biologicalSex, .female)
     }
 #endif
 }

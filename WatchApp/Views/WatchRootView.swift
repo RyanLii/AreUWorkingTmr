@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import Combine
 
 struct WatchRootView: View {
     @Environment(\.modelContext) private var modelContext
@@ -15,6 +16,7 @@ struct WatchRootView: View {
     @State private var selectedTab: DemoTab = .quickAdd
     @State private var demoTask: Task<Void, Never>?
     @State private var demoCaption: String? = nil
+    private let liveRefreshTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
     var body: some View {
         ZStack {
@@ -55,7 +57,6 @@ struct WatchRootView: View {
             guard !didBind else { return }
             didBind = true
             store.bind(modelContext: modelContext)
-            locationMonitor.homeLocation = store.profile.homeLocation?.coordinate
         }
         .onAppear {
             guard !didConfigureRuntime else { return }
@@ -69,15 +70,11 @@ struct WatchRootView: View {
                 locationMonitor.stop()
             }
         }
-        .onChange(of: permissionManager.healthKitAuthorized) { _, authorized in
-            guard authorized else { return }
-            syncHealthProfileIfAvailable()
-        }
-        .onChange(of: store.profile.homeLocation) { _, _ in
-            locationMonitor.homeLocation = store.profile.homeLocation?.coordinate
-        }
         .onAppear {
             startAutoDemoIfNeeded()
+        }
+        .onReceive(liveRefreshTimer) { _ in
+            store.refreshSnapshot()
         }
         .onDisappear {
             demoTask?.cancel()
@@ -107,20 +104,6 @@ struct WatchRootView: View {
         }
         locationMonitor.onHomeArrival = { arrivedAt in
             store.handleHomeArrival(arrivedAt: arrivedAt)
-        }
-
-        syncHealthProfileIfAvailable()
-    }
-
-    private func syncHealthProfileIfAvailable() {
-        Task {
-            let healthProfile = await permissionManager.loadLatestHealthProfile()
-            await MainActor.run {
-                store.updateProfileFromHealth(
-                    weightKg: healthProfile.weightKg,
-                    biologicalSex: healthProfile.biologicalSex
-                )
-            }
         }
     }
 

@@ -34,7 +34,7 @@ struct QuickAddView: View {
     @State private var alarmConfirmed = false
     @State private var doneTonightMessage = DoneTonightCopy.random(
         totalStandardDrinks: 0,
-        state: .clear,
+        effectiveStandardDrinks: 0,
         workingTomorrow: false
     )
     @State private var detailScrollToBottomToken = 0
@@ -51,13 +51,16 @@ struct QuickAddView: View {
         store.sessionSnapshot.totalStandardDrinks > 0.001
     }
 
-    private var isHighRiskState: Bool {
-        switch store.sessionSnapshot.intoxicationState {
-        case .wavy, .high:
-            return true
-        default:
-            return false
-        }
+    private var currentEffectiveStandardDrinks: Double {
+        store.sessionSnapshot.effectiveStandardDrinks
+    }
+
+    private var isCleared: Bool {
+        store.sessionSnapshot.state == .cleared
+    }
+
+    private var isHeavyLoad: Bool {
+        currentEffectiveStandardDrinks >= 5 || store.sessionSnapshot.totalStandardDrinks >= 8
     }
 
     var body: some View {
@@ -94,9 +97,8 @@ struct QuickAddView: View {
                     .buttonStyle(.plain)
                 }
 
-                if hasSessionDrinks {
+                if hasSessionDrinks && !store.hasMarkedDoneTonight {
                     Button {
-                        store.markDoneTonight()
                         hydrationConfirmed = false
                         rideConfirmed = false
                         alarmConfirmed = false
@@ -117,38 +119,51 @@ struct QuickAddView: View {
                 }
 
                 ForEach(presets) { preset in
-                    Button {
-                        openDetail(for: preset)
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: symbol(for: preset.category))
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(tint(for: preset.category))
-                                .frame(width: 18)
+                    HStack(spacing: 8) {
+                        Button {
+                            openDetail(for: preset)
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: symbol(for: preset.category))
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(tint(for: preset.category))
+                                    .frame(width: 18)
 
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text(preset.category.title)
-                                    .font(WatchNightTheme.bodyStrong)
-                                    .foregroundStyle(.white)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.82)
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(preset.category.title)
+                                        .font(WatchNightTheme.bodyStrong)
+                                        .foregroundStyle(.white)
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.82)
 
-                                Text(presetSummary(preset))
-                                    .font(WatchNightTheme.captionFont)
-                                    .foregroundStyle(WatchNightTheme.label)
-                                    .lineLimit(2)
-                                    .minimumScaleFactor(0.82)
+                                    Text(presetSummary(preset))
+                                        .font(WatchNightTheme.captionFont)
+                                        .foregroundStyle(WatchNightTheme.label)
+                                        .lineLimit(2)
+                                        .minimumScaleFactor(0.82)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+
+                                Image(systemName: "chevron.right.circle.fill")
+                                    .foregroundStyle(WatchNightTheme.accentSoft)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
-
-                            Spacer(minLength: 6)
-
-                            Image(systemName: "chevron.right.circle.fill")
-                                .foregroundStyle(WatchNightTheme.accentSoft)
+                            .contentShape(Rectangle())
                         }
-                        .watchCard()
+                        .buttonStyle(.plain)
+
+                        Button {
+                            addDefaultDrink(preset)
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.title3.weight(.bold))
+                                .foregroundStyle(WatchNightTheme.accentSoft)
+                                .frame(width: 24, height: 24)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Quick add default \(preset.category.title)")
                     }
-                    .buttonStyle(.plain)
+                    .watchCard()
                 }
             }
             .padding(.horizontal, 8)
@@ -179,7 +194,6 @@ struct QuickAddView: View {
             case "logBeer":
                 logSelection(for: .beer)
             case "doneTonight":
-                store.markDoneTonight()
                 showDoneTonightSheet = true
             default:
                 break
@@ -190,11 +204,11 @@ struct QuickAddView: View {
     private var quickSessionStatusCard: some View {
         VStack(alignment: .leading, spacing: 7) {
             HStack {
-                Text("Current state")
+                Text("Time to clear")
                     .font(WatchNightTheme.captionFont)
                     .foregroundStyle(WatchNightTheme.labelSoft)
                 Spacer()
-                Text(statusBadgeText)
+                Text(store.sessionSnapshot.state.title)
                     .font(WatchNightTheme.captionFont)
                     .foregroundStyle(.white)
                     .lineLimit(1)
@@ -207,34 +221,25 @@ struct QuickAddView: View {
                     )
             }
 
-            HStack(alignment: .firstTextBaseline) {
-                Text("Drive lower-risk")
-                    .font(WatchNightTheme.captionFont)
-                    .foregroundStyle(WatchNightTheme.labelSoft)
-                Spacer(minLength: 8)
-                Text(driveReadinessText(for: store.sessionSnapshot))
-                    .font(WatchNightTheme.bodyStrong)
-                    .foregroundStyle(.white)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.75)
-                    .multilineTextAlignment(.trailing)
-            }
+            Text(isCleared ? "Cleared" : DisplayFormatter.remaining(store.sessionSnapshot.remainingToZero))
+                .font(WatchNightTheme.bodyStrong)
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
 
-            Text(driveRemainingText(for: store.sessionSnapshot.remainingToSaferDrive))
+            Text(
+                "Estimated Clear Time (Model): "
+                    + (isCleared ? "Now" : DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime))
+            )
                 .font(WatchNightTheme.bodyFont)
-                .foregroundStyle(store.sessionSnapshot.remainingToSaferDrive <= 0 ? WatchNightTheme.mint : WatchNightTheme.warning)
+                .foregroundStyle(isCleared ? WatchNightTheme.mint : WatchNightTheme.warning)
 
-            if store.sessionSnapshot.remainingToSaferDrive > 0 {
-                ProgressView(value: safetyProgress)
-                    .tint(WatchNightTheme.warning)
-            }
-
-            Text(nextSafetyMove)
+            Text(store.sessionSnapshot.state.supportiveCopy)
                 .font(WatchNightTheme.captionFont)
-                .foregroundStyle(isHighRiskState ? WatchNightTheme.warning : WatchNightTheme.label)
+                .foregroundStyle(WatchNightTheme.label)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text("Estimate only. If unsure, choose a ride.")
+            Text("Represents modeled final clearing of effective standard drinks only.")
                 .font(WatchNightTheme.captionFont)
                 .foregroundStyle(WatchNightTheme.labelSoft)
                 .fixedSize(horizontal: false, vertical: true)
@@ -242,37 +247,31 @@ struct QuickAddView: View {
         .watchCard(highlighted: true)
     }
 
-    private var statusBadgeText: String {
-        if store.sessionSnapshot.remainingToSaferDrive <= 0 {
-            return "Lower risk"
-        }
-        return store.sessionSnapshot.intoxicationState.title
-    }
-
     private var statusBadgeColor: Color {
-        if store.sessionSnapshot.remainingToSaferDrive <= 0 {
+        switch store.sessionSnapshot.state {
+        case .preAbsorption:
+            return WatchNightTheme.accentSoft
+        case .absorbing:
+            return WatchNightTheme.warning
+        case .clearing:
+            return WatchNightTheme.mint
+        case .cleared:
             return WatchNightTheme.mint
         }
-
-        switch store.sessionSnapshot.intoxicationState {
-        case .clear, .light:
-            return WatchNightTheme.accentSoft
-        case .social, .tipsy:
-            return WatchNightTheme.warning
-        case .wavy, .high:
-            return WatchNightTheme.danger
-        }
-    }
-
-    private var safetyProgress: Double {
-        let threshold = max(store.profile.regionStandard.legalDriveBACLimit, 0.001)
-        let bac = max(store.sessionSnapshot.estimatedBAC, 0)
-        return min(max(1 - (bac / (threshold * 2)), 0), 1)
     }
 
     private var doneTonightSheet: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Spacer()
+                    Button("Close") {
+                        showDoneTonightSheet = false
+                    }
+                    .font(WatchNightTheme.captionFont)
+                    .foregroundStyle(WatchNightTheme.accent)
+                }
+
                 Text("I'm Done Tonight")
                     .font(WatchNightTheme.titleFont)
                     .foregroundStyle(.white)
@@ -297,6 +296,10 @@ struct QuickAddView: View {
                             .foregroundStyle(.white)
                     }
 
+                    Text("Tap to check off each item.")
+                        .font(WatchNightTheme.captionFont)
+                        .foregroundStyle(WatchNightTheme.label)
+
                     doneToggleButton(
                         title: "Hydrated",
                         subtitle: "Finish water target",
@@ -307,9 +310,9 @@ struct QuickAddView: View {
                     }
 
                     doneToggleButton(
-                        title: "Ride sorted",
-                        subtitle: "No driving tonight",
-                        icon: "car.fill",
+                        title: "Mate check-in",
+                        subtitle: "Texted someone you trust",
+                        icon: "message.fill",
                         confirmed: rideConfirmed
                     ) {
                         rideConfirmed.toggle()
@@ -326,31 +329,15 @@ struct QuickAddView: View {
                 }
                 .watchCard()
 
-                if isHighRiskState {
+                if isHeavyLoad {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Safety mode")
+                        Text("Recovery mode")
                             .font(WatchNightTheme.bodyStrong)
                             .foregroundStyle(.white)
 
-                        Text("Stay with friends, skip extra rounds, and sort your ride before leaving.")
+                        Text("Big night logged. Pause drinks, hydrate, and stay with your people.")
                             .font(WatchNightTheme.captionFont)
                             .foregroundStyle(WatchNightTheme.label)
-
-                        Button {
-                            rideConfirmed = true
-                        } label: {
-                            Label("Mark ride sorted", systemImage: "car.rear.fill")
-                                .font(WatchNightTheme.bodyFont)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 6)
-                                .foregroundStyle(.white)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                        .fill(Color.white.opacity(0.16))
-                                )
-                        }
-                        .buttonStyle(.plain)
-
                     }
                     .watchCard(highlighted: true)
                 }
@@ -389,6 +376,7 @@ struct QuickAddView: View {
                 .watchCard()
 
                 Button {
+                    store.markDoneTonight()
                     showDoneTonightSheet = false
                 } label: {
                     Label("Perfect. Good night", systemImage: "checkmark.circle.fill")
@@ -410,38 +398,19 @@ struct QuickAddView: View {
         .presentationDetents([.medium, .large])
     }
 
-    private var nextSafetyMove: String {
-        if store.sessionSnapshot.remainingToSaferDrive <= 0 {
-            return "Estimate says you're likely back in range. Keep hydrating and wind down."
-        }
-
-        switch store.sessionSnapshot.intoxicationState {
-        case .clear, .light:
-            return "Easy pace. Keep logging each drink for a clearer recovery time."
-        case .social:
-            return "Add some water now to keep tomorrow smooth."
-        case .tipsy:
-            return "Water + food now. Slow down and recover."
-        case .wavy:
-            return "Stop here, lock a ride, and stay with your people."
-        case .high:
-            return "Safety first. Sit down, hydrate, and get support."
-        }
-    }
-
     private var doneTonightContext: String {
         let label = DoneTonightCopy.toneLabel(
             totalStandardDrinks: store.sessionSnapshot.totalStandardDrinks,
-            state: store.sessionSnapshot.intoxicationState,
+            effectiveStandardDrinks: store.sessionSnapshot.effectiveStandardDrinks,
             workingTomorrow: store.effectiveWorkingTomorrow
         )
-        return "\(store.sessionSnapshot.intoxicationState.recoveryHint) - \(label)"
+        return "\(DisplayFormatter.standardDrinks(store.sessionSnapshot.effectiveStandardDrinks)) active - \(label)"
     }
 
     private func refreshDoneTonightMessage() {
         doneTonightMessage = DoneTonightCopy.random(
             totalStandardDrinks: store.sessionSnapshot.totalStandardDrinks,
-            state: store.sessionSnapshot.intoxicationState,
+            effectiveStandardDrinks: store.sessionSnapshot.effectiveStandardDrinks,
             workingTomorrow: store.effectiveWorkingTomorrow
         )
     }
@@ -471,6 +440,7 @@ struct QuickAddView: View {
                 Spacer()
 
                 Image(systemName: confirmed ? "checkmark.circle.fill" : "circle")
+                    .font(.body.weight(.semibold))
                     .foregroundStyle(confirmed ? WatchNightTheme.mint : WatchNightTheme.label)
             }
             .padding(.vertical, 2)
@@ -496,13 +466,6 @@ struct QuickAddView: View {
         let selectedVolume = currentVolumeMl(category: category, defaultPreset: defaultPreset)
         let stdEstimate = estimatedStandardDrinks(volumeMl: selectedVolume, abv: selectedABV)
         let totalStdEstimate = stdEstimate * Double(quantity)
-        let previewPreset = DrinkPreset(
-            name: selectedServing?.name ?? category.title,
-            category: category,
-            defaultVolumeMl: selectedVolume,
-            defaultABV: selectedABV
-        )
-        let projectedSnapshot = store.projectedSnapshot(adding: previewPreset, count: quantity)
 
         return ScrollViewReader { proxy in
             ScrollView(showsIndicators: false) {
@@ -534,6 +497,7 @@ struct QuickAddView: View {
                                 }
                                 .padding(.vertical, 3)
                             }
+                            .contentShape(Rectangle())
                             .buttonStyle(.plain)
                         }
                     }
@@ -615,41 +579,6 @@ struct QuickAddView: View {
                 }
                 .watchCard()
 
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("Impact Preview")
-                        .font(WatchNightTheme.captionFont)
-                        .foregroundStyle(WatchNightTheme.label)
-
-                    HStack {
-                        Text("Drive lower-risk")
-                            .font(WatchNightTheme.captionFont)
-                            .foregroundStyle(WatchNightTheme.label)
-                        Spacer()
-                        Text(driveReadinessText(for: projectedSnapshot))
-                            .font(WatchNightTheme.bodyFont)
-                            .foregroundStyle(.white)
-                    }
-
-                    Text(driveRemainingText(for: projectedSnapshot.remainingToSaferDrive))
-                        .font(WatchNightTheme.captionFont)
-                        .foregroundStyle(projectedSnapshot.remainingToSaferDrive <= 0 ? WatchNightTheme.mint : WatchNightTheme.warning)
-
-                    if hasSessionDrinks {
-                        Text(etaDeltaText(from: store.sessionSnapshot.saferDriveTime, to: projectedSnapshot.saferDriveTime))
-                            .font(WatchNightTheme.captionFont)
-                            .foregroundStyle(WatchNightTheme.label)
-                    } else {
-                        Text("First log sets your baseline estimate tonight.")
-                            .font(WatchNightTheme.captionFont)
-                            .foregroundStyle(WatchNightTheme.label)
-                    }
-
-                    Text("Estimate only, not legal advice.")
-                        .font(WatchNightTheme.captionFont)
-                        .foregroundStyle(WatchNightTheme.label)
-                }
-                .watchCard(highlighted: true)
-
                 Button {
                     logSelection(for: category)
                 } label: {
@@ -674,7 +603,7 @@ struct QuickAddView: View {
                     )
                     activeCategory = nil
                 } label: {
-                    Label("Use Default", systemImage: "bolt.fill")
+                    Label("Log Saved Default", systemImage: "bolt.fill")
                         .font(WatchNightTheme.bodyFont)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
@@ -693,7 +622,7 @@ struct QuickAddView: View {
                 Button {
                     saveCurrentAsDefault(for: category)
                 } label: {
-                    Label("Set As Default", systemImage: "star.fill")
+                    Label("Save Current as Default", systemImage: "star.fill")
                         .font(WatchNightTheme.bodyFont)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
@@ -722,51 +651,29 @@ struct QuickAddView: View {
                     proxy.scrollTo("detail-log-button", anchor: .bottom)
                 }
             }
+            .onAppear {
+                seedDetailState(for: category, resetQuantity: false)
+            }
         }
         .presentationDetents([.medium, .large])
     }
 
-    private func etaDeltaText(from baseline: Date, to projected: Date) -> String {
-        let seconds = max(0, Int(projected.timeIntervalSince(baseline)))
-        guard seconds > 60 else {
-            return "Logging this keeps ETA about the same."
-        }
-
-        let hours = seconds / 3600
-        let minutes = (seconds % 3600) / 60
-        if hours == 0 {
-            return "Adds around \(minutes)m to your estimate."
-        }
-
-        return "Adds around \(hours)h \(minutes)m to your estimate."
-    }
-
-    private func driveReadinessText(for snapshot: SessionSnapshot) -> String {
-        if snapshot.remainingToSaferDrive <= 0 {
-            return "Likely under local limit now"
-        }
-        return DisplayFormatter.eta(snapshot.saferDriveTime)
-    }
-
-    private func driveRemainingText(for interval: TimeInterval) -> String {
-        if interval <= 0 {
-            return "No wait estimated"
-        }
-        return DisplayFormatter.remaining(interval)
-    }
-
     private func openDetail(for preset: DrinkPreset) {
-        let template = detailTemplate(for: preset.category, region: store.profile.regionStandard)
-        selectedServing = template.servings.first(where: { abs($0.volumeMl - preset.defaultVolumeMl) < 0.1 }) ?? template.servings.first
-        selectedABV = preset.defaultABV
-        manualVolumeMl = Int(preset.defaultVolumeMl.rounded())
-        quantity = 1
+        seedDetailState(for: preset.category, preset: preset, resetQuantity: true)
         activeCategory = preset.category
     }
 
+    private func addDefaultDrink(_ preset: DrinkPreset) {
+        store.addQuickDrink(
+            preset: preset,
+            location: locationMonitor.currentLocation?.coordinate
+        )
+    }
+
     private func logSelection(for category: DrinkCategory) {
-        let volume = currentVolumeMl(category: category, defaultPreset: store.preset(for: category))
-        let servingName = selectedServing?.name ?? category.title
+        let currentDefault = store.preset(for: category)
+        let volume = currentVolumeMl(category: category, defaultPreset: currentDefault)
+        let servingName = selectedServing?.name ?? currentDefault.name
 
         let preset = DrinkPreset(
             name: servingName,
@@ -794,6 +701,27 @@ struct QuickAddView: View {
             volumeMl: volume,
             abvPercent: selectedABV
         )
+
+        seedDetailState(for: category, resetQuantity: false)
+    }
+
+    private func seedDetailState(for category: DrinkCategory, preset: DrinkPreset? = nil, resetQuantity: Bool) {
+        let workingPreset = preset ?? store.preset(for: category)
+        selectedABV = workingPreset.defaultABV
+        manualVolumeMl = Int(workingPreset.defaultVolumeMl.rounded())
+
+        if resetQuantity {
+            quantity = 1
+        }
+
+        let template = detailTemplate(for: category, region: store.profile.regionStandard)
+        if template.supportsManualVolume {
+            selectedServing = nil
+            return
+        }
+
+        selectedServing = template.servings.first(where: { abs($0.volumeMl - workingPreset.defaultVolumeMl) < 0.1 })
+            ?? template.servings.first
     }
 
     private func currentVolumeMl(category: DrinkCategory, defaultPreset: DrinkPreset) -> Double {
@@ -976,7 +904,7 @@ private enum DoneTonightTone {
     case playfulMode
     case spicyMode
     case chaosMode
-    case protectMode
+    case recoveryMode
 
     var label: String {
         switch self {
@@ -990,34 +918,27 @@ private enum DoneTonightTone {
             return "Spicy mode"
         case .chaosMode:
             return "Chaos mode"
-        case .protectMode:
-            return "Protect mode"
+        case .recoveryMode:
+            return "Recovery mode"
         }
     }
 }
 
 private enum DoneTonightCopy {
-    static func random(totalStandardDrinks: Double, state: IntoxicationState, workingTomorrow _: Bool) -> String {
-        let tone = toneBand(totalStandardDrinks: totalStandardDrinks, state: state)
+    static func random(totalStandardDrinks: Double, effectiveStandardDrinks: Double, workingTomorrow _: Bool) -> String {
+        let tone = toneBand(totalStandardDrinks: totalStandardDrinks, effectiveStandardDrinks: effectiveStandardDrinks)
         let candidates = lines(for: tone)
         return candidates.randomElement() ?? "Great night. Hydrate and rest well."
     }
 
-    static func toneLabel(totalStandardDrinks: Double, state: IntoxicationState, workingTomorrow _: Bool) -> String {
-        toneBand(totalStandardDrinks: totalStandardDrinks, state: state).label
+    static func toneLabel(totalStandardDrinks: Double, effectiveStandardDrinks: Double, workingTomorrow _: Bool) -> String {
+        toneBand(totalStandardDrinks: totalStandardDrinks, effectiveStandardDrinks: effectiveStandardDrinks).label
     }
 
-    private static func toneBand(totalStandardDrinks: Double, state: IntoxicationState) -> DoneTonightTone {
-        switch state {
-        case .high:
-            return .protectMode
-        case .wavy:
-            return .chaosMode
-        default:
-            break
-        }
+    private static func toneBand(totalStandardDrinks: Double, effectiveStandardDrinks: Double) -> DoneTonightTone {
+        let load = max(totalStandardDrinks, effectiveStandardDrinks)
 
-        switch totalStandardDrinks {
+        switch load {
         case ..<1.5:
             return .softStart
         case ..<3.5:
@@ -1029,7 +950,7 @@ private enum DoneTonightCopy {
         case ..<12:
             return .chaosMode
         default:
-            return .protectMode
+            return .recoveryMode
         }
     }
 
@@ -1045,203 +966,56 @@ private enum DoneTonightCopy {
             return spicyMode
         case .chaosMode:
             return chaosMode
-        case .protectMode:
-            return protectMode
-        }
-    }
-
-    private static func workingTomorrowLines(for tone: DoneTonightTone) -> [String] {
-        switch tone {
-        case .softStart:
-            return [
-                "Tomorrow-you is already thanking tonight-you.",
-                "Short night, sharp morning. Nice combo.",
-                "You kept enough battery for tomorrow's meetings.",
-                "Clean finish. Tomorrow stays smooth.",
-                "This stop timing protects your morning brain."
-            ]
-        case .goodVibe:
-            return [
-                "Great night, still enough fuel for tomorrow.",
-                "Hydrate now and tomorrow stays very workable.",
-                "You nailed the fun-to-function balance.",
-                "This is the exact lane for a good work morning.",
-                "You kept the vibe and your calendar intact."
-            ]
-        case .playfulMode:
-            return [
-                "Fun delivered. Now set alarm and lock water.",
-                "Your future coffee break just got less dramatic.",
-                "You can still save tomorrow with one smart finish.",
-                "Hydrate hard, sleep early, conquer tomorrow.",
-                "This is the last safe exit before work-mode pain."
-            ]
-        case .spicyMode:
-            return [
-                "You got your stories. Now rescue tomorrow.",
-                "No bonus rounds. Your morning is on the line.",
-                "Hydration and sleep are now part of your job prep.",
-                "Tonight was loud. Keep tomorrow functional.",
-                "One smart stop now can still protect work-you."
-            ]
-        case .chaosMode:
-            return [
-                "Work tomorrow means safety mode immediately.",
-                "Tonight is done. Water, ride, sleep. In that order.",
-                "No more alcohol. Save tomorrow if you can.",
-                "Call it now so tomorrow has a chance.",
-                "Protect your commute by ending right here."
-            ]
-        case .protectMode:
-            return [
-                "Tomorrow can wait. Safety cannot.",
-                "Skip work worries. Get home safe first.",
-                "Your only task now is safe recovery.",
-                "If needed, ask for help now. That is the right move.",
-                "Safety first tonight, decisions tomorrow."
-            ]
+        case .recoveryMode:
+            return recoveryMode
         }
     }
 
     private static let softStart: [String] = [
-        "One drink in and still poetic about life.",
-        "Early stop. Elite decision making.",
-        "Tiny buzz, big wisdom.",
-        "Life is short. This was the right chapter.",
-        "You kept it light and lovely tonight.",
-        "You clocked out before the plot twist.",
-        "This is how calm legends end a night.",
-        "One and done has serious style.",
-        "Perfect landing. No chaos required.",
-        "A gentle finish is still a flex.",
-        "You chose vibe over drama. Respect.",
-        "This might be the cleanest stop on earth.",
-        "Future-you just smiled.",
-        "You kept tonight sweet and simple.",
+        "One and done. Clean pacing.",
+        "Light night, smart finish.",
+        "Small sip energy, big brain energy.",
         "Early wrap. Tomorrow stays bright.",
-        "You ended while everything still felt golden.",
-        "That was enough to make memories.",
-        "Small sip energy. Big brain energy.",
-        "Nice call. Soft morning unlocked.",
-        "This stop timing is chef's kiss.",
-        "You kept it classy and kind to yourself.",
-        "One drink and already a masterclass in pacing."
+        "Gentle finish is still a flex."
     ]
 
     private static let goodVibe: [String] = [
         "Great vibe, great timing, great exit.",
-        "You rode the fun wave and got off perfectly.",
-        "This is the sweet spot zone.",
-        "Good mood secured. Risk stays low.",
-        "You chose the exact right ending scene.",
-        "Yes to fun, yes to tomorrow.",
-        "You're pacing like a pro tonight.",
-        "Solid session. Cleaner finish.",
-        "You're in that golden middle lane.",
-        "Good energy in, no regret out.",
-        "You made this night very winnable.",
-        "Confident stop. Beautiful work.",
         "You kept the party and your peace.",
-        "Tonight is memorable for the right reasons.",
-        "You landed this one with style.",
-        "Your future breakfast thanks you.",
+        "Solid session. Cleaner finish.",
         "Hydrate now, brag tomorrow.",
-        "Clean finish, steady heart, better sleep.",
-        "This is your signature move now.",
-        "A little water and you're unstoppable.",
-        "You ended before the night got loud.",
-        "Excellent cut. Nothing to prove tonight."
+        "Good energy in, no regret out."
     ]
 
     private static let playfulMode: [String] = [
-        "Okay, now we are in stories-for-brunch territory.",
+        "Stories-for-brunch territory reached.",
         "Fun level high. Decision quality still online.",
-        "That was a smart place to put the full stop.",
-        "You had your arc. Time for hydration credits.",
-        "Your vibe is loud, your stop is smarter.",
-        "You are ending on the strong episode.",
-        "We keep the memories, not the headache.",
-        "Tonight was spicy enough. Great cutoff.",
-        "This is where cool people switch to water.",
-        "You can still text with full sentences. Nice.",
-        "Great timing. The chaos draft is canceled.",
-        "You are steering this night, not chasing it.",
-        "This is a power move disguised as chill.",
-        "Perfect time to retire from bad ideas.",
-        "Hydrate now and tomorrow stays friendly.",
-        "You ended before the random side quest.",
-        "This stop might save your morning soul.",
-        "Call it now and keep the crown.",
-        "Enough sparkle for one night. Well played.",
-        "Your balance game is very strong.",
-        "This is where legends order water without shame.",
-        "Fun complete. System recommends cozy mode."
+        "Perfect time to switch to water.",
+        "You had your arc. Great cutoff.",
+        "Fun complete. Cozy mode unlocked."
     ]
 
     private static let spicyMode: [String] = [
-        "Alright captain, this was ambitious and iconic.",
-        "Night was wild. Your stop is wiser.",
-        "You did enough for two plotlines tonight.",
-        "This is the exact second to end on a win.",
-        "That escalated quickly. Great moment to tap out.",
-        "Respectfully: no bonus rounds needed.",
-        "You're funny right now. Stay safe right now too.",
-        "Tonight has peak content already.",
-        "You are in bold mode. We now choose smart mode.",
+        "Night was loud. Your stop is wiser.",
+        "You are in bold mode. Choose recovery mode now.",
         "Hydrate like it is your part-time job.",
-        "The meme version of you is loud. Sober-you is still in charge.",
-        "Good stop. Keep the legend, skip the damage.",
-        "No hero driving. Let someone sober do the wheels.",
-        "The room is spinning? The app says sit and sip water.",
-        "You're at the edge. Great choice to stop here.",
-        "You've unlocked premium hydration advice.",
-        "Wrap it now and tomorrow remains negotiable.",
-        "This is where mature chaos ends beautifully.",
-        "Your night is maxed. Recovery starts now.",
-        "You are one great decision away from a decent morning.",
-        "That was a lot. Ending now is elite.",
-        "You gave enough to tonight. Save some for tomorrow."
+        "Wrap it now and tomorrow remains workable.",
+        "That was a lot. Ending now is elite."
     ]
 
     private static let chaosMode: [String] = [
         "Okay this is officially a lot of standard drinks.",
-        "Tonight is legendary. Your mission now is safe landing.",
         "No more drinks. Water is the main character now.",
-        "You're in chaos mode, so we switch to care mode.",
-        "This is not a driving night under any storyline.",
         "Big night confirmed. Soft exit required.",
-        "You are funny, loud, and now done for tonight.",
-        "Call a ride. Sit down. Hydrate. Repeat.",
-        "You won the fun. Do not lose the ending.",
-        "The best joke now is waking up okay tomorrow.",
-        "Tonight has enough content for three group chats.",
-        "Your future self requests immediate water support.",
         "Keep your friends close and your electrolytes closer.",
-        "This is where we protect the main character.",
-        "No hero moves. No driving. No extra rounds.",
-        "You have reached boss-level night. Time to close it.",
-        "Legendary attendance. Immediate recovery protocol.",
-        "You can still make this a great ending. Start now."
+        "Legendary attendance. Recovery protocol now."
     ]
 
-    private static let protectMode: [String] = [
-        "This is ultra high territory. Safety first, always.",
-        "Serious level reached. Please stay with trusted people.",
+    private static let recoveryMode: [String] = [
+        "Serious load reached. Stay with trusted people.",
         "No more alcohol tonight. Water and rest only.",
-        "You are beyond spicy. We are fully in protect mode.",
-        "Please do not travel alone right now.",
-        "This is a high-risk zone. Sit, breathe, hydrate.",
-        "You need a safe ride and a safe place now.",
-        "No driving tonight. Not even close.",
-        "You're not in trouble. You just need extra care now.",
-        "Your one job now: get home safe with support.",
         "Message a friend and stick together.",
         "Water in small sips. Slow and steady.",
-        "If you feel unwell, ask for help immediately.",
-        "Huge night. Gentle ending. Stay protected.",
-        "Let's make sure tomorrow still happens smoothly.",
-        "Tonight stops here. Safety is the flex now.",
-        "You can be legendary and careful at the same time.",
-        "Main mission: safe home, hydration, sleep."
+        "If you feel unwell, ask for help immediately."
     ]
 }
