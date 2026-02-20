@@ -1,5 +1,4 @@
 import SwiftUI
-import Shimmer
 
 private struct TodayServingOption: Identifiable, Hashable {
     let id: String
@@ -24,8 +23,12 @@ struct TodayView: View {
     @Environment(\.openURL) private var openURL
 
     @State private var statusDetailsExpanded = false
-    @State private var clearTrendPulse = false
-    @State private var runnerBounce = false
+    @State private var statusChipPulse = false
+    @State private var clearBarSweep: CGFloat = -0.35
+    @State private var clearBarSweepActive = false
+    @State private var progressAnchorToken: String = ""
+    @State private var progressAnchorSessionStart: Date?
+    @State private var progressAnchorProjectedZero: Date = .now
 
     @State private var activeCategory: DrinkCategory?
     @State private var selectedServing: TodayServingOption?
@@ -128,7 +131,7 @@ struct TodayView: View {
     }
 
     private var statusCard: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Status")
                     .font(NightTheme.sectionFont)
@@ -140,18 +143,16 @@ struct TodayView: View {
             }
 
             Text(statusMoodCopy)
-                .font(NightTheme.bodyFont)
-                .foregroundStyle(NightTheme.label)
+                .font(.system(size: 12.5, weight: .semibold, design: .rounded))
+                .foregroundStyle(NightTheme.label.opacity(0.96))
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
                 .fixedSize(horizontal: false, vertical: true)
 
             statusRecoveryBlock
 
             DisclosureGroup(isExpanded: $statusDetailsExpanded) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("STD means one standard drink.")
-                        .font(NightTheme.captionFont)
-                        .foregroundStyle(NightTheme.label)
-
                     statusDetailRow(
                         "Total logged standard drinks",
                         DisplayFormatter.standardDrinks(statusSnapshot.totalStandardDrinks)
@@ -195,6 +196,18 @@ struct TodayView: View {
         }
         .glassCard(.high)
         .animation(.spring(response: 0.5, dampingFraction: 0.82), value: buzzStatus.level)
+        .onAppear {
+            syncStableProgressAnchor()
+        }
+        .onChange(of: statusSnapshot.lastDrinkTime) { _, _ in
+            syncStableProgressAnchor()
+        }
+        .onChange(of: statusSnapshot.totalStandardDrinks) { _, _ in
+            syncStableProgressAnchor()
+        }
+        .onChange(of: statusSnapshot.remainingToZero) { _, _ in
+            syncStableProgressAnchor()
+        }
     }
 
     private var undoCard: some View {
@@ -765,8 +778,9 @@ struct TodayView: View {
 
     private var statusBadgePill: some View {
         Text(buzzStatus.title)
-            .font(NightTheme.captionFont.weight(.bold))
+            .font(.system(size: 14, weight: .black, design: .rounded))
             .foregroundStyle(.white)
+            .shadow(color: Color.black.opacity(0.42), radius: 1, x: 0, y: 1)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(
@@ -774,8 +788,8 @@ struct TodayView: View {
                     .fill(
                         LinearGradient(
                             colors: [
-                                statusBadgeColor.opacity(0.50),
-                                statusBadgeColor.opacity(0.28)
+                                statusBadgeColor.opacity(0.96),
+                                Color.black.opacity(0.58)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
@@ -783,25 +797,19 @@ struct TodayView: View {
                     )
                     .overlay(
                         Capsule()
-                            .stroke(Color.white.opacity(0.25), lineWidth: 1)
+                            .stroke(Color.white.opacity(0.36), lineWidth: 1.1)
                     )
             )
-            .shimmering(
-                active: true,
-                animation: .linear(duration: 1.6).repeatForever(autoreverses: false),
-                gradient: Gradient(colors: [
-                    Color.white.opacity(0.15),
-                    Color.white.opacity(0.70),
-                    Color.white.opacity(0.15)
-                ]),
-                bandSize: 0.38
-            )
-            .shadow(color: statusBadgeColor.opacity(0.25), radius: 6, y: 1)
+            .shadow(color: statusBadgeColor.opacity(statusChipPulse ? 0.56 : 0.30), radius: statusChipPulse ? 14 : 8, y: 2)
+            .scaleEffect(statusChipPulse ? 1.02 : 1.0)
+            .onAppear {
+                startStatusChipPulseIfNeeded()
+            }
     }
 
     private var statusRecoveryBlock: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top, spacing: 12) {
+            HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Chill ETA")
                         .font(NightTheme.captionFont)
@@ -812,29 +820,48 @@ struct TodayView: View {
                         .foregroundStyle(statusIsCleared ? NightTheme.success : NightTheme.warning)
                         .lineLimit(2)
                         .minimumScaleFactor(0.80)
+                        .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-                Spacer(minLength: 8)
+                ZStack(alignment: .trailing) {
+                    Text("88h 88m")
+                        .font(NightTheme.sectionFont.weight(.heavy))
+                        .opacity(0)
 
-                Text(statusRecoveryCountdown)
-                    .font(NightTheme.sectionFont.weight(.heavy))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
+                    Text(statusRecoveryCountdown)
+                        .font(NightTheme.sectionFont.weight(.heavy))
+                        .foregroundStyle(.white)
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.72)
+                }
+                .frame(width: 96, alignment: .trailing)
             }
 
-            HStack {
-                Text("Nerd meter")
-                    .font(NightTheme.captionFont)
-                    .foregroundStyle(NightTheme.label)
-                Spacer()
-                Text("\(Int((remainingLoadProgress * 100).rounded()))% still in system")
-                    .font(NightTheme.captionFont.weight(.bold))
-                    .foregroundStyle(.white)
+            if !statusIsCleared && statusSnapshot.remainingToZero > 0 {
+                TimelineView(.periodic(from: .now, by: 0.5)) { context in
+                    let cooledProgress = dynamicCooledOffProgress(at: context.date)
+                    let remainingProgress = 1 - cooledProgress
+                    let cooledPercent = max(0, min(100, Int(cooledProgress * 100)))
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Text("Cooling off progress")
+                                .font(NightTheme.captionFont)
+                                .foregroundStyle(NightTheme.label)
+                            Spacer()
+                            Text("\(cooledPercent)% cooled off")
+                                .font(NightTheme.captionFont.weight(.bold))
+                                .foregroundStyle(.white)
+                        }
+                        remainingLoadBar(progress: cooledProgress)
+                        Text(cooldownFlavorCopy(progress: remainingProgress))
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            .foregroundStyle(NightTheme.label)
+                    }
+                }
             }
-
-            remainingLoadBar
         }
     }
 
@@ -859,7 +886,7 @@ struct TodayView: View {
 
     private var statusMoodCopy: String {
         if statusSnapshot.state == .clearing && !statusIsCleared {
-            return "\(buzzStatus.description) Cooling down now."
+            return "\(buzzStatus.description) Cooling off now."
         }
 
         return buzzStatus.description
@@ -867,10 +894,10 @@ struct TodayView: View {
 
     private var statusRecoveryHeadline: String {
         if statusIsCleared {
-            return "Back in human mode now."
+            return "You are all good now."
         }
 
-        return "Likely back in human mode around \(DisplayFormatter.eta(statusSnapshot.projectedZeroTime))."
+        return "Back to normal-human mode around \(DisplayFormatter.eta(displayProjectedZeroTime))."
     }
 
     private var statusRecoveryCountdown: String {
@@ -878,81 +905,152 @@ struct TodayView: View {
             return "All good"
         }
 
-        return "\(DisplayFormatter.countdown(statusSnapshot.remainingToZero)) left"
+        return DisplayFormatter.countdown(dynamicRemainingToZero(at: .now))
     }
 
-    private var metabolizedProgress: Double {
-        let total = max(statusSnapshot.totalStandardDrinks, 0.001)
-        let metabolized = max(0, min(statusSnapshot.metabolizedStandardDrinks, total))
-        return min(max(metabolized / total, 0), 1)
+    private func dynamicRemainingToZero(at now: Date) -> TimeInterval {
+        if !progressAnchorToken.isEmpty {
+            return max(0, progressAnchorProjectedZero.timeIntervalSince(now))
+        }
+
+        let elapsed = max(0, now.timeIntervalSince(statusSnapshot.date))
+        return max(0, statusSnapshot.remainingToZero - elapsed)
     }
 
-    private var remainingLoadProgress: Double {
-        min(max(1 - metabolizedProgress, 0), 1)
+    private func dynamicCooledOffProgress(at now: Date) -> Double {
+        let start = progressAnchorSessionStart
+            ?? currentSessionFirstDrinkTime
+            ?? statusSnapshot.lastDrinkTime
+            ?? statusSnapshot.date
+        let end = !progressAnchorToken.isEmpty ? progressAnchorProjectedZero : statusSnapshot.projectedZeroTime
+        let total = end.timeIntervalSince(start)
+        guard total > 1 else { return statusIsCleared ? 1 : 0 }
+        return min(max(now.timeIntervalSince(start) / total, 0), 1)
     }
 
-    private var remainingLoadBar: some View {
+    private func cooldownFlavorCopy(progress: Double) -> String {
+        if progress > 0.75 {
+            return "Still pretty up there. Sip water and pace it."
+        }
+
+        if progress > 0.45 {
+            return "Cruisin' now. Keep it steady, mate."
+        }
+
+        if progress > 0.20 {
+            return "Winding down. Nearly back to normal."
+        }
+
+        return "Home stretch. You are almost all good."
+    }
+
+    private func remainingLoadBar(progress: Double) -> some View {
         GeometryReader { proxy in
-            let clamped = min(max(remainingLoadProgress, 0), 1)
+            let clamped = min(max(progress, 0), 1)
             let width = max(0, proxy.size.width * clamped)
-            let runnerX = min(max(10, proxy.size.width * clamped), max(10, proxy.size.width - 10))
+            let glowWidth = max(22, width * 0.24)
 
             ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(Color.white.opacity(0.15))
+                    .fill(Color.white.opacity(0.14))
                     .frame(height: 14)
 
                 if width > 0 {
-                    Capsule()
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    statusBadgeColor,
-                                    NightTheme.accentSoft.opacity(0.92),
-                                    NightTheme.mint.opacity(0.85)
-                                ],
-                                startPoint: .leading,
-                                endPoint: .trailing
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        NightTheme.mint.opacity(0.95),
+                                        NightTheme.accentSoft.opacity(0.92),
+                                        NightTheme.warning.opacity(0.88)
+                                    ],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
                             )
-                        )
-                        .frame(width: width, height: 14)
-                        .animation(.easeInOut(duration: 0.45), value: clamped)
-                }
 
-                Image(systemName: statusIsCleared ? "figure.walk" : "figure.run")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.white)
-                    .offset(x: runnerX - 10, y: runnerBounce ? -13 : -10)
-                    .animation(.easeInOut(duration: 0.22), value: runnerBounce)
-                    .animation(.easeInOut(duration: 0.45), value: clamped)
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        Color.white.opacity(0.02),
+                                        Color.white.opacity(0.36),
+                                        Color.white.opacity(0.02)
+                                    ],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .frame(width: glowWidth, height: 14)
+                            .offset(x: (width + glowWidth) * clearBarSweep - glowWidth)
+                            .blendMode(.screen)
+                    }
+                    .frame(width: width, height: 14)
+                    .clipShape(Capsule())
+                    .animation(.linear(duration: 0.5), value: clamped)
+                }
             }
             .overlay(
                 Capsule()
-                    .stroke(Color.white.opacity(clearTrendPulse ? 0.34 : 0.16), lineWidth: 1)
-                    .blendMode(.screen)
-                    .frame(height: 14)
+                    .stroke(Color.white.opacity(0.24), lineWidth: 1)
             )
-        }
-        .frame(height: 24)
-        .onAppear {
-            startClearTrendPulseIfNeeded()
-            startRunnerAnimationIfNeeded()
-        }
-    }
-
-    private func startRunnerAnimationIfNeeded() {
-        if !runnerBounce {
-            withAnimation(.easeInOut(duration: 0.22).repeatForever(autoreverses: true)) {
-                runnerBounce = true
+            .onAppear {
+                startClearBarSweepIfNeeded()
             }
         }
+        .frame(height: 18)
     }
 
-    private func startClearTrendPulseIfNeeded() {
-        guard !clearTrendPulse else { return }
-        withAnimation(.easeInOut(duration: 1.3).repeatForever(autoreverses: true)) {
-            clearTrendPulse = true
+    private func startStatusChipPulseIfNeeded() {
+        guard !statusChipPulse else { return }
+        withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
+            statusChipPulse = true
         }
+    }
+
+    private func startClearBarSweepIfNeeded() {
+        guard !clearBarSweepActive else { return }
+        clearBarSweepActive = true
+        clearBarSweep = -0.35
+        withAnimation(.linear(duration: 1.1).repeatForever(autoreverses: false)) {
+            clearBarSweep = 1.2
+        }
+    }
+
+    private var progressSessionToken: String {
+        let lastDrinkEpoch = Int(statusSnapshot.lastDrinkTime?.timeIntervalSince1970 ?? 0)
+        let totalBucket = Int((statusSnapshot.totalStandardDrinks * 1000).rounded())
+        return "\(lastDrinkEpoch)-\(totalBucket)"
+    }
+
+    private var currentSessionFirstDrinkTime: Date? {
+        let session = SessionClock.entriesInCurrentSession(store.entries, now: .now, calendar: .current)
+        return session.map(\.timestamp).min()
+    }
+
+    private var displayProjectedZeroTime: Date {
+        let reference = !progressAnchorToken.isEmpty ? progressAnchorProjectedZero : statusSnapshot.projectedZeroTime
+        let roundedMinute = floor(reference.timeIntervalSince1970 / 60) * 60
+        return Date(timeIntervalSince1970: roundedMinute)
+    }
+
+    private func syncStableProgressAnchor() {
+        if statusSnapshot.totalStandardDrinks <= 0 || statusSnapshot.state == .cleared {
+            progressAnchorToken = ""
+            progressAnchorSessionStart = nil
+            progressAnchorProjectedZero = statusSnapshot.projectedZeroTime
+            return
+        }
+
+        let token = progressSessionToken
+        guard token != progressAnchorToken else { return }
+
+        progressAnchorToken = token
+        progressAnchorSessionStart = currentSessionFirstDrinkTime
+            ?? statusSnapshot.lastDrinkTime
+            ?? statusSnapshot.date
+        progressAnchorProjectedZero = statusSnapshot.projectedZeroTime
     }
 
     private var doneTonightSummary: String {
