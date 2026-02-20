@@ -841,19 +841,20 @@ struct TodayView: View {
             }
 
             if !statusIsCleared && statusSnapshot.remainingToZero > 0 {
-                TimelineView(.periodic(from: .now, by: 0.5)) { context in
+                TimelineView(.periodic(from: .now, by: 0.12)) { context in
                     let cooledProgress = dynamicCooledOffProgress(at: context.date)
                     let remainingProgress = 1 - cooledProgress
-                    let cooledPercent = max(0, min(100, Int(cooledProgress * 100)))
                     VStack(alignment: .leading, spacing: 6) {
                         HStack {
                             Text("Cooling off progress")
                                 .font(NightTheme.captionFont)
                                 .foregroundStyle(NightTheme.label)
                             Spacer()
-                            Text("\(cooledPercent)% cooled off")
+                            Text("\(cooledProgress * 100, specifier: "%.1f")% cooled off")
                                 .font(NightTheme.captionFont.weight(.bold))
                                 .foregroundStyle(.white)
+                                .monospacedDigit()
+                                .contentTransition(.numericText(value: cooledProgress * 100))
                         }
                         remainingLoadBar(progress: cooledProgress)
                         Text(cooldownFlavorCopy(progress: remainingProgress))
@@ -988,7 +989,7 @@ struct TodayView: View {
                     }
                     .frame(width: width, height: 14)
                     .clipShape(Capsule())
-                    .animation(.linear(duration: 0.5), value: clamped)
+                    .animation(.linear(duration: 0.16), value: clamped)
                 }
             }
             .overlay(
