@@ -208,7 +208,7 @@ struct QuickAddView: View {
     private var quickSessionStatusCard: some View {
         VStack(alignment: .leading, spacing: 7) {
             HStack {
-                Text("Back to zero-ish in")
+                Text("Chill ETA")
                     .font(WatchNightTheme.captionFont)
                     .foregroundStyle(WatchNightTheme.labelSoft)
                 Spacer()
@@ -225,7 +225,7 @@ struct QuickAddView: View {
                     )
             }
 
-            Text(isCleared ? "Zero-ish now" : DisplayFormatter.countdown(store.sessionSnapshot.remainingToZero))
+            Text(isCleared ? "All good" : DisplayFormatter.countdown(store.sessionSnapshot.remainingToZero))
                 .font(WatchNightTheme.bodyStrong)
                 .foregroundStyle(.white)
                 .lineLimit(1)
@@ -233,11 +233,23 @@ struct QuickAddView: View {
 
             Text(
                 isCleared
-                    ? "Probably back to normal now."
-                    : "Probably back to normal by \(DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime))."
+                    ? "You are all good now."
+                    : "Back to normal-human mode around \(DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime))."
             )
                 .font(WatchNightTheme.bodyFont)
                 .foregroundStyle(isCleared ? WatchNightTheme.mint : WatchNightTheme.warning)
+
+            HStack {
+                Text("Cooling off progress")
+                    .font(WatchNightTheme.captionFont)
+                    .foregroundStyle(WatchNightTheme.labelSoft)
+                Spacer()
+                Text("\(Int((cooledOffProgress * 100).rounded()))% cooled off")
+                    .font(WatchNightTheme.captionFont.weight(.bold))
+                    .foregroundStyle(.white)
+            }
+
+            coolingOffBar
 
             Text(statusMoodCopy)
                 .font(WatchNightTheme.captionFont)
@@ -273,10 +285,51 @@ struct QuickAddView: View {
 
     private var statusMoodCopy: String {
         if store.sessionSnapshot.state == .clearing && !isCleared {
-            return "\(buzzStatus.description) Cooling down now."
+            return "\(buzzStatus.description) Cooling off now."
         }
 
         return buzzStatus.description
+    }
+
+    private var cooledOffProgress: Double {
+        guard let start = sessionStartTime else { return 0 }
+        let end = store.sessionSnapshot.projectedZeroTime
+        let total = end.timeIntervalSince(start)
+        guard total > 1 else { return isCleared ? 1 : 0 }
+        return min(max(Date().timeIntervalSince(start) / total, 0), 1)
+    }
+
+    private var sessionStartTime: Date? {
+        let session = SessionClock.entriesInCurrentSession(store.entries, now: .now, calendar: .current)
+        return session.map(\.timestamp).min()
+    }
+
+    private var coolingOffBar: some View {
+        GeometryReader { proxy in
+            let width = max(0, proxy.size.width * cooledOffProgress)
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(Color.white.opacity(0.14))
+
+                if width > 0 {
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [statusBadgeColor, WatchNightTheme.mint.opacity(0.95)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: width)
+                        .animation(.easeInOut(duration: 0.45), value: cooledOffProgress)
+                }
+            }
+            .overlay(
+                Capsule()
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+            )
+        }
+        .frame(height: 10)
     }
 
     private var doneTonightSheet: some View {

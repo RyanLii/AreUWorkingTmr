@@ -42,12 +42,12 @@ struct LiveStatusView: View {
 
                 VStack(spacing: 6) {
                     metricRow(
-                        "Back to zero-ish in",
-                        isCleared ? "Zero-ish now" : DisplayFormatter.countdown(store.sessionSnapshot.remainingToZero)
+                        "Chill ETA",
+                        isCleared ? "All good" : DisplayFormatter.countdown(store.sessionSnapshot.remainingToZero)
                     )
                     metricRow(
-                        "Back to normal by",
-                        isCleared ? "Now-ish" : DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime)
+                        "Back to normal-human",
+                        isCleared ? "Now" : DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime)
                     )
                     metricRow("STD in your body", DisplayFormatter.standardDrinks(currentEffectiveStandardDrinks))
                 }
@@ -55,11 +55,11 @@ struct LiveStatusView: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
-                        Text("Buzz trend")
+                        Text("Cooling off progress")
                             .font(WatchNightTheme.captionFont)
                             .foregroundStyle(WatchNightTheme.label)
                         Spacer()
-                        Text("\(Int((clearTrendProgress * 100).rounded()))% to zero-ish")
+                        Text("\(Int((cooledOffProgress * 100).rounded()))% cooled off")
                             .font(WatchNightTheme.captionFont.weight(.bold))
                             .foregroundStyle(.white)
                     }
@@ -92,10 +92,6 @@ struct LiveStatusView: View {
                         Text("Nerd stuff")
                             .font(WatchNightTheme.captionFont)
                             .foregroundStyle(WatchNightTheme.labelSoft)
-
-                        Text("STD means one standard drink.")
-                            .font(WatchNightTheme.captionFont)
-                            .foregroundStyle(WatchNightTheme.label)
 
                         metricRow(
                             "Total logged STD",
@@ -157,21 +153,28 @@ struct LiveStatusView: View {
 
     private var statusMoodCopy: String {
         if store.sessionSnapshot.state == .clearing && !isCleared {
-            return "\(buzzStatus.description) Cooling down now."
+            return "\(buzzStatus.description) Cooling off now."
         }
 
         return buzzStatus.description
     }
 
-    private var clearTrendProgress: Double {
-        let total = max(store.sessionSnapshot.totalStandardDrinks, 0.001)
-        let metabolized = max(0, min(store.sessionSnapshot.metabolizedStandardDrinks, total))
-        return min(max(metabolized / total, 0), 1)
+    private var cooledOffProgress: Double {
+        guard let start = sessionStartTime else { return 0 }
+        let end = store.sessionSnapshot.projectedZeroTime
+        let total = end.timeIntervalSince(start)
+        guard total > 1 else { return isCleared ? 1 : 0 }
+        return min(max(Date().timeIntervalSince(start) / total, 0), 1)
+    }
+
+    private var sessionStartTime: Date? {
+        let session = SessionClock.entriesInCurrentSession(store.entries, now: .now, calendar: .current)
+        return session.map(\.timestamp).min()
     }
 
     private var clearTrendBar: some View {
         GeometryReader { proxy in
-            let width = max(0, proxy.size.width * clearTrendProgress)
+            let width = max(0, proxy.size.width * cooledOffProgress)
 
             ZStack(alignment: .leading) {
                 Capsule()
@@ -187,7 +190,7 @@ struct LiveStatusView: View {
                             )
                         )
                         .frame(width: width)
-                        .animation(.easeInOut(duration: 0.45), value: clearTrendProgress)
+                        .animation(.easeInOut(duration: 0.45), value: cooledOffProgress)
                 }
             }
             .overlay(
