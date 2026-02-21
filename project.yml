@@ -12,6 +12,9 @@ packages:
   Shimmer:
     url: https://github.com/markiv/SwiftUI-Shimmer
     from: 1.5.1
+  lottie-ios:
+    url: https://github.com/airbnb/lottie-ios
+    from: 4.5.0
 
 targets:
   AreUWorkingTmr:
@@ -23,6 +26,8 @@ targets:
         embed: true
       - package: Shimmer
         product: Shimmer
+      - package: lottie-ios
+        product: Lottie
     sources:
       - path: iOSApp
       - path: Shared
