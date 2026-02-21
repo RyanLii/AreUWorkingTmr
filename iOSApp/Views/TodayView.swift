@@ -808,63 +808,12 @@ struct TodayView: View {
     }
 
     private var statusRecoveryBlock: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .center, spacing: 12) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Recovery ETA")
-                        .font(NightTheme.captionFont)
-                        .foregroundStyle(NightTheme.label)
-
-                    Text(statusRecoveryHeadline)
-                        .font(NightTheme.bodyFont)
-                        .foregroundStyle(statusIsCleared ? NightTheme.success : NightTheme.warning)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.80)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                VStack(alignment: .trailing, spacing: 4) {
-                    ZStack(alignment: .trailing) {
-                        Text("88h 88m")
-                            .font(NightTheme.sectionFont.weight(.heavy))
-                            .opacity(0)
-
-                        Text(statusRecoveryCountdown)
-                            .font(NightTheme.sectionFont.weight(.heavy))
-                            .foregroundStyle(.white)
-                            .monospacedDigit()
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.72)
-                    }
-
-                    if !statusIsCleared {
-                        Text("Clear \(DisplayFormatter.eta(displayProjectedZeroTime))")
-                            .font(NightTheme.captionFont)
-                            .foregroundStyle(NightTheme.label)
-                            .monospacedDigit()
-                    }
-                }
-                .frame(width: 96, alignment: .trailing)
-            }
-
+        Group {
             if !statusIsCleared && statusSnapshot.remainingToZero > 0 {
                 TimelineView(.periodic(from: .now, by: 0.5)) { context in
                     let cooledProgress = dynamicCooledOffProgress(at: context.date)
                     let recoveryFraction = dynamicRecoveryFraction()
-                    let remainingProgress = 1 - cooledProgress
-                    let cooledPercent = max(0, min(100, Int(cooledProgress * 100)))
                     VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Text("Cooling off progress")
-                                .font(NightTheme.captionFont)
-                                .foregroundStyle(NightTheme.label)
-                            Spacer()
-                            Text("\(cooledPercent)% cooled off")
-                                .font(NightTheme.captionFont.weight(.bold))
-                                .foregroundStyle(.white)
-                        }
                         remainingLoadBar(progress: cooledProgress, recoveryFraction: recoveryFraction)
                         HStack {
                             HStack(spacing: 4) {
@@ -885,12 +834,13 @@ struct TodayView: View {
                                     .frame(width: 6, height: 6)
                             }
                         }
-                        Text(cooldownFlavorCopy(progress: remainingProgress))
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
-                            .foregroundStyle(NightTheme.label)
+                        Text("Model estimate only — actual recovery varies by person. Not medical or legal advice.")
+                            .font(.system(size: 9, weight: .regular, design: .rounded))
+                            .foregroundStyle(NightTheme.label.opacity(0.55))
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    .transition(.identity)
                 }
+                .transition(.identity)
             }
         }
     }
