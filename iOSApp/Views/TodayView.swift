@@ -860,6 +860,7 @@ struct TodayView: View {
                             .font(.system(size: 11, weight: .semibold, design: .rounded))
                             .foregroundStyle(NightTheme.label)
                     }
+                    .transition(.identity)
                 }
             }
         }
