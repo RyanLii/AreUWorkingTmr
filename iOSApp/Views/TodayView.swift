@@ -154,11 +154,11 @@ struct TodayView: View {
             DisclosureGroup(isExpanded: $statusDetailsExpanded) {
                 VStack(alignment: .leading, spacing: 8) {
                     statusDetailRow(
-                        "Total logged standard drinks",
+                        "Total logged",
                         DisplayFormatter.standardDrinks(statusSnapshot.totalStandardDrinks)
                     )
                     statusDetailRow(
-                        "Current standard drinks in body",
+                        "In body now",
                         DisplayFormatter.standardDrinks(statusEffectiveStandardDrinks)
                     )
                     statusDetailRow(
@@ -166,18 +166,26 @@ struct TodayView: View {
                         DisplayFormatter.standardDrinks(statusSnapshot.pendingAbsorptionStandardDrinks)
                     )
                     statusDetailRow(
+                        "Metabolized",
+                        DisplayFormatter.standardDrinks(statusSnapshot.metabolizedStandardDrinks)
+                    )
+                    statusDetailRow(
                         "Estimated peak",
                         "\(DisplayFormatter.standardDrinks(statusSnapshot.estimatedPeakStandardDrinks)) at \(DisplayFormatter.eta(statusSnapshot.estimatedPeakTime))"
                     )
-
-                    if let lastDrink = statusSnapshot.lastDrinkTime {
-                        statusDetailRow("Last drink", DisplayFormatter.eta(lastDrink))
-                    }
+                    statusDetailRow(
+                        "Feel human",
+                        DisplayFormatter.eta(statusSnapshot.projectedRecoveryTime)
+                    )
+                    statusDetailRow(
+                        "Full clear",
+                        DisplayFormatter.eta(statusSnapshot.projectedZeroTime)
+                    )
 
                     if statusSnapshot.clearingElapsed > 1,
                        (statusSnapshot.state == .clearing || statusSnapshot.state == .cleared) {
                         statusDetailRow(
-                            "Elapsed clearing duration",
+                            "Clearing for",
                             DisplayFormatter.duration(statusSnapshot.clearingElapsed)
                         )
                     }
