@@ -213,6 +213,7 @@ struct SessionSnapshot: Equatable {
     var metabolizedStandardDrinks: Double = 0
     var projectedZeroTime: Date = .now
     var remainingToZero: TimeInterval = 0
+    var projectedRecoveryTime: Date = .now
     var estimatedPeakStandardDrinks: Double = 0
     var estimatedPeakTime: Date = .now
     var lastDrinkTime: Date?

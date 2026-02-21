@@ -811,7 +811,7 @@ struct TodayView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Chill ETA")
+                    Text("Recovery ETA")
                         .font(NightTheme.captionFont)
                         .foregroundStyle(NightTheme.label)
 
@@ -825,17 +825,26 @@ struct TodayView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                ZStack(alignment: .trailing) {
-                    Text("88h 88m")
-                        .font(NightTheme.sectionFont.weight(.heavy))
-                        .opacity(0)
+                VStack(alignment: .trailing, spacing: 4) {
+                    ZStack(alignment: .trailing) {
+                        Text("88h 88m")
+                            .font(NightTheme.sectionFont.weight(.heavy))
+                            .opacity(0)
 
-                    Text(statusRecoveryCountdown)
-                        .font(NightTheme.sectionFont.weight(.heavy))
-                        .foregroundStyle(.white)
-                        .monospacedDigit()
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.72)
+                        Text(statusRecoveryCountdown)
+                            .font(NightTheme.sectionFont.weight(.heavy))
+                            .foregroundStyle(.white)
+                            .monospacedDigit()
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.72)
+                    }
+
+                    if !statusIsCleared {
+                        Text("Clear \(DisplayFormatter.eta(displayProjectedZeroTime))")
+                            .font(NightTheme.captionFont)
+                            .foregroundStyle(NightTheme.label)
+                            .monospacedDigit()
+                    }
                 }
                 .frame(width: 96, alignment: .trailing)
             }
@@ -843,6 +852,7 @@ struct TodayView: View {
             if !statusIsCleared && statusSnapshot.remainingToZero > 0 {
                 TimelineView(.periodic(from: .now, by: 0.5)) { context in
                     let cooledProgress = dynamicCooledOffProgress(at: context.date)
+                    let recoveryFraction = dynamicRecoveryFraction()
                     let remainingProgress = 1 - cooledProgress
                     let cooledPercent = max(0, min(100, Int(cooledProgress * 100)))
                     VStack(alignment: .leading, spacing: 6) {
@@ -855,7 +865,26 @@ struct TodayView: View {
                                 .font(NightTheme.captionFont.weight(.bold))
                                 .foregroundStyle(.white)
                         }
-                        remainingLoadBar(progress: cooledProgress)
+                        remainingLoadBar(progress: cooledProgress, recoveryFraction: recoveryFraction)
+                        HStack {
+                            HStack(spacing: 4) {
+                                Circle()
+                                    .fill(NightTheme.warning)
+                                    .frame(width: 6, height: 6)
+                                Text("Recovery \(DisplayFormatter.eta(statusSnapshot.projectedRecoveryTime))")
+                                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(NightTheme.warning.opacity(0.9))
+                            }
+                            Spacer()
+                            HStack(spacing: 4) {
+                                Text("Full clear \(DisplayFormatter.eta(displayProjectedZeroTime))")
+                                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(NightTheme.label)
+                                Circle()
+                                    .fill(Color(red: 0.36, green: 0.76, blue: 0.92))
+                                    .frame(width: 6, height: 6)
+                            }
+                        }
                         Text(cooldownFlavorCopy(progress: remainingProgress))
                             .font(.system(size: 11, weight: .semibold, design: .rounded))
                             .foregroundStyle(NightTheme.label)
@@ -898,7 +927,7 @@ struct TodayView: View {
             return "You are all good now."
         }
 
-        return "Back to normal-human mode around \(DisplayFormatter.eta(displayProjectedZeroTime))."
+        return "Feeling better around \(DisplayFormatter.eta(statusSnapshot.projectedRecoveryTime))."
     }
 
     private var statusRecoveryCountdown: String {
@@ -906,7 +935,8 @@ struct TodayView: View {
             return "All good"
         }
 
-        return DisplayFormatter.countdown(dynamicRemainingToZero(at: .now))
+        let remaining = max(0, statusSnapshot.projectedRecoveryTime.timeIntervalSince(.now))
+        return DisplayFormatter.countdown(remaining)
     }
 
     private func dynamicRemainingToZero(at now: Date) -> TimeInterval {
@@ -929,6 +959,17 @@ struct TodayView: View {
         return min(max(now.timeIntervalSince(start) / total, 0), 1)
     }
 
+    private func dynamicRecoveryFraction() -> Double {
+        let start = progressAnchorSessionStart
+            ?? currentSessionFirstDrinkTime
+            ?? statusSnapshot.lastDrinkTime
+            ?? statusSnapshot.date
+        let end = !progressAnchorToken.isEmpty ? progressAnchorProjectedZero : statusSnapshot.projectedZeroTime
+        let total = end.timeIntervalSince(start)
+        guard total > 1 else { return 0.85 }
+        return min(max(statusSnapshot.projectedRecoveryTime.timeIntervalSince(start) / total, 0), 1)
+    }
+
     private func cooldownFlavorCopy(progress: Double) -> String {
         if progress > 0.75 {
             return "Still pretty up there. Sip water and pace it."
@@ -945,14 +986,18 @@ struct TodayView: View {
         return "Home stretch. You are almost all good."
     }
 
-    private func remainingLoadBar(progress: Double) -> some View {
+    private func remainingLoadBar(progress: Double, recoveryFraction: Double) -> some View {
         let barHeight: CGFloat = 20
         let runnerSize: CGFloat = barHeight
 
         return GeometryReader { proxy in
             let clamped = min(max(progress, 0), 1)
-            let width = max(0, proxy.size.width * clamped)
+            let totalWidth = proxy.size.width
+            let width = max(0, totalWidth * clamped)
+            let recoveryX = max(0, min(totalWidth * min(max(recoveryFraction, 0), 1), totalWidth))
             let glowWidth = max(22, width * 0.24)
+            let seg1Width = min(width, recoveryX)
+            let seg2Width = max(0, width - recoveryX)
 
             ZStack(alignment: .leading) {
                 Capsule()
@@ -961,18 +1006,37 @@ struct TodayView: View {
 
                 if width > 0 {
                     ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        NightTheme.mint.opacity(0.95),
-                                        NightTheme.accentSoft.opacity(0.92),
-                                        NightTheme.warning.opacity(0.88)
-                                    ],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
+                        if seg1Width > 0 {
+                            Rectangle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            NightTheme.mint.opacity(0.95),
+                                            NightTheme.accentSoft.opacity(0.92),
+                                            NightTheme.warning.opacity(0.88)
+                                        ],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
                                 )
-                            )
+                                .frame(width: seg1Width, height: barHeight)
+                        }
+
+                        if seg2Width > 0 {
+                            Rectangle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            Color(red: 0.36, green: 0.76, blue: 0.92).opacity(0.90),
+                                            Color(red: 0.60, green: 0.88, blue: 0.98).opacity(0.75)
+                                        ],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .frame(width: seg2Width, height: barHeight)
+                                .offset(x: recoveryX)
+                        }
 
                         Capsule()
                             .fill(
@@ -998,6 +1062,13 @@ struct TodayView: View {
                         .frame(width: runnerSize, height: runnerSize)
                         .offset(x: max(0, width - runnerSize))
                         .animation(.linear(duration: 0.5), value: clamped)
+                }
+
+                if recoveryX > 6 && recoveryX < totalWidth - 6 {
+                    Rectangle()
+                        .fill(Color.white.opacity(0.65))
+                        .frame(width: 1.5, height: barHeight - 4)
+                        .offset(x: recoveryX - 0.75)
                 }
             }
             .overlay(

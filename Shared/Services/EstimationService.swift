@@ -142,6 +142,7 @@ struct DefaultEstimationService: EstimationService {
         let peak = estimatedPeak(blocks: blocks, sessionStart: sessionStart, projectionEnd: projectedZero)
         let clearingStartedAt = clearingStartTime(state: state, peakTime: peak.time, now: now)
         let clearingElapsed = max(0, now.timeIntervalSince(clearingStartedAt ?? now))
+        let projectedRecovery = recoveryTime(totalStandardDrinks: totalStandardDrinks, projectedZeroTime: projectedZero)
 
         return SessionSnapshot(
             date: now,
@@ -153,6 +154,7 @@ struct DefaultEstimationService: EstimationService {
             metabolizedStandardDrinks: metabolizedNow,
             projectedZeroTime: projectedZero,
             remainingToZero: remainingToZero,
+            projectedRecoveryTime: projectedRecovery,
             estimatedPeakStandardDrinks: peak.value,
             estimatedPeakTime: peak.time,
             lastDrinkTime: sortedEntries.last?.timestamp,
@@ -336,6 +338,14 @@ struct DefaultEstimationService: EstimationService {
         }
 
         return max(0, current - (config.metabolismRateSDPerHour - inRate) * dtHours)
+    }
+
+    // v2.0: Dynamic recovery time — earlier than full clearance.
+    // Buffer scales with session intake so heavier sessions get a larger safety margin.
+    private func recoveryTime(totalStandardDrinks: Double, projectedZeroTime: Date) -> Date {
+        let bufferRaw = 0.33 + 0.08 * max(0, totalStandardDrinks - 1)
+        let bufferHours = min(2.0, max(0.25, bufferRaw))
+        return projectedZeroTime.addingTimeInterval(-bufferHours * 3600)
     }
 
     private func projectedZeroTime(
