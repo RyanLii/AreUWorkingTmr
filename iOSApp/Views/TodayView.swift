@@ -945,7 +945,10 @@ struct TodayView: View {
     }
 
     private func remainingLoadBar(progress: Double) -> some View {
-        GeometryReader { proxy in
+        let barHeight: CGFloat = 20
+        let runnerSize: CGFloat = barHeight
+
+        return GeometryReader { proxy in
             let clamped = min(max(progress, 0), 1)
             let width = max(0, proxy.size.width * clamped)
             let glowWidth = max(22, width * 0.24)
@@ -953,7 +956,7 @@ struct TodayView: View {
             ZStack(alignment: .leading) {
                 Capsule()
                     .fill(Color.white.opacity(0.14))
-                    .frame(height: 14)
+                    .frame(height: barHeight)
 
                 if width > 0 {
                     ZStack(alignment: .leading) {
@@ -982,13 +985,18 @@ struct TodayView: View {
                                     endPoint: .trailing
                                 )
                             )
-                            .frame(width: glowWidth, height: 14)
+                            .frame(width: glowWidth, height: barHeight)
                             .offset(x: (width + glowWidth) * clearBarSweep - glowWidth)
                             .blendMode(.screen)
                     }
-                    .frame(width: width, height: 14)
+                    .frame(width: width, height: barHeight)
                     .clipShape(Capsule())
                     .animation(.linear(duration: 0.5), value: clamped)
+
+                    LottieView(animationName: "Running character")
+                        .frame(width: runnerSize, height: runnerSize)
+                        .offset(x: max(0, width - runnerSize))
+                        .animation(.linear(duration: 0.5), value: clamped)
                 }
             }
             .overlay(
@@ -999,7 +1007,7 @@ struct TodayView: View {
                 startClearBarSweepIfNeeded()
             }
         }
-        .frame(height: 18)
+        .frame(height: barHeight)
     }
 
     private func startStatusChipPulseIfNeeded() {

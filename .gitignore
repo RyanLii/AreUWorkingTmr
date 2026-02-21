@@ -26,3 +26,6 @@ artifacts/
 build/
 *.log
 tmp/
+
+# Claude Code local state
+.claude/
