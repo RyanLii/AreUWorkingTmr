@@ -143,8 +143,8 @@ struct TodayView: View {
             }
 
             Text(statusMoodCopy)
-                .font(.system(size: 12.5, weight: .semibold, design: .rounded))
-                .foregroundStyle(NightTheme.label.opacity(0.96))
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .foregroundStyle(statusBadgeColor.opacity(0.90))
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
                 .fixedSize(horizontal: false, vertical: true)
@@ -820,7 +820,7 @@ struct TodayView: View {
                                 Circle()
                                     .fill(NightTheme.warning)
                                     .frame(width: 6, height: 6)
-                                Text("Recovery \(DisplayFormatter.eta(statusSnapshot.projectedRecoveryTime))")
+                                Text("Feel human \(DisplayFormatter.eta(statusSnapshot.projectedRecoveryTime))")
                                     .font(.system(size: 10, weight: .semibold, design: .rounded))
                                     .foregroundStyle(NightTheme.warning.opacity(0.9))
                             }
@@ -847,7 +847,7 @@ struct TodayView: View {
 
     private var statusBadgeColor: Color {
         switch buzzStatus.level {
-        case .nightJustBegan:
+        case .underTheRadar:
             return NightTheme.mint
         case .goodVibes:
             return Color(red: 0.76, green: 0.91, blue: 0.52)
@@ -946,8 +946,6 @@ struct TodayView: View {
             let width = max(0, totalWidth * clamped)
             let recoveryX = max(0, min(totalWidth * min(max(recoveryFraction, 0), 1), totalWidth))
             let glowWidth = max(22, width * 0.24)
-            let seg1Width = min(width, recoveryX)
-            let seg2Width = max(0, width - recoveryX)
 
             ZStack(alignment: .leading) {
                 Capsule()
@@ -955,38 +953,22 @@ struct TodayView: View {
                     .frame(height: barHeight)
 
                 if width > 0 {
-                    ZStack(alignment: .leading) {
-                        if seg1Width > 0 {
-                            Rectangle()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [
-                                            NightTheme.mint.opacity(0.95),
-                                            NightTheme.accentSoft.opacity(0.92),
-                                            NightTheme.warning.opacity(0.88)
-                                        ],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .frame(width: seg1Width, height: barHeight)
-                        }
+                    let recoveryStop = min(max(recoveryX / width, 0), 1)
 
-                        if seg2Width > 0 {
-                            Rectangle()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [
-                                            Color(red: 0.36, green: 0.76, blue: 0.92).opacity(0.90),
-                                            Color(red: 0.60, green: 0.88, blue: 0.98).opacity(0.75)
-                                        ],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
+                    ZStack(alignment: .leading) {
+                        Rectangle()
+                            .fill(
+                                LinearGradient(
+                                    stops: [
+                                        .init(color: NightTheme.mint.opacity(0.95), location: 0),
+                                        .init(color: NightTheme.warning.opacity(0.88), location: recoveryStop),
+                                        .init(color: Color(red: 0.20, green: 0.60, blue: 0.95), location: min(recoveryStop + 0.001, 1)),
+                                        .init(color: Color(red: 0.40, green: 0.82, blue: 1.00), location: 1)
+                                    ],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
                                 )
-                                .frame(width: seg2Width, height: barHeight)
-                                .offset(x: recoveryX)
-                        }
+                            )
 
                         Capsule()
                             .fill(

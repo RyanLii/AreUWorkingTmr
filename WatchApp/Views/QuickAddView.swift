@@ -266,7 +266,7 @@ struct QuickAddView: View {
 
     private var statusBadgeColor: Color {
         switch buzzStatus.level {
-        case .nightJustBegan:
+        case .underTheRadar:
             return WatchNightTheme.mint
         case .goodVibes:
             return Color(red: 0.76, green: 0.91, blue: 0.52)
