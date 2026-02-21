@@ -1,7 +1,7 @@
 # Drinking Tracker App
 ## Dynamic Standard Drink Model Specification
-### Version 1.4 (Human-State Simulator UX Revision)
-### Date: 2026-02-19
+### Version 2.0 (Dynamic Recovery Framework)
+### Date: 2026-02-22
 
 ---
 
@@ -14,6 +14,7 @@ This version is designed to satisfy all of the following:
 2. Behavioral realism: absorption has a lag; it does not rise immediately at drink entry.
 3. User clarity: default UI focuses on "time to clear"; details are on demand.
 4. Engineering practicality: stable behavior under very short-interval rapid drinking logs.
+5. Recovery awareness: a dynamic Recovery Time (earlier than full clearance) is surfaced as the primary output, scaled by session intake.
 
 This model is for behavioral awareness only. It is not medical, legal, or driving advice.
 
@@ -28,6 +29,7 @@ This model is for behavioral awareness only. It is not medical, legal, or drivin
 3. Burst-merge handling for very short drink intervals.
 4. Layered UX guidance for primary vs detailed information.
 5. Runnable incremental algorithm and validation protocol.
+6. Dynamic Recovery Time derived from full clearance with a session-scaled buffer.
 
 ### 2.2 Out of Scope
 
@@ -48,7 +50,7 @@ display_sd(t) = B(t)
 
 `B(t)` represents effective standard drinks currently in the body.
 It is an internal quantity; the main UI should answer:
-`What state am I in now?` and `How long until clear?`
+`What state am I in now?` and `How long until I feel human again?`
 
 Recommended state labels:
 
@@ -68,6 +70,10 @@ Recommended state labels:
 5. `a(t) = dA/dt`: instantaneous absorption rate (SD/h).
 6. `r`: metabolism rate (SD/h).
 7. `B(t)`: effective standard-drink body stock at time `t`.
+8. `S_total`: total standard drinks consumed in the session.
+9. `t_clear`: time when `B(t)` reaches 0 and remains 0 (full clearance).
+10. `buffer_hours`: dynamic safety buffer derived from `S_total`.
+11. `t_recovery`: recovery time — `t_clear - buffer_hours` (primary output).
 
 ---
 
@@ -192,9 +198,62 @@ On refresh:
 
 ---
 
-## 12. Real-World Interpretation
+## 12. Dynamic Recovery Framework (v2.0)
 
-### 12.1 Two drinks, wait 5 hours, then one drink
+This section extends the output layer of the v1.4 model. All core dynamics (absorption lag, non-negative stock, segmented linear propagation) are unchanged.
+
+### 12.1 Dynamic Buffer
+
+Let `S_total` be the total standard drinks consumed in the session.
+
+```text
+buffer_hours_raw = 0.33 + 0.08 × max(0, S_total − 1)
+buffer_hours     = clamp(buffer_hours_raw, 0.25, 2.0)
+```
+
+Lighter sessions produce shorter buffers; heavier sessions produce longer ones.
+This ensures the Recovery Time is meaningfully earlier than full clearance across the full intake range.
+
+| `S_total` | `buffer_hours_raw` | `buffer_hours` |
+|---|---|---|
+| 1 | 0.33 | 0.33 |
+| 3 | 0.49 | 0.49 |
+| 6 | 0.73 | 0.73 |
+| 10 | 1.05 | 1.05 |
+| 20 | 1.85 | 1.85 |
+| 25 | 2.25 | 2.00 (clamped) |
+
+### 12.2 Recovery Time Definition
+
+Let `t_clear` be the first time `B(t) = 0` and stays at 0.
+
+```text
+t_recovery = t_clear − buffer_hours × 3600
+```
+
+`t_recovery` is the model's estimate of when the user has returned to a low-impact internal state. It is not a BAC threshold, legal limit, or medical standard.
+
+### 12.3 Updated Output Priority
+
+| Priority | Output | Description |
+|---|---|---|
+| Primary | Recovery Time (`t_recovery`) | When the user is likely to feel functional again |
+| Secondary | Full Clearance (`t_clear`) | When modeled `B(t)` reaches zero |
+
+### 12.4 Disclaimer
+
+Recovery Time is derived purely from the model's internal stock simulation. It does not represent:
+- Blood or breath alcohol concentration.
+- Fitness to drive or operate machinery.
+- Any legal threshold.
+
+Individual variation (food, sleep, weight, medication) may shift actual recovery earlier or later.
+
+---
+
+## 13. Real-World Interpretation
+
+### 13.1 Two drinks, wait 5 hours, then one drink
 
 Under default params (`r = 0.8`, `lag = 15`):
 
@@ -202,36 +261,51 @@ Under default params (`r = 0.8`, `lag = 15`):
 2. During the first 15 minutes after the third drink, `B` remains near 0 (lag).
 3. Then it rises, and is not canceled by historical idle time.
 
-### 12.2 Five drinks logged within 1 minute
+### 13.2 Five drinks logged within 1 minute
 
 With default `burst_merge_window = 2`, these logs merge into one cluster.
 Combined with `lag + min_absorption_duration`, this avoids unstable spikes.
 
 ---
 
-## 13. User-Facing Output Guidance
+## 14. User-Facing Output Guidance
 
-### 13.1 Product Principle
+### 14.1 Product Principle
 
-Default screen should answer one question:
-`How long until clear?`
+Default screen answers two questions in order:
 
-Detailed quantities (how much absorbed, current SD level, etc.) belong in the detail view.
+1. `How long until I feel human again?` (Recovery Time — primary)
+2. `How long until fully cleared?` (Full Clearance — secondary)
 
-### 13.2 Main Card (Default View)
+Detailed quantities belong in the detail view.
 
-1. Primary: `Time to clear` (countdown).
-2. Secondary: `Estimated clear time` (absolute clock time, e.g. `01:40`).
-3. State chip: `Pre-absorption / Absorbing / Clearing / Cleared`.
+### 14.2 Progress Bar
 
-### 13.3 Detail Page (On Demand)
+The cooling-off bar is divided into two visual segments at the recovery split point:
+
+- **Segment 1** (session start → Recovery Time): warm gradient (mint → orange).
+  Represents the active-load phase.
+- **Segment 2** (Recovery Time → Full Clearance): cool gradient (blue).
+  Represents the tail / residual phase.
+
+Labels below the bar:
+
+```text
+● Feel human ~HH:MM          Full clear ~HH:MM ●
+```
+
+### 14.3 Detail Page (On Demand)
 
 If the user opens details, show:
 
-1. `Current estimated SD in body` (`B(now)`).
-2. `Estimated pending absorption SD` (`pending_sd(now)`).
-3. `Estimated peak SD` and `peak time`.
-4. Last drink timestamp and elapsed clearing duration.
+1. `Total logged` — `S_total` in SD.
+2. `In body now` — `B(now)` in SD.
+3. `Still absorbing` — `pending_sd(now)` in SD.
+4. `Metabolized` — `S_total - B(now) - pending_sd(now)` in SD.
+5. `Estimated peak` — peak `B(t)` and time.
+6. `Feel human` — `t_recovery` (absolute time).
+7. `Full clear` — `t_clear` (absolute time).
+8. `Clearing for` — elapsed time since `B(t)` began descending (shown in clearing/cleared state only).
 
 Where:
 
@@ -239,16 +313,12 @@ Where:
 pending_sd(t) = sum_j [ v_j * (1 - p_j(t)) ]
 ```
 
-### 13.4 Definition of "Time to Clear"
-
-`Time to clear` is defined as:
+### 14.4 Definition of "Full Clearance"
 
 ```text
 Assuming no new drinks from now on,
 the remaining time until B(t) reaches 0 and stays at 0.
 ```
-
-This is the model's final-clear time for effective standard drinks.
 
 Notes:
 
@@ -256,7 +326,7 @@ Notes:
 2. It must be the first time after which logged intake cannot make it rise again.
 3. This handles lag cases (e.g. just logged a drink but absorption has not started yet).
 
-### 13.5 Human-Feeling Mapping (Non-Medical)
+### 14.5 Human-Feeling Mapping (Non-Medical)
 
 For better realism and readability, map states to supportive copy:
 
@@ -267,21 +337,16 @@ For better realism and readability, map states to supportive copy:
 
 These are behavioral cues, not medical judgments.
 
-### 13.6 Important Disclaimer
+### 14.6 Important Disclaimer
 
-`Time to clear` only means modeled `B(t)` has cleared.
+All outputs only mean modeled `B(t)` has cleared or is below threshold.
 
-1. It is not equal to measured BAC.
-2. It is an awareness metric, not a medical conclusion.
-
-Recommended fixed UI copy:
-
-1. Main label: `Estimated Clear Time (Model)`
-2. Secondary copy: `Represents modeled final clearing of effective standard drinks only.`
+1. They are not equal to measured BAC.
+2. They are awareness metrics, not medical conclusions.
 
 ---
 
-## 14. Validation Protocol
+## 15. Validation Protocol
 
 Script path:
 
@@ -301,7 +366,7 @@ Default output compares these candidates against physical reference:
 
 ---
 
-## 15. Current Validation Snapshot (Default Cases)
+## 16. Current Validation Snapshot (Default Cases)
 
 Based on current defaults and scenarios (2026-02-19):
 
@@ -313,7 +378,7 @@ Based on current defaults and scenarios (2026-02-19):
 
 ---
 
-## 16. Acceptance Tests
+## 17. Acceptance Tests
 
 At minimum:
 
@@ -322,18 +387,22 @@ At minimum:
 3. `long_gap_second_drink`.
 4. `one_minute_five_drinks_burst`.
 5. Monte Carlo random regression.
+6. Recovery buffer scaling: verify `t_recovery` is `buffer_hours` before `t_clear` for a range of `S_total` values.
 
 ---
 
-## 17. Assumptions and Limitations
+## 18. Assumptions and Limitations
 
 1. Absorption is still a linear approximation, not full pharmacokinetics.
 2. Parameters are population-level approximations, not individual medical truth.
 3. Outputs are not equivalent to breath or blood BAC measurements.
+4. Recovery Time does not account for sleep quality, food, hydration, or individual variation.
 
 ---
 
-## 18. Migration Notes (v1.1 -> v1.4)
+## 19. Migration Notes
+
+### v1.1 → v1.4
 
 1. Remove global continuous subtraction `M(t) = r * (t - s_first)`.
 2. Remove carry-forward negative debt state.
@@ -343,3 +412,12 @@ At minimum:
 6. Shift UI to "time-first main card + numeric detail page."
 7. Update product narrative from tank metaphor to human-state simulator.
 
+### v1.4 → v2.0
+
+1. Add `projectedRecoveryTime` field to `SessionSnapshot`.
+2. Implement `recoveryTime(totalStandardDrinks:projectedZeroTime:)` in `EstimationService`.
+3. Recovery buffer formula: `clamp(0.33 + 0.08 × max(0, S_total - 1), 0.25, 2.0)` hours before `t_clear`.
+4. Promote Recovery Time to primary UI output; demote Full Clearance to secondary.
+5. Split cooling-off progress bar at recovery fraction (warm → cool gradient).
+6. Add `Feel human` and `Full clear` rows to detail view.
+7. No changes to core absorption or metabolism math.
