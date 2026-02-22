@@ -37,6 +37,7 @@ struct QuickAddView: View {
         effectiveStandardDrinks: 0,
         workingTomorrow: false
     )
+    @State private var drinkIconsAppeared: [Bool] = []
     @State private var detailScrollToBottomToken = 0
     @State private var showStatusDetails = false
     @State private var progressAnchorToken: String = ""
@@ -45,6 +46,11 @@ struct QuickAddView: View {
 
     private var presets: [DrinkPreset] {
         store.quickAddPresets()
+    }
+
+    private var sessionDrinkEntries: [DrinkEntry] {
+        SessionClock.entriesInCurrentSession(store.entries, now: .now, calendar: .current)
+            .sorted { $0.timestamp < $1.timestamp }
     }
 
     private var checklistCompletedCount: Int {
@@ -88,6 +94,28 @@ struct QuickAddView: View {
                     .lineLimit(2)
                     .minimumScaleFactor(0.85)
 
+                if hasSessionDrinks && !store.hasMarkedDoneTonight {
+                    Button {
+                        hydrationConfirmed = false
+                        rideConfirmed = false
+                        alarmConfirmed = false
+                        drinkIconsAppeared = []
+                        refreshDoneTonightMessage()
+                        showDoneTonightSheet = true
+                    } label: {
+                        HStack {
+                            Label("Cut Me Off", systemImage: "moon.stars.fill")
+                                .font(WatchNightTheme.bodyStrong)
+                                .foregroundStyle(.white)
+                            Spacer()
+                            Image(systemName: "sparkles")
+                                .foregroundStyle(WatchNightTheme.accentSoft)
+                        }
+                        .watchCard(highlighted: true)
+                    }
+                    .buttonStyle(.plain)
+                }
+
                 if hasSessionDrinks {
                     quickSessionStatusCard
                 }
@@ -101,27 +129,6 @@ struct QuickAddView: View {
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .watchCard()
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                if hasSessionDrinks && !store.hasMarkedDoneTonight {
-                    Button {
-                        hydrationConfirmed = false
-                        rideConfirmed = false
-                        alarmConfirmed = false
-                        refreshDoneTonightMessage()
-                        showDoneTonightSheet = true
-                    } label: {
-                        HStack {
-                            Label("I'm Done Tonight", systemImage: "moon.stars.fill")
-                                .font(WatchNightTheme.bodyStrong)
-                                .foregroundStyle(.white)
-                            Spacer()
-                            Image(systemName: "sparkles")
-                                .foregroundStyle(WatchNightTheme.accentSoft)
-                        }
-                        .watchCard(highlighted: true)
                     }
                     .buttonStyle(.plain)
                 }
@@ -483,30 +490,58 @@ struct QuickAddView: View {
         .frame(height: 14)
     }
 
+    private var watchDrinkSummaryView: some View {
+        let entries = sessionDrinkEntries
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("Tonight's haul")
+                .font(WatchNightTheme.captionFont)
+                .foregroundStyle(WatchNightTheme.label)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 36), spacing: 6)], spacing: 6) {
+                ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
+                    let appeared = drinkIconsAppeared.indices.contains(index) ? drinkIconsAppeared[index] : false
+                    ZStack {
+                        Circle()
+                            .fill(watchTint(for: entry.category).opacity(0.22))
+                            .frame(width: 36, height: 36)
+                        Image(systemName: symbol(for: entry.category))
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(watchTint(for: entry.category))
+                    }
+                    .offset(x: appeared ? 0 : 50, y: appeared ? 0 : 8)
+                    .opacity(appeared ? 1 : 0)
+                }
+            }
+        }
+        .watchCard(highlighted: true)
+        .onAppear {
+            let entries = sessionDrinkEntries
+            drinkIconsAppeared = Array(repeating: false, count: entries.count)
+            for i in entries.indices {
+                DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.09 + 0.1) {
+                    withAnimation(.spring(response: 0.38, dampingFraction: 0.62)) {
+                        guard drinkIconsAppeared.indices.contains(i) else { return }
+                        drinkIconsAppeared[i] = true
+                    }
+                }
+            }
+        }
+    }
+
+    private func watchTint(for category: DrinkCategory) -> Color {
+        switch category {
+        case .beer: Color(red: 0.99, green: 0.79, blue: 0.34)
+        case .wine: Color(red: 0.98, green: 0.52, blue: 0.58)
+        case .shot: Color(red: 0.99, green: 0.56, blue: 0.36)
+        case .cocktail: WatchNightTheme.mint
+        case .spirits: Color(red: 0.99, green: 0.69, blue: 0.37)
+        case .custom: Color.white
+        }
+    }
+
     private var doneTonightSheet: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Spacer()
-                    Button("Close") {
-                        showDoneTonightSheet = false
-                    }
-                    .font(WatchNightTheme.captionFont)
-                    .foregroundStyle(WatchNightTheme.accent)
-                }
-
-                Text("I'm Done Tonight")
-                    .font(WatchNightTheme.titleFont)
-                    .foregroundStyle(.white)
-
-                Text(doneTonightContext)
-                    .font(WatchNightTheme.captionFont)
-                    .foregroundStyle(WatchNightTheme.label)
-
-                Text(doneTonightMessage)
-                    .font(WatchNightTheme.bodyFont)
-                    .foregroundStyle(.white)
-                    .watchCard(highlighted: true)
+                watchDrinkSummaryView
 
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
@@ -1121,7 +1156,7 @@ extension Notification.Name {
     static let watchDemoAction = Notification.Name("WatchDemoAction")
 }
 
-private enum DoneTonightTone {
+enum DoneTonightTone {
     case softStart
     case goodVibe
     case playfulMode
@@ -1147,7 +1182,7 @@ private enum DoneTonightTone {
     }
 }
 
-private enum DoneTonightCopy {
+enum DoneTonightCopy {
     static func random(totalStandardDrinks: Double, effectiveStandardDrinks: Double, workingTomorrow _: Bool) -> String {
         let tone = toneBand(totalStandardDrinks: totalStandardDrinks, effectiveStandardDrinks: effectiveStandardDrinks)
         let candidates = lines(for: tone)

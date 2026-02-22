@@ -40,6 +40,12 @@ struct TodayView: View {
     @State private var hydrationConfirmed = false
     @State private var rideConfirmed = false
     @State private var alarmConfirmed = false
+    @State private var drinkIconsAppeared: [Bool] = []
+
+    private var sessionDrinkEntries: [DrinkEntry] {
+        SessionClock.entriesInCurrentSession(store.entries, now: .now, calendar: .current)
+            .sorted { $0.timestamp < $1.timestamp }
+    }
 
     private var allPresets: [DrinkPreset] {
         store.quickAddPresets()
@@ -326,10 +332,11 @@ struct TodayView: View {
             hydrationConfirmed = false
             rideConfirmed = false
             alarmConfirmed = false
+            drinkIconsAppeared = []
             showDoneTonightSheet = true
         } label: {
             HStack {
-                Label("I'm Done Tonight", systemImage: "moon.stars.fill")
+                Label("Cut Me Off", systemImage: "moon.stars.fill")
                     .font(NightTheme.bodyFont.weight(.bold))
                     .foregroundStyle(.white)
                 Spacer()
@@ -367,18 +374,7 @@ struct TodayView: View {
                                 .foregroundStyle(NightTheme.accent)
                             }
 
-                            Text("I'm Done Tonight")
-                                .font(NightTheme.titleFont)
-                                .foregroundStyle(.white)
-                                .lineLimit(2)
-                                .minimumScaleFactor(0.72)
-                                .fixedSize(horizontal: false, vertical: true)
-
-                            Text(doneTonightSummary)
-                                .font(NightTheme.bodyFont)
-                                .foregroundStyle(NightTheme.label)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .glassCard()
+                            drinkSummaryView
 
                             VStack(alignment: .leading, spacing: 10) {
                                 HStack {
@@ -1086,6 +1082,43 @@ struct TodayView: View {
         }
 
         return "Good call wrapping up. You're near baseline now. Hydrate and set yourself up for tomorrow."
+    }
+
+    private var drinkSummaryView: some View {
+        let entries = sessionDrinkEntries
+        return VStack(alignment: .leading, spacing: 10) {
+            Text("Tonight's haul")
+                .font(NightTheme.captionFont)
+                .foregroundStyle(NightTheme.label)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 52), spacing: 8)], spacing: 8) {
+                ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
+                    let appeared = drinkIconsAppeared.indices.contains(index) ? drinkIconsAppeared[index] : false
+                    ZStack {
+                        Circle()
+                            .fill(tint(for: entry.category).opacity(0.22))
+                            .frame(width: 52, height: 52)
+                        Image(systemName: symbol(for: entry.category))
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundStyle(tint(for: entry.category))
+                    }
+                    .offset(x: appeared ? 0 : 60, y: appeared ? 0 : 10)
+                    .opacity(appeared ? 1 : 0)
+                }
+            }
+        }
+        .glassCard(.high)
+        .onAppear {
+            let entries = sessionDrinkEntries
+            drinkIconsAppeared = Array(repeating: false, count: entries.count)
+            for i in entries.indices {
+                DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.09 + 0.1) {
+                    withAnimation(.spring(response: 0.38, dampingFraction: 0.62)) {
+                        guard drinkIconsAppeared.indices.contains(i) else { return }
+                        drinkIconsAppeared[i] = true
+                    }
+                }
+            }
+        }
     }
 
     private func statusDetailRow(_ title: String, _ value: String) -> some View {

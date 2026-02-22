@@ -154,7 +154,7 @@ struct WatchRootView: View {
 
             selectedTab = .quickAdd
             NotificationCenter.default.post(name: .watchDemoAction, object: nil, userInfo: ["action": "doneTonight"])
-            demoCaption = "I'm done tonight"
+            demoCaption = "Cut me off"
             try? await Task.sleep(nanoseconds: 2_000_000_000)
 
             store.handleHomeArrival(arrivedAt: .now)

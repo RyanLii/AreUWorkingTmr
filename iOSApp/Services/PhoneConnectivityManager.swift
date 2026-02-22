@@ -14,8 +14,7 @@ final class PhoneConnectivityManager: NSObject, ObservableObject {
     // MARK: - Send helpers
 
     private func sendMessage(type: WCMsgType, payload: Data? = nil) {
-        guard WCSession.default.activationState == .activated,
-              WCSession.default.isWatchAppInstalled else { return }
+        guard WCSession.default.activationState == .activated else { return }
 
         var msg: [String: Any] = ["t": type.rawValue]
         if let data = payload {
@@ -110,6 +109,11 @@ extension PhoneConnectivityManager: ConnectivityService {
 
 extension PhoneConnectivityManager: WCSessionDelegate {
     nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {}
+
+    nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
+        guard session.isReachable else { return }
+        Task { @MainActor in self.sendFullContext() }
+    }
 
     nonisolated func sessionDidBecomeInactive(_ session: WCSession) {}
 

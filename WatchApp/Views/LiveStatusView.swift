@@ -2,12 +2,18 @@ import SwiftUI
 
 struct LiveStatusView: View {
     @EnvironmentObject private var store: AppStore
+    @Environment(\.openURL) private var openURL
     @State private var showDetails = false
     @State private var clearTrendPulse = false
     @State private var statusChipPulse = false
     @State private var progressAnchorToken: String = ""
     @State private var progressAnchorSessionStart: Date?
     @State private var progressAnchorProjectedZero: Date = .now
+    @State private var showCutMeOffSheet = false
+    @State private var hydrationConfirmed = false
+    @State private var rideConfirmed = false
+    @State private var alarmConfirmed = false
+    @State private var drinkIconsAppeared: [Bool] = []
 
     private var buzzStatus: BuzzStatusDescriptor {
         BuzzStatusDescriptor.from(snapshot: store.sessionSnapshot)
@@ -17,9 +23,52 @@ struct LiveStatusView: View {
         store.sessionSnapshot.state == .cleared
     }
 
+    private var hasSessionDrinks: Bool {
+        store.sessionSnapshot.totalStandardDrinks > 0.001
+    }
+
+    private var checklistCompletedCount: Int {
+        [hydrationConfirmed, rideConfirmed, alarmConfirmed].filter { $0 }.count
+    }
+
+    private var isHeavyLoad: Bool {
+        store.sessionSnapshot.effectiveStandardDrinks >= 5 || store.sessionSnapshot.totalStandardDrinks >= 8
+    }
+
+    private var cutMeOffContext: String {
+        let label = DoneTonightCopy.toneLabel(
+            totalStandardDrinks: store.sessionSnapshot.totalStandardDrinks,
+            effectiveStandardDrinks: store.sessionSnapshot.effectiveStandardDrinks,
+            workingTomorrow: store.effectiveWorkingTomorrow
+        )
+        return "\(DisplayFormatter.standardDrinks(store.sessionSnapshot.effectiveStandardDrinks)) active - \(label)"
+    }
+
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 10) {
+                if hasSessionDrinks && !store.hasMarkedDoneTonight {
+                    Button {
+                        hydrationConfirmed = false
+                        rideConfirmed = false
+                        alarmConfirmed = false
+                        drinkIconsAppeared = []
+                        showCutMeOffSheet = true
+                    } label: {
+                        HStack {
+                            Label("Cut Me Off", systemImage: "moon.stars.fill")
+                                .font(WatchNightTheme.bodyStrong)
+                                .foregroundStyle(.white)
+                            Spacer()
+                            Image(systemName: "sparkles")
+                                .foregroundStyle(WatchNightTheme.accentSoft)
+                        }
+                        .watchCard(highlighted: true)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+
                 HStack {
                     Text("Live Status")
                         .font(WatchNightTheme.titleFont)
@@ -155,6 +204,179 @@ struct LiveStatusView: View {
             .padding(.top, 6)
             .padding(.bottom, 10)
         }
+        .sheet(isPresented: $showCutMeOffSheet) {
+            cutMeOffSheet
+        }
+    }
+
+    private var cutMeOffSheet: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 10) {
+                liveStatusDrinkSummaryView
+
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("Landing checklist")
+                            .font(WatchNightTheme.captionFont)
+                            .foregroundStyle(WatchNightTheme.label)
+                        Spacer()
+                        Text("\(checklistCompletedCount)/3")
+                            .font(WatchNightTheme.bodyStrong)
+                            .foregroundStyle(.white)
+                    }
+                    Text("Tap to check off each item.")
+                        .font(WatchNightTheme.captionFont)
+                        .foregroundStyle(WatchNightTheme.label)
+                    cutMeOffToggle(title: "Hydrated", subtitle: "Finish water target", icon: "drop.fill", confirmed: hydrationConfirmed) {
+                        hydrationConfirmed.toggle()
+                    }
+                    cutMeOffToggle(title: "Mate check-in", subtitle: "Texted someone you trust", icon: "message.fill", confirmed: rideConfirmed) {
+                        rideConfirmed.toggle()
+                    }
+                    cutMeOffToggle(title: "Sleep setup", subtitle: "Wind down mode", icon: "alarm.fill", confirmed: alarmConfirmed) {
+                        alarmConfirmed.toggle()
+                    }
+                }
+                .watchCard()
+
+                if isHeavyLoad {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Recovery mode")
+                            .font(WatchNightTheme.bodyStrong)
+                            .foregroundStyle(.white)
+                        Text("Big night logged. Pause drinks, hydrate, and stay with your people.")
+                            .font(WatchNightTheme.captionFont)
+                            .foregroundStyle(WatchNightTheme.label)
+                    }
+                    .watchCard(highlighted: true)
+                }
+
+                Button {
+                    let body = "Hey, heading home now. Can you check in on me?"
+                    if let encoded = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+                       let url = URL(string: "sms:&body=\(encoded)") {
+                        openURL(url)
+                    }
+                } label: {
+                    Label("Text Mate", systemImage: "message.fill")
+                        .font(WatchNightTheme.bodyFont)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                        .foregroundStyle(.white)
+                        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.white.opacity(0.12)))
+                }
+                .buttonStyle(.plain)
+                .watchCard()
+
+                Button {
+                    store.markDoneTonight()
+                    showCutMeOffSheet = false
+                } label: {
+                    Label("Perfect. Good night", systemImage: "checkmark.circle.fill")
+                        .font(WatchNightTheme.bodyFont)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .foregroundStyle(.white)
+                        .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(WatchNightTheme.accent))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 12)
+            .padding(.top, 6)
+            .padding(.bottom, 10)
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    private var sessionDrinkEntries: [DrinkEntry] {
+        SessionClock.entriesInCurrentSession(store.entries, now: .now, calendar: .current)
+            .sorted { $0.timestamp < $1.timestamp }
+    }
+
+    private var liveStatusDrinkSummaryView: some View {
+        let entries = sessionDrinkEntries
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("Tonight's haul")
+                .font(WatchNightTheme.captionFont)
+                .foregroundStyle(WatchNightTheme.label)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 36), spacing: 6)], spacing: 6) {
+                ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
+                    let appeared = drinkIconsAppeared.indices.contains(index) ? drinkIconsAppeared[index] : false
+                    ZStack {
+                        Circle()
+                            .fill(liveTint(for: entry.category).opacity(0.22))
+                            .frame(width: 36, height: 36)
+                        Image(systemName: liveSymbol(for: entry.category))
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(liveTint(for: entry.category))
+                    }
+                    .offset(x: appeared ? 0 : 50, y: appeared ? 0 : 8)
+                    .opacity(appeared ? 1 : 0)
+                }
+            }
+        }
+        .watchCard(highlighted: true)
+        .onAppear {
+            let entries = sessionDrinkEntries
+            drinkIconsAppeared = Array(repeating: false, count: entries.count)
+            for i in entries.indices {
+                DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.09 + 0.1) {
+                    withAnimation(.spring(response: 0.38, dampingFraction: 0.62)) {
+                        guard drinkIconsAppeared.indices.contains(i) else { return }
+                        drinkIconsAppeared[i] = true
+                    }
+                }
+            }
+        }
+    }
+
+    private func liveTint(for category: DrinkCategory) -> Color {
+        switch category {
+        case .beer: Color(red: 0.99, green: 0.79, blue: 0.34)
+        case .wine: Color(red: 0.98, green: 0.52, blue: 0.58)
+        case .shot: Color(red: 0.99, green: 0.56, blue: 0.36)
+        case .cocktail: WatchNightTheme.mint
+        case .spirits: Color(red: 0.99, green: 0.69, blue: 0.37)
+        case .custom: Color.white
+        }
+    }
+
+    private func liveSymbol(for category: DrinkCategory) -> String {
+        switch category {
+        case .beer: "mug.fill"
+        case .wine: "wineglass.fill"
+        case .shot: "drop.fill"
+        case .cocktail: "takeoutbag.and.cup.and.straw.fill"
+        case .spirits: "flame.fill"
+        case .custom: "slider.horizontal.3"
+        }
+    }
+
+    private func cutMeOffToggle(title: String, subtitle: String, icon: String, confirmed: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .foregroundStyle(confirmed ? WatchNightTheme.mint : WatchNightTheme.accentSoft)
+                    .frame(width: 14)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(title)
+                        .font(WatchNightTheme.bodyStrong)
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                    Text(subtitle)
+                        .font(WatchNightTheme.captionFont)
+                        .foregroundStyle(WatchNightTheme.label)
+                        .lineLimit(2)
+                }
+                Spacer()
+                Image(systemName: confirmed ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(confirmed ? WatchNightTheme.mint : WatchNightTheme.labelSoft)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.white.opacity(confirmed ? 0.15 : 0.08)))
+        }
+        .buttonStyle(.plain)
     }
 
     private var statusBadgePill: some View {
