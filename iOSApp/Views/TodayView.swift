@@ -14,7 +14,6 @@ private struct TodayDrinkDetailTemplate {
     let title: String
     let servings: [TodayServingOption]
     let abvOptions: [Double]
-    let supportsManualVolume: Bool
 }
 
 struct TodayView: View {
@@ -276,7 +275,7 @@ struct TodayView: View {
                 Image(customAssetName(for: preset.category))
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 30, height: 30)
+                    .frame(width: 30 * iconScale(for: preset.category), height: 30 * iconScale(for: preset.category))
 
                 Spacer(minLength: 2)
 
@@ -563,25 +562,7 @@ struct TodayView: View {
                             .minimumScaleFactor(0.75)
                             .fixedSize(horizontal: false, vertical: true)
 
-                        if template.supportsManualVolume {
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Text("Volume")
-                                        .font(NightTheme.captionFont)
-                                        .foregroundStyle(NightTheme.label)
-                                    Spacer()
-                                    Text("\(manualVolumeMl)ml")
-                                        .font(NightTheme.bodyFont)
-                                        .foregroundStyle(.white)
-                                }
-
-                                Stepper(value: $manualVolumeMl, in: 20...2000, step: 10) {
-                                    EmptyView()
-                                }
-                                .labelsHidden()
-                            }
-                            .glassCard()
-                        } else {
+                        if !template.servings.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Serving")
                                     .font(NightTheme.captionFont)
@@ -591,6 +572,7 @@ struct TodayView: View {
                                     ForEach(template.servings) { option in
                                         Button {
                                             selectedServing = option
+                                            manualVolumeMl = Int(option.volumeMl)
                                         } label: {
                                             VStack(alignment: .leading, spacing: 2) {
                                                 Text(option.name)
@@ -619,6 +601,27 @@ struct TodayView: View {
                             }
                             .glassCard()
                         }
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Volume")
+                                    .font(NightTheme.captionFont)
+                                    .foregroundStyle(NightTheme.label)
+                                Spacer()
+                                Text("\(manualVolumeMl)ml")
+                                    .font(NightTheme.bodyFont)
+                                    .foregroundStyle(.white)
+                            }
+
+                            Stepper(value: $manualVolumeMl, in: 20...2000, step: 10) {
+                                EmptyView()
+                            }
+                            .labelsHidden()
+                            .onChange(of: manualVolumeMl) { _, _ in
+                                selectedServing = nil
+                            }
+                        }
+                        .glassCard()
 
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
@@ -1096,7 +1099,7 @@ struct TodayView: View {
                     Image(customAssetName(for: entry.category))
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 48, height: 48)
+                        .frame(width: 48 * iconScale(for: entry.category), height: 48 * iconScale(for: entry.category))
                     .offset(x: appeared ? 0 : 60, y: appeared ? 0 : 10)
                     .opacity(appeared ? 1 : 0)
                 }
@@ -1203,21 +1206,11 @@ struct TodayView: View {
         }
 
         let template = detailTemplate(for: category, region: store.profile.regionStandard)
-        if template.supportsManualVolume {
-            selectedServing = nil
-            return
-        }
-
         selectedServing = template.servings.first(where: { abs($0.volumeMl - workingPreset.defaultVolumeMl) < 0.1 })
-            ?? template.servings.first
     }
 
     private func currentVolumeMl(category: DrinkCategory, defaultPreset: DrinkPreset) -> Double {
-        if category == .custom {
-            return Double(manualVolumeMl)
-        }
-
-        return selectedServing?.volumeMl ?? defaultPreset.defaultVolumeMl
+        Double(manualVolumeMl)
     }
 
     private func estimatedStandardDrinks(volumeMl: Double, abv: Double) -> Double {
@@ -1253,39 +1246,25 @@ struct TodayView: View {
         }
     }
 
+    private func iconScale(for category: DrinkCategory) -> CGFloat {
+        switch category {
+        case .shot, .custom: return 1.35
+        default: return 1.0
+        }
+    }
+
     private func detailTemplate(for category: DrinkCategory, region: RegionStandard) -> TodayDrinkDetailTemplate {
         switch category {
         case .beer:
-            let servings: [TodayServingOption]
-            switch region {
-            case .au10g:
-                servings = [
-                    TodayServingOption(id: "beer_pot", name: "Pot", volumeMl: 285),
-                    TodayServingOption(id: "beer_schooner", name: "Schooner", volumeMl: 425),
-                    TodayServingOption(id: "beer_pint_au", name: "Pint", volumeMl: 570),
-                    TodayServingOption(id: "beer_longneck", name: "Longneck", volumeMl: 750)
-                ]
-            case .uk8g:
-                servings = [
-                    TodayServingOption(id: "beer_half_pint", name: "Half Pint", volumeMl: 284),
-                    TodayServingOption(id: "beer_pint_uk", name: "Pint", volumeMl: 568),
-                    TodayServingOption(id: "beer_can_uk", name: "Can", volumeMl: 440),
-                    TodayServingOption(id: "beer_bottle_uk", name: "Bottle", volumeMl: 500)
-                ]
-            case .us14g:
-                servings = [
-                    TodayServingOption(id: "beer_can", name: "12oz Can", volumeMl: 355),
-                    TodayServingOption(id: "beer_pint_us", name: "16oz Pint", volumeMl: 473),
-                    TodayServingOption(id: "beer_tallboy", name: "Tallboy", volumeMl: 473),
-                    TodayServingOption(id: "beer_bomber", name: "Bomber", volumeMl: 650)
-                ]
-            }
-
             return TodayDrinkDetailTemplate(
                 title: "Beer",
-                servings: servings,
-                abvOptions: [3.5, 4.2, 5.0, 6.0, 7.5, 9.0],
-                supportsManualVolume: false
+                servings: [
+                    TodayServingOption(id: "beer_schooner", name: "Schooner", volumeMl: 425),
+                    TodayServingOption(id: "beer_pint", name: "Pint", volumeMl: 568),
+                    TodayServingOption(id: "beer_bottle", name: "Bottle", volumeMl: 330),
+                    TodayServingOption(id: "beer_can", name: "Can", volumeMl: 375)
+                ],
+                abvOptions: [3.5, 4.2, 5.0, 6.0, 7.5, 9.0]
             )
 
         case .wine:
@@ -1313,12 +1292,10 @@ struct TodayView: View {
                     TodayServingOption(id: "wine_bottle_us", name: "Bottle", volumeMl: 750)
                 ]
             }
-
             return TodayDrinkDetailTemplate(
                 title: "Wine",
                 servings: servings,
-                abvOptions: [9.0, 11.0, 12.0, 13.5, 15.0],
-                supportsManualVolume: false
+                abvOptions: [9.0, 11.0, 12.0, 13.5, 15.0]
             )
 
         case .shot:
@@ -1343,12 +1320,10 @@ struct TodayView: View {
                     TodayServingOption(id: "shot_double_us", name: "Double", volumeMl: 60)
                 ]
             }
-
             return TodayDrinkDetailTemplate(
                 title: "Shot",
                 servings: servings,
-                abvOptions: [30.0, 35.0, 40.0, 45.0, 50.0],
-                supportsManualVolume: false
+                abvOptions: [30.0, 35.0, 40.0, 45.0, 50.0]
             )
 
         case .cocktail:
@@ -1360,8 +1335,7 @@ struct TodayView: View {
                     TodayServingOption(id: "cocktail_tall", name: "Tall", volumeMl: 250),
                     TodayServingOption(id: "cocktail_jumbo", name: "Jumbo", volumeMl: 330)
                 ],
-                abvOptions: [8.0, 12.0, 16.0, 20.0, 24.0],
-                supportsManualVolume: false
+                abvOptions: [8.0, 12.0, 16.0, 20.0, 24.0]
             )
 
         case .spirits:
@@ -1373,16 +1347,14 @@ struct TodayView: View {
                     TodayServingOption(id: "spirits_double", name: "Double", volumeMl: 60),
                     TodayServingOption(id: "spirits_large", name: "Large", volumeMl: 90)
                 ],
-                abvOptions: [35.0, 40.0, 45.0, 50.0, 55.0],
-                supportsManualVolume: false
+                abvOptions: [35.0, 40.0, 45.0, 50.0, 55.0]
             )
 
         case .custom:
             return TodayDrinkDetailTemplate(
                 title: "Custom",
                 servings: [],
-                abvOptions: [5.0, 8.0, 12.0, 18.0, 30.0, 40.0],
-                supportsManualVolume: true
+                abvOptions: [5.0, 8.0, 12.0, 18.0, 30.0, 40.0]
             )
         }
     }

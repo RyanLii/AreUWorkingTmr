@@ -15,7 +15,6 @@ private struct DrinkDetailTemplate {
     let title: String
     let servings: [ServingOption]
     let abvOptions: [Double]
-    let supportsManualVolume: Bool
 }
 
 struct QuickAddView: View {
@@ -146,7 +145,7 @@ struct QuickAddView: View {
                                 Image(customAssetName(for: preset.category))
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: 26, height: 26)
+                                    .frame(width: 26 * iconScale(for: preset.category), height: 26 * iconScale(for: preset.category))
 
                                 VStack(alignment: .leading, spacing: 1) {
                                     Text(preset.category.title)
@@ -186,7 +185,6 @@ struct QuickAddView: View {
                 }
             }
             .padding(.horizontal, 8)
-            .padding(.leading, 8)
             .padding(.top, 6)
             .padding(.bottom, 10)
         }
@@ -245,7 +243,7 @@ struct QuickAddView: View {
                 dualSegmentBar(progress: progress, recoveryFraction: recovery)
             }
 
-            HStack {
+            VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 3) {
                     Circle()
                         .fill(WatchNightTheme.warning)
@@ -254,18 +252,17 @@ struct QuickAddView: View {
                         .font(WatchNightTheme.captionFont)
                         .foregroundStyle(WatchNightTheme.warning.opacity(0.9))
                         .lineLimit(1)
-                        .minimumScaleFactor(0.72)
+                        .minimumScaleFactor(0.8)
                 }
-                Spacer()
                 HStack(spacing: 3) {
+                    Circle()
+                        .fill(Color(red: 0.36, green: 0.76, blue: 0.92))
+                        .frame(width: 5, height: 5)
                     Text("Full clear \(DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime))")
                         .font(WatchNightTheme.captionFont)
                         .foregroundStyle(WatchNightTheme.label)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.72)
-                    Circle()
-                        .fill(Color(red: 0.36, green: 0.76, blue: 0.92))
-                        .frame(width: 5, height: 5)
+                        .minimumScaleFactor(0.8)
                 }
             }
 
@@ -506,7 +503,7 @@ struct QuickAddView: View {
                     Image(customAssetName(for: entry.category))
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 36, height: 36)
+                        .frame(width: 36 * iconScale(for: entry.category), height: 36 * iconScale(for: entry.category))
                     .offset(x: appeared ? 0 : 50, y: appeared ? 0 : 8)
                     .opacity(appeared ? 1 : 0)
                 }
@@ -741,6 +738,7 @@ struct QuickAddView: View {
                         ForEach(template.servings) { option in
                             Button {
                                 selectedServing = option
+                                manualVolumeMl = Int(option.volumeMl)
                             } label: {
                                 HStack {
                                     Text(option.name)
@@ -762,20 +760,21 @@ struct QuickAddView: View {
                     .watchCard()
                 }
 
-                if template.supportsManualVolume {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Volume")
-                            .font(WatchNightTheme.captionFont)
-                            .foregroundStyle(WatchNightTheme.label)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Volume")
+                        .font(WatchNightTheme.captionFont)
+                        .foregroundStyle(WatchNightTheme.label)
 
-                        Stepper(value: $manualVolumeMl, in: 30...1000, step: 10) {
-                            Text("\(manualVolumeMl) ml")
-                                .font(WatchNightTheme.bodyFont)
-                                .foregroundStyle(.white)
-                        }
+                    Stepper(value: $manualVolumeMl, in: 30...1000, step: 10) {
+                        Text("\(manualVolumeMl) ml")
+                            .font(WatchNightTheme.bodyFont)
+                            .foregroundStyle(.white)
                     }
-                    .watchCard()
+                    .onChange(of: manualVolumeMl) { _, _ in
+                        selectedServing = nil
+                    }
                 }
+                .watchCard()
 
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
@@ -973,56 +972,26 @@ struct QuickAddView: View {
         }
 
         let template = detailTemplate(for: category, region: store.profile.regionStandard)
-        if template.supportsManualVolume {
-            selectedServing = nil
-            return
-        }
-
         selectedServing = template.servings.first(where: { abs($0.volumeMl - workingPreset.defaultVolumeMl) < 0.1 })
             ?? template.servings.first
     }
 
     private func currentVolumeMl(category: DrinkCategory, defaultPreset: DrinkPreset) -> Double {
-        if category == .custom {
-            return Double(manualVolumeMl)
-        }
-
-        return selectedServing?.volumeMl ?? defaultPreset.defaultVolumeMl
+        Double(manualVolumeMl)
     }
 
     private func detailTemplate(for category: DrinkCategory, region: RegionStandard) -> DrinkDetailTemplate {
         switch category {
         case .beer:
-            let servings: [ServingOption]
-            switch region {
-            case .au10g:
-                servings = [
-                    ServingOption(id: "beer_pot", name: "Pot", volumeMl: 285),
-                    ServingOption(id: "beer_schooner", name: "Schooner", volumeMl: 425),
-                    ServingOption(id: "beer_pint_au", name: "Pint", volumeMl: 570),
-                    ServingOption(id: "beer_longneck", name: "Longneck", volumeMl: 750)
-                ]
-            case .uk8g:
-                servings = [
-                    ServingOption(id: "beer_half_pint", name: "Half Pint", volumeMl: 284),
-                    ServingOption(id: "beer_pint_uk", name: "Pint", volumeMl: 568),
-                    ServingOption(id: "beer_can_uk", name: "Can", volumeMl: 440),
-                    ServingOption(id: "beer_bottle_uk", name: "Bottle", volumeMl: 500)
-                ]
-            case .us14g:
-                servings = [
-                    ServingOption(id: "beer_can", name: "12oz Can", volumeMl: 355),
-                    ServingOption(id: "beer_pint_us", name: "16oz Pint", volumeMl: 473),
-                    ServingOption(id: "beer_tallboy", name: "Tallboy", volumeMl: 473),
-                    ServingOption(id: "beer_bomber", name: "Bomber", volumeMl: 650)
-                ]
-            }
-
             return DrinkDetailTemplate(
                 title: "Beer",
-                servings: servings,
-                abvOptions: [3.5, 4.2, 5.0, 6.0, 7.5, 9.0],
-                supportsManualVolume: false
+                servings: [
+                    ServingOption(id: "beer_schooner", name: "Schooner", volumeMl: 425),
+                    ServingOption(id: "beer_pint", name: "Pint", volumeMl: 568),
+                    ServingOption(id: "beer_bottle", name: "Bottle", volumeMl: 330),
+                    ServingOption(id: "beer_can", name: "Can", volumeMl: 375)
+                ],
+                abvOptions: [3.5, 4.2, 5.0, 6.0, 7.5, 9.0]
             )
         case .wine:
             let servings: [ServingOption]
@@ -1053,8 +1022,7 @@ struct QuickAddView: View {
             return DrinkDetailTemplate(
                 title: "Wine",
                 servings: servings,
-                abvOptions: [9.0, 11.0, 12.0, 13.5, 15.0],
-                supportsManualVolume: false
+                abvOptions: [9.0, 11.0, 12.0, 13.5, 15.0]
             )
         case .shot:
             let servings: [ServingOption]
@@ -1082,8 +1050,7 @@ struct QuickAddView: View {
             return DrinkDetailTemplate(
                 title: "Shot",
                 servings: servings,
-                abvOptions: [30.0, 35.0, 40.0, 45.0, 50.0],
-                supportsManualVolume: false
+                abvOptions: [30.0, 35.0, 40.0, 45.0, 50.0]
             )
         case .cocktail:
             return DrinkDetailTemplate(
@@ -1094,8 +1061,7 @@ struct QuickAddView: View {
                     ServingOption(id: "cocktail_tall", name: "Tall", volumeMl: 250),
                     ServingOption(id: "cocktail_jumbo", name: "Jumbo", volumeMl: 330)
                 ],
-                abvOptions: [8.0, 12.0, 16.0, 20.0, 24.0],
-                supportsManualVolume: false
+                abvOptions: [8.0, 12.0, 16.0, 20.0, 24.0]
             )
         case .spirits:
             return DrinkDetailTemplate(
@@ -1106,15 +1072,13 @@ struct QuickAddView: View {
                     ServingOption(id: "spirits_double", name: "Double", volumeMl: 60),
                     ServingOption(id: "spirits_large", name: "Large", volumeMl: 90)
                 ],
-                abvOptions: [35.0, 40.0, 45.0, 50.0, 55.0],
-                supportsManualVolume: false
+                abvOptions: [35.0, 40.0, 45.0, 50.0, 55.0]
             )
         case .custom:
             return DrinkDetailTemplate(
                 title: "Custom",
                 servings: [],
-                abvOptions: [5.0, 8.0, 12.0, 18.0, 30.0, 40.0],
-                supportsManualVolume: true
+                abvOptions: [5.0, 8.0, 12.0, 18.0, 30.0, 40.0]
             )
         }
     }
@@ -1149,6 +1113,13 @@ struct QuickAddView: View {
         case .cocktail: return WatchNightTheme.mint
         case .spirits: return Color(red: 0.99, green: 0.66, blue: 0.35)
         case .custom: return .white
+        }
+    }
+
+    private func iconScale(for category: DrinkCategory) -> CGFloat {
+        switch category {
+        case .shot, .custom: return 1.35
+        default: return 1.0
         }
     }
 }
