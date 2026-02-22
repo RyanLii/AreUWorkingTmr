@@ -15,11 +15,14 @@ struct AreUWorkingTmrApp: App {
     init() {
         self.modelContainer = PersistenceController.makeModelContainer()
         configureNavigationBarAppearance()
+        UIWindow.appearance().backgroundColor = UIColor(red: 0.33, green: 0.16, blue: 0.14, alpha: 1)
     }
 
     var body: some Scene {
         WindowGroup {
             ZStack {
+                Color(red: 0.33, green: 0.16, blue: 0.14).ignoresSafeArea()
+
                 RootTabView()
 
                 if showSplash {
