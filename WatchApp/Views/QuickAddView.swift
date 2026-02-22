@@ -729,49 +729,57 @@ struct QuickAddView: View {
                     .font(WatchNightTheme.titleFont)
                     .foregroundStyle(.white)
 
-                if !template.servings.isEmpty {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Size")
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("Volume")
                             .font(WatchNightTheme.captionFont)
                             .foregroundStyle(WatchNightTheme.label)
-
-                        ForEach(template.servings) { option in
-                            Button {
-                                selectedServing = option
-                                manualVolumeMl = Int(option.volumeMl)
-                            } label: {
-                                HStack {
-                                    Text(option.name)
-                                        .font(WatchNightTheme.bodyFont)
-                                        .foregroundStyle(.white)
-                                    Spacer()
-                                    Text(option.subtitle)
-                                        .font(WatchNightTheme.captionFont)
-                                        .foregroundStyle(WatchNightTheme.label)
-                                    Image(systemName: selectedServing == option ? "checkmark.circle.fill" : "circle")
-                                        .foregroundStyle(selectedServing == option ? WatchNightTheme.mint : WatchNightTheme.label)
-                                }
-                                .padding(.vertical, 3)
-                            }
-                            .contentShape(Rectangle())
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .watchCard()
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Volume")
-                        .font(WatchNightTheme.captionFont)
-                        .foregroundStyle(WatchNightTheme.label)
-
-                    Stepper(value: $manualVolumeMl, in: 30...1000, step: 10) {
+                        Spacer()
                         Text("\(manualVolumeMl) ml")
                             .font(WatchNightTheme.bodyFont)
                             .foregroundStyle(.white)
                     }
-                    .onChange(of: manualVolumeMl) { _, _ in
-                        selectedServing = nil
+
+                    Stepper(
+                        value: Binding(
+                            get: { manualVolumeMl },
+                            set: { newValue in
+                                manualVolumeMl = newValue
+                                selectedServing = nil
+                            }
+                        ),
+                        in: 30...1000,
+                        step: 10
+                    ) {
+                        EmptyView()
+                    }
+                    .labelsHidden()
+
+                    if !template.servings.isEmpty {
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 6) {
+                            ForEach(template.servings) { option in
+                                Button {
+                                    selectedServing = option
+                                    manualVolumeMl = Int(option.volumeMl)
+                                } label: {
+                                    VStack(spacing: 1) {
+                                        Text(option.name)
+                                            .font(WatchNightTheme.captionFont)
+                                            .foregroundStyle(.white)
+                                        Text("\(Int(option.volumeMl))ml")
+                                            .font(.system(size: 9, weight: .regular, design: .rounded))
+                                            .foregroundStyle(WatchNightTheme.label)
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        Capsule()
+                                            .fill(selectedServing == option ? WatchNightTheme.accent.opacity(0.34) : Color.white.opacity(0.10))
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
                     }
                 }
                 .watchCard()

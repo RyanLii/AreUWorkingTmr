@@ -562,46 +562,6 @@ struct TodayView: View {
                             .minimumScaleFactor(0.75)
                             .fixedSize(horizontal: false, vertical: true)
 
-                        if !template.servings.isEmpty {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Serving")
-                                    .font(NightTheme.captionFont)
-                                    .foregroundStyle(NightTheme.label)
-
-                                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                                    ForEach(template.servings) { option in
-                                        Button {
-                                            selectedServing = option
-                                            manualVolumeMl = Int(option.volumeMl)
-                                        } label: {
-                                            VStack(alignment: .leading, spacing: 2) {
-                                                Text(option.name)
-                                                    .font(NightTheme.bodyFont.weight(.semibold))
-                                                    .foregroundStyle(.white)
-                                                Text(option.subtitle)
-                                                    .font(NightTheme.captionFont)
-                                                    .foregroundStyle(NightTheme.label)
-                                            }
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                            .padding(.horizontal, 10)
-                                            .padding(.vertical, 8)
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                                    .fill(option.id == selectedServing?.id ? NightTheme.accent.opacity(0.28) : Color.white.opacity(0.08))
-                                                    .overlay(
-                                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                                            .stroke(Color.white.opacity(0.18), lineWidth: 1)
-                                                    )
-                                            )
-                                        }
-                                        .contentShape(Rectangle())
-                                        .buttonStyle(.plain)
-                                    }
-                                }
-                            }
-                            .glassCard()
-                        }
-
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
                                 Text("Volume")
@@ -613,12 +573,46 @@ struct TodayView: View {
                                     .foregroundStyle(.white)
                             }
 
-                            Stepper(value: $manualVolumeMl, in: 20...2000, step: 10) {
-                                EmptyView()
-                            }
-                            .labelsHidden()
-                            .onChange(of: manualVolumeMl) { _, _ in
-                                selectedServing = nil
+                            Slider(
+                                value: Binding(
+                                    get: { Double(manualVolumeMl) },
+                                    set: { newValue in
+                                        manualVolumeMl = Int(newValue.rounded())
+                                        selectedServing = nil
+                                    }
+                                ),
+                                in: 20...2000,
+                                step: 10
+                            )
+                            .tint(NightTheme.accent)
+
+                            if !template.servings.isEmpty {
+                                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                                    ForEach(template.servings) { option in
+                                        Button {
+                                            selectedServing = option
+                                            manualVolumeMl = Int(option.volumeMl)
+                                        } label: {
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(option.name)
+                                                    .font(NightTheme.captionFont.weight(.semibold))
+                                                    .foregroundStyle(.white)
+                                                Text(option.subtitle)
+                                                    .font(NightTheme.captionFont)
+                                                    .foregroundStyle(NightTheme.label)
+                                            }
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 7)
+                                            .background(
+                                                Capsule()
+                                                    .fill(option.id == selectedServing?.id ? NightTheme.accent.opacity(0.28) : Color.white.opacity(0.08))
+                                            )
+                                        }
+                                        .contentShape(Rectangle())
+                                        .buttonStyle(.plain)
+                                    }
+                                }
                             }
                         }
                         .glassCard()
