@@ -17,9 +17,9 @@ struct RemindersView: View {
             }
 
             SectionCard("Smart Reminders") {
-                bullet("Missed-log nudge: after extended idle + movement.")
-                bullet("Landing hydration: scheduled about 20 minutes after arrival/done.")
-                bullet("Morning check-in: one gentle follow-up after Done Tonight.")
+                bullet("Missed log: if you've been still for a while and then started moving, we'll check if you had a drink.")
+                bullet("Hydration nudge: sent about 20 minutes after you tap Done Tonight or arrive home.")
+                bullet("Morning check-in: a gentle follow-up the next morning after a session ends.")
             }
         }
         .navigationBarTitleDisplayMode(.inline)

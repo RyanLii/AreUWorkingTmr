@@ -13,16 +13,15 @@ struct PrivacyView: View {
 
     var body: some View {
         AppScreenScaffold {
-            SectionCard("Data") {
-                bodyText("Drink logs and app data stay on device, with CloudKit sync when available.")
-                bodyText("No account sign-in is required in V1.")
+            SectionCard("Your Data") {
+                bodyText("Drink logs and app data are stored on your device. iCloud sync is used when available — no account required.")
+                bodyText("Your data is never sold or shared with third parties.")
             }
 
-            SectionCard("Model Notes") {
-                bodyText("Live status shows estimated effective standard drinks in body.")
-                bodyText("The model applies an absorption lag, smooth intake windows, and non-negative body-stock metabolism.")
-                bodyText("Primary output is modeled time-to-clear of effective standard drinks.")
-                bodyText("Guidance only, not medical advice.")
+            SectionCard("How the Model Works") {
+                bodyText("Live status shows an estimate of how many standard drinks are still active in your body, based on what you've logged.")
+                bodyText("The estimate accounts for absorption delay, how quickly drinks were consumed, and a typical metabolism rate.")
+                bodyText("This is a behavioural guide only — not medical advice. When in doubt, don't drive.")
             }
 
             SectionCard("Product") {
@@ -31,8 +30,8 @@ struct PrivacyView: View {
             }
 
             SectionCard("Analytics") {
-                bodyText("V1 only keeps minimal anonymous event counts.")
-                bodyText("No identity profile or raw dictation text is uploaded.")
+                bodyText("We only collect minimal, anonymous usage counts to understand how the app is used.")
+                bodyText("No personal data, voice recordings, or drink history is ever uploaded.")
             }
 
             SectionCard("Danger Zone") {
