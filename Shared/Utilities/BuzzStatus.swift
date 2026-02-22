@@ -1,7 +1,7 @@
 import Foundation
 
 enum BuzzMoodLevel: Int, CaseIterable {
-    case nightJustBegan
+    case underTheRadar
     case goodVibes
     case buzzin
     case wavy
@@ -20,9 +20,9 @@ struct BuzzStatusDescriptor: Equatable {
 
         if effective < 0.3 {
             return BuzzStatusDescriptor(
-                level: .nightJustBegan,
-                title: "Night just began",
-                description: "Fresh start. Keep it smooth."
+                level: .underTheRadar,
+                title: "Under the radar",
+                description: "Still sober enough to regret nothing. Yet."
             )
         }
 
@@ -30,7 +30,7 @@ struct BuzzStatusDescriptor: Equatable {
             return BuzzStatusDescriptor(
                 level: .goodVibes,
                 title: "Good vibes",
-                description: "Light buzz, easy flow."
+                description: "One in. Charming and probably right."
             )
         }
 
@@ -38,7 +38,7 @@ struct BuzzStatusDescriptor: Equatable {
             return BuzzStatusDescriptor(
                 level: .buzzin,
                 title: "Buzzin'",
-                description: "You're feeling it."
+                description: "Feeling yourself. Texts getting interesting."
             )
         }
 
@@ -46,7 +46,7 @@ struct BuzzStatusDescriptor: Equatable {
             return BuzzStatusDescriptor(
                 level: .wavy,
                 title: "Wavy",
-                description: "Mood is up. Slow the pace a touch."
+                description: "You're funnier than usual. Objectively."
             )
         }
 
@@ -54,7 +54,7 @@ struct BuzzStatusDescriptor: Equatable {
             return BuzzStatusDescriptor(
                 level: .onFire,
                 title: "On fire",
-                description: "Big energy. Water break now."
+                description: "Peak confidence. Decisions pending review."
             )
         }
 
@@ -62,14 +62,14 @@ struct BuzzStatusDescriptor: Equatable {
             return BuzzStatusDescriptor(
                 level: .tooLit,
                 title: "Too lit",
-                description: "You're peaking hard. Pause and hydrate."
+                description: "Future you is already drafting an apology."
             )
         }
 
         return BuzzStatusDescriptor(
             level: .takeItEasyZone,
             title: "Take-it-easy zone",
-            description: "Heavy zone. Chill, water, no hero mode."
+            description: "Full send. Your liver filed a formal complaint."
         )
     }
 }

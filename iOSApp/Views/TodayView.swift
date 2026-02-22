@@ -40,6 +40,12 @@ struct TodayView: View {
     @State private var hydrationConfirmed = false
     @State private var rideConfirmed = false
     @State private var alarmConfirmed = false
+    @State private var drinkIconsAppeared: [Bool] = []
+
+    private var sessionDrinkEntries: [DrinkEntry] {
+        SessionClock.entriesInCurrentSession(store.entries, now: .now, calendar: .current)
+            .sorted { $0.timestamp < $1.timestamp }
+    }
 
     private var allPresets: [DrinkPreset] {
         store.quickAddPresets()
@@ -47,6 +53,10 @@ struct TodayView: View {
 
     private var hasSessionDrinks: Bool {
         store.sessionSnapshot.totalStandardDrinks > 0.001
+    }
+
+    private var hasActiveLoad: Bool {
+        hasSessionDrinks && store.sessionSnapshot.state != .cleared
     }
 
     private var statusSnapshot: SessionSnapshot {
@@ -81,11 +91,11 @@ struct TodayView: View {
         AppScreenScaffold {
             header
 
-            if hasSessionDrinks && !store.hasMarkedDoneTonight {
+            if hasActiveLoad && !store.hasMarkedDoneTonight {
                 doneTonightCard
             }
 
-            if hasSessionDrinks {
+            if hasActiveLoad {
                 statusCard
             }
 
@@ -143,8 +153,8 @@ struct TodayView: View {
             }
 
             Text(statusMoodCopy)
-                .font(.system(size: 12.5, weight: .semibold, design: .rounded))
-                .foregroundStyle(NightTheme.label.opacity(0.96))
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .foregroundStyle(statusBadgeColor.opacity(0.90))
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
                 .fixedSize(horizontal: false, vertical: true)
@@ -154,11 +164,11 @@ struct TodayView: View {
             DisclosureGroup(isExpanded: $statusDetailsExpanded) {
                 VStack(alignment: .leading, spacing: 8) {
                     statusDetailRow(
-                        "Total logged standard drinks",
+                        "Total logged",
                         DisplayFormatter.standardDrinks(statusSnapshot.totalStandardDrinks)
                     )
                     statusDetailRow(
-                        "Current standard drinks in body",
+                        "In body now",
                         DisplayFormatter.standardDrinks(statusEffectiveStandardDrinks)
                     )
                     statusDetailRow(
@@ -166,18 +176,26 @@ struct TodayView: View {
                         DisplayFormatter.standardDrinks(statusSnapshot.pendingAbsorptionStandardDrinks)
                     )
                     statusDetailRow(
+                        "Metabolized",
+                        DisplayFormatter.standardDrinks(statusSnapshot.metabolizedStandardDrinks)
+                    )
+                    statusDetailRow(
                         "Estimated peak",
                         "\(DisplayFormatter.standardDrinks(statusSnapshot.estimatedPeakStandardDrinks)) at \(DisplayFormatter.eta(statusSnapshot.estimatedPeakTime))"
                     )
-
-                    if let lastDrink = statusSnapshot.lastDrinkTime {
-                        statusDetailRow("Last drink", DisplayFormatter.eta(lastDrink))
-                    }
+                    statusDetailRow(
+                        "Feel human",
+                        DisplayFormatter.eta(statusSnapshot.projectedRecoveryTime)
+                    )
+                    statusDetailRow(
+                        "Full clear",
+                        DisplayFormatter.eta(statusSnapshot.projectedZeroTime)
+                    )
 
                     if statusSnapshot.clearingElapsed > 1,
                        (statusSnapshot.state == .clearing || statusSnapshot.state == .cleared) {
                         statusDetailRow(
-                            "Elapsed clearing duration",
+                            "Clearing for",
                             DisplayFormatter.duration(statusSnapshot.clearingElapsed)
                         )
                     }
@@ -255,14 +273,10 @@ struct TodayView: View {
     private func quickAddTile(_ preset: DrinkPreset) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                ZStack {
-                    Circle()
-                        .fill(tint(for: preset.category).opacity(0.24))
-                        .frame(width: 28, height: 28)
-                    Image(systemName: symbol(for: preset.category))
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(tint(for: preset.category))
-                }
+                Image(customAssetName(for: preset.category))
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 30, height: 30)
 
                 Spacer(minLength: 2)
 
@@ -318,10 +332,11 @@ struct TodayView: View {
             hydrationConfirmed = false
             rideConfirmed = false
             alarmConfirmed = false
+            drinkIconsAppeared = []
             showDoneTonightSheet = true
         } label: {
             HStack {
-                Label("I'm Done Tonight", systemImage: "moon.stars.fill")
+                Label("Cut Me Off", systemImage: "moon.stars.fill")
                     .font(NightTheme.bodyFont.weight(.bold))
                     .foregroundStyle(.white)
                 Spacer()
@@ -359,18 +374,7 @@ struct TodayView: View {
                                 .foregroundStyle(NightTheme.accent)
                             }
 
-                            Text("I'm Done Tonight")
-                                .font(NightTheme.titleFont)
-                                .foregroundStyle(.white)
-                                .lineLimit(2)
-                                .minimumScaleFactor(0.72)
-                                .fixedSize(horizontal: false, vertical: true)
-
-                            Text(doneTonightSummary)
-                                .font(NightTheme.bodyFont)
-                                .foregroundStyle(NightTheme.label)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .glassCard()
+                            drinkSummaryView
 
                             VStack(alignment: .leading, spacing: 10) {
                                 HStack {
@@ -808,66 +812,46 @@ struct TodayView: View {
     }
 
     private var statusRecoveryBlock: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .center, spacing: 12) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Chill ETA")
-                        .font(NightTheme.captionFont)
-                        .foregroundStyle(NightTheme.label)
-
-                    Text(statusRecoveryHeadline)
-                        .font(NightTheme.bodyFont)
-                        .foregroundStyle(statusIsCleared ? NightTheme.success : NightTheme.warning)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.80)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                ZStack(alignment: .trailing) {
-                    Text("88h 88m")
-                        .font(NightTheme.sectionFont.weight(.heavy))
-                        .opacity(0)
-
-                    Text(statusRecoveryCountdown)
-                        .font(NightTheme.sectionFont.weight(.heavy))
-                        .foregroundStyle(.white)
-                        .monospacedDigit()
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.72)
-                }
-                .frame(width: 96, alignment: .trailing)
-            }
-
+        Group {
             if !statusIsCleared && statusSnapshot.remainingToZero > 0 {
                 TimelineView(.periodic(from: .now, by: 0.5)) { context in
                     let cooledProgress = dynamicCooledOffProgress(at: context.date)
-                    let remainingProgress = 1 - cooledProgress
-                    let cooledPercent = max(0, min(100, Int(cooledProgress * 100)))
+                    let recoveryFraction = dynamicRecoveryFraction()
                     VStack(alignment: .leading, spacing: 6) {
+                        remainingLoadBar(progress: cooledProgress, recoveryFraction: recoveryFraction)
                         HStack {
-                            Text("Cooling off progress")
-                                .font(NightTheme.captionFont)
-                                .foregroundStyle(NightTheme.label)
+                            HStack(spacing: 4) {
+                                Circle()
+                                    .fill(NightTheme.warning)
+                                    .frame(width: 6, height: 6)
+                                Text("Feel human \(DisplayFormatter.eta(statusSnapshot.projectedRecoveryTime))")
+                                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(NightTheme.warning.opacity(0.9))
+                            }
                             Spacer()
-                            Text("\(cooledPercent)% cooled off")
-                                .font(NightTheme.captionFont.weight(.bold))
-                                .foregroundStyle(.white)
+                            HStack(spacing: 4) {
+                                Text("Full clear \(DisplayFormatter.eta(displayProjectedZeroTime))")
+                                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(NightTheme.label)
+                                Circle()
+                                    .fill(Color(red: 0.36, green: 0.76, blue: 0.92))
+                                    .frame(width: 6, height: 6)
+                            }
                         }
-                        remainingLoadBar(progress: cooledProgress)
-                        Text(cooldownFlavorCopy(progress: remainingProgress))
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
-                            .foregroundStyle(NightTheme.label)
+                        Text("Model estimate only — actual recovery varies by person. Not medical or legal advice.")
+                            .font(.system(size: 9, weight: .regular, design: .rounded))
+                            .foregroundStyle(NightTheme.label.opacity(0.55))
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
+                .transition(.identity)
             }
         }
     }
 
     private var statusBadgeColor: Color {
         switch buzzStatus.level {
-        case .nightJustBegan:
+        case .underTheRadar:
             return NightTheme.mint
         case .goodVibes:
             return Color(red: 0.76, green: 0.91, blue: 0.52)
@@ -886,7 +870,7 @@ struct TodayView: View {
 
     private var statusMoodCopy: String {
         if statusSnapshot.state == .clearing && !statusIsCleared {
-            return "\(buzzStatus.description) Cooling off now."
+            return "\(buzzStatus.description)"
         }
 
         return buzzStatus.description
@@ -897,7 +881,7 @@ struct TodayView: View {
             return "You are all good now."
         }
 
-        return "Back to normal-human mode around \(DisplayFormatter.eta(displayProjectedZeroTime))."
+        return "Feeling better around \(DisplayFormatter.eta(statusSnapshot.projectedRecoveryTime))."
     }
 
     private var statusRecoveryCountdown: String {
@@ -905,7 +889,8 @@ struct TodayView: View {
             return "All good"
         }
 
-        return DisplayFormatter.countdown(dynamicRemainingToZero(at: .now))
+        let remaining = max(0, statusSnapshot.projectedRecoveryTime.timeIntervalSince(.now))
+        return DisplayFormatter.countdown(remaining)
     }
 
     private func dynamicRemainingToZero(at now: Date) -> TimeInterval {
@@ -928,6 +913,17 @@ struct TodayView: View {
         return min(max(now.timeIntervalSince(start) / total, 0), 1)
     }
 
+    private func dynamicRecoveryFraction() -> Double {
+        let start = progressAnchorSessionStart
+            ?? currentSessionFirstDrinkTime
+            ?? statusSnapshot.lastDrinkTime
+            ?? statusSnapshot.date
+        let end = !progressAnchorToken.isEmpty ? progressAnchorProjectedZero : statusSnapshot.projectedZeroTime
+        let total = end.timeIntervalSince(start)
+        guard total > 1 else { return 0.85 }
+        return min(max(statusSnapshot.projectedRecoveryTime.timeIntervalSince(start) / total, 0), 1)
+    }
+
     private func cooldownFlavorCopy(progress: Double) -> String {
         if progress > 0.75 {
             return "Still pretty up there. Sip water and pace it."
@@ -944,13 +940,15 @@ struct TodayView: View {
         return "Home stretch. You are almost all good."
     }
 
-    private func remainingLoadBar(progress: Double) -> some View {
+    private func remainingLoadBar(progress: Double, recoveryFraction: Double) -> some View {
         let barHeight: CGFloat = 20
         let runnerSize: CGFloat = barHeight
 
         return GeometryReader { proxy in
             let clamped = min(max(progress, 0), 1)
-            let width = max(0, proxy.size.width * clamped)
+            let totalWidth = proxy.size.width
+            let width = max(0, totalWidth * clamped)
+            let recoveryX = max(0, min(totalWidth * min(max(recoveryFraction, 0), 1), totalWidth))
             let glowWidth = max(22, width * 0.24)
 
             ZStack(alignment: .leading) {
@@ -959,14 +957,17 @@ struct TodayView: View {
                     .frame(height: barHeight)
 
                 if width > 0 {
+                    let recoveryStop = min(max(recoveryX / width, 0), 1)
+
                     ZStack(alignment: .leading) {
-                        Capsule()
+                        Rectangle()
                             .fill(
                                 LinearGradient(
-                                    colors: [
-                                        NightTheme.mint.opacity(0.95),
-                                        NightTheme.accentSoft.opacity(0.92),
-                                        NightTheme.warning.opacity(0.88)
+                                    stops: [
+                                        .init(color: NightTheme.mint.opacity(0.95), location: 0),
+                                        .init(color: NightTheme.warning.opacity(0.88), location: recoveryStop),
+                                        .init(color: Color(red: 0.20, green: 0.60, blue: 0.95), location: min(recoveryStop + 0.001, 1)),
+                                        .init(color: Color(red: 0.40, green: 0.82, blue: 1.00), location: 1)
                                     ],
                                     startPoint: .leading,
                                     endPoint: .trailing
@@ -997,6 +998,13 @@ struct TodayView: View {
                         .frame(width: runnerSize, height: runnerSize)
                         .offset(x: max(0, width - runnerSize))
                         .animation(.linear(duration: 0.5), value: clamped)
+                }
+
+                if recoveryX > 6 && recoveryX < totalWidth - 6 {
+                    Rectangle()
+                        .fill(Color.white.opacity(0.65))
+                        .frame(width: 1.5, height: barHeight - 4)
+                        .offset(x: recoveryX - 0.75)
                 }
             }
             .overlay(
@@ -1074,6 +1082,39 @@ struct TodayView: View {
         }
 
         return "Good call wrapping up. You're near baseline now. Hydrate and set yourself up for tomorrow."
+    }
+
+    private var drinkSummaryView: some View {
+        let entries = sessionDrinkEntries
+        return VStack(alignment: .leading, spacing: 10) {
+            Text("Tonight's haul")
+                .font(NightTheme.captionFont)
+                .foregroundStyle(NightTheme.label)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 52), spacing: 8)], spacing: 8) {
+                ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
+                    let appeared = drinkIconsAppeared.indices.contains(index) ? drinkIconsAppeared[index] : false
+                    Image(customAssetName(for: entry.category))
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 48, height: 48)
+                    .offset(x: appeared ? 0 : 60, y: appeared ? 0 : 10)
+                    .opacity(appeared ? 1 : 0)
+                }
+            }
+        }
+        .glassCard(.high)
+        .onAppear {
+            let entries = sessionDrinkEntries
+            drinkIconsAppeared = Array(repeating: false, count: entries.count)
+            for i in entries.indices {
+                DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.09 + 0.1) {
+                    withAnimation(.spring(response: 0.38, dampingFraction: 0.62)) {
+                        guard drinkIconsAppeared.indices.contains(i) else { return }
+                        drinkIconsAppeared[i] = true
+                    }
+                }
+            }
+        }
     }
 
     private func statusDetailRow(_ title: String, _ value: String) -> some View {
@@ -1190,18 +1231,18 @@ struct TodayView: View {
         return "\(label)\(Int(preset.defaultVolumeMl))ml · \(String(format: "%.1f", preset.defaultABV))%"
     }
 
-    private func symbol(for category: DrinkCategory) -> String {
+    private func customAssetName(for category: DrinkCategory) -> String {
         switch category {
-        case .beer: return "mug.fill"
-        case .wine: return "wineglass.fill"
-        case .shot: return "drop.fill"
-        case .cocktail: return "takeoutbag.and.cup.and.straw.fill"
-        case .spirits: return "flame.fill"
-        case .custom: return "slider.horizontal.3"
+        case .beer: return "Beer"
+        case .wine: return "Wine"
+        case .shot: return "Shot"
+        case .cocktail: return "Cocotail"
+        case .spirits: return "Spirit"
+        case .custom: return "Custom"
         }
     }
 
-    private func tint(for category: DrinkCategory) -> Color {
+    private func colorForCategory(for category: DrinkCategory) -> Color {
         switch category {
         case .beer: return Color(red: 0.99, green: 0.79, blue: 0.34)
         case .wine: return Color(red: 0.98, green: 0.52, blue: 0.58)

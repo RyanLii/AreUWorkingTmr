@@ -7,6 +7,7 @@ struct AreUWorkingTmrApp: App {
     @StateObject private var store = AppStore()
     @StateObject private var permissionManager = PermissionManager()
     @StateObject private var locationMonitor = LocationMonitor()
+    @StateObject private var connectivity = PhoneConnectivityManager()
 
     private let modelContainer: ModelContainer
 
@@ -22,6 +23,9 @@ struct AreUWorkingTmrApp: App {
                 .environmentObject(permissionManager)
                 .environmentObject(locationMonitor)
                 .onAppear {
+                    connectivity.store = store
+                    store.connectivity = connectivity
+
                     permissionManager.refreshStatus()
 
                     if permissionManager.locationAuthorized {
