@@ -158,6 +158,8 @@ final class AppStore: ObservableObject {
     private let sessionPolicy: AppStoreSessionPolicy
     private var modelContext: ModelContext?
 
+    weak var connectivity: ConnectivityService?
+
     private var hasHomeHydrationReminderBeenSent = false
     private var hasMorningCheckInScheduled = false
     private var activeSessionKey: String?
@@ -273,6 +275,7 @@ final class AppStore: ObservableObject {
         hasMarkedDoneTonight = false
         doneTonightAt = nil
 
+        var newEntries: [DrinkEntry] = []
         for _ in 0..<count {
             let entry = estimationService.makeEntry(
                 category: preset.category,
@@ -286,8 +289,10 @@ final class AppStore: ObservableObject {
             )
             entries.append(entry)
             persist(entry: entry)
+            newEntries.append(entry)
         }
 
+        connectivity?.sendDrinksAdded(newEntries)
         recalculateSnapshot(now: .now)
     }
 
@@ -299,6 +304,7 @@ final class AppStore: ObservableObject {
         hasMarkedDoneTonight = false
         doneTonightAt = nil
 
+        var newEntries: [DrinkEntry] = []
         for _ in 0..<quantity {
             let volume = parsed.volumeMl ?? fallbackPreset.defaultVolumeMl
             let abv = parsed.abvPercent ?? fallbackPreset.defaultABV
@@ -314,8 +320,10 @@ final class AppStore: ObservableObject {
             )
             entries.append(entry)
             persist(entry: entry)
+            newEntries.append(entry)
         }
 
+        connectivity?.sendDrinksAdded(newEntries)
         recalculateSnapshot(now: .now)
     }
 
@@ -334,16 +342,18 @@ final class AppStore: ObservableObject {
 
         entries.removeAll(where: { $0.id == last.id })
         deletePersistedEntries(ids: [last.id])
+        connectivity?.sendDrinksDeleted([last.id])
         recalculateSnapshot(now: now)
         return true
     }
 
     func deleteEntries(at offsets: IndexSet) {
-        let ids = offsets.compactMap { entries[safe: $0]?.id }
+        let ids = Set(offsets.compactMap { entries[safe: $0]?.id })
         for index in offsets.sorted(by: >) where entries.indices.contains(index) {
             entries.remove(at: index)
         }
-        deletePersistedEntries(ids: Set(ids))
+        deletePersistedEntries(ids: ids)
+        connectivity?.sendDrinksDeleted(ids)
         recalculateSnapshot(now: .now)
     }
 
@@ -351,6 +361,7 @@ final class AppStore: ObservableObject {
         guard !ids.isEmpty else { return }
         entries.removeAll(where: { ids.contains($0.id) })
         deletePersistedEntries(ids: ids)
+        connectivity?.sendDrinksDeleted(ids)
         recalculateSnapshot(now: .now)
     }
 
@@ -371,6 +382,7 @@ final class AppStore: ObservableObject {
 
         profile = newProfile
         persist(profile: newProfile)
+        connectivity?.sendProfileUpdated(newProfile)
         recalculateSnapshot(now: .now)
     }
 
@@ -378,6 +390,7 @@ final class AppStore: ObservableObject {
         refreshSessionStateIfNeeded(now: now)
         hasMarkedDoneTonight = true
         doneTonightAt = now
+        connectivity?.sendDoneTonight()
         // Fallback schedule so hydration support still works even when home-location detection is unavailable.
         handleHomeArrival(arrivedAt: now, now: now)
         scheduleMorningCheckInIfNeeded(now: now)
@@ -661,6 +674,43 @@ final class AppStore: ObservableObject {
         Task {
             await reminderService.cancelAllScheduledNotifications()
         }
+    }
+
+    // MARK: - Remote apply (no re-broadcast to avoid loops)
+
+    func applyRemoteDrinks(_ remoteEntries: [DrinkEntry]) {
+        var changed = false
+        for entry in remoteEntries {
+            guard !entries.contains(where: { $0.id == entry.id }) else { continue }
+            entries.append(entry)
+            persist(entry: entry)
+            changed = true
+        }
+        guard changed else { return }
+        entries.sort { $0.timestamp < $1.timestamp }
+        recalculateSnapshot(now: .now)
+    }
+
+    func applyRemoteDelete(_ ids: Set<UUID>) {
+        guard !ids.isEmpty else { return }
+        let before = entries.count
+        entries.removeAll(where: { ids.contains($0.id) })
+        guard entries.count != before else { return }
+        deletePersistedEntries(ids: ids)
+        recalculateSnapshot(now: .now)
+    }
+
+    func applyRemoteProfile(_ remoteProfile: UserProfile) {
+        guard remoteProfile != profile else { return }
+        profile = remoteProfile
+        persist(profile: remoteProfile)
+        recalculateSnapshot(now: .now)
+    }
+
+    func applyRemoteDoneTonight() {
+        guard !hasMarkedDoneTonight else { return }
+        hasMarkedDoneTonight = true
+        doneTonightAt = .now
     }
 }
 

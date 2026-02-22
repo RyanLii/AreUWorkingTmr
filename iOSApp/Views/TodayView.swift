@@ -874,7 +874,7 @@ struct TodayView: View {
 
     private var statusMoodCopy: String {
         if statusSnapshot.state == .clearing && !statusIsCleared {
-            return "\(buzzStatus.description) Cooling off now."
+            return "\(buzzStatus.description)"
         }
 
         return buzzStatus.description
