@@ -5,6 +5,14 @@ struct SettingsHubView: View {
         AppScreenScaffold {
             VStack(spacing: 10) {
                 settingsLink(
+                    title: "Profile",
+                    icon: "person.circle",
+                    tint: NightTheme.mint
+                ) {
+                    ProfileView()
+                }
+
+                settingsLink(
                     title: "History",
                     icon: "clock.arrow.circlepath",
                     tint: NightTheme.accentSoft

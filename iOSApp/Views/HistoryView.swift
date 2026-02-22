@@ -4,34 +4,39 @@ struct HistoryView: View {
     @EnvironmentObject private var store: AppStore
     @Environment(\.editMode) private var editMode
 
-    private var sortedEntries: [DrinkEntry] {
-        SessionClock.entriesInCurrentSession(store.entries, now: .now)
-            .sorted(by: { $0.timestamp > $1.timestamp })
-    }
-
     private var isEditing: Bool {
         editMode?.wrappedValue.isEditing == true
     }
 
+    // Group all entries into sessions, newest session first
+    private var sessions: [(key: String, date: Date, entries: [DrinkEntry])] {
+        let grouped = Dictionary(grouping: store.entries) { entry in
+            SessionClock.key(for: entry.timestamp)
+        }
+        return grouped
+            .map { key, entries in
+                let sessionStart = SessionClock.interval(containing: entries[0].timestamp).start
+                let sorted = entries.sorted { $0.timestamp > $1.timestamp }
+                return (key: key, date: sessionStart, entries: sorted)
+            }
+            .sorted { $0.date > $1.date }
+    }
+
     var body: some View {
         AppScreenScaffold {
-            if sortedEntries.isEmpty {
+            if sessions.isEmpty {
                 SectionCard("Timeline") {
                     Text("No drinks logged yet")
                         .font(NightTheme.sectionFont)
                         .foregroundStyle(.white)
-                    Text("Your timeline appears here after your first quick add or voice log.")
+                    Text("Your history appears here after your first log.")
                         .font(NightTheme.bodyFont)
                         .foregroundStyle(NightTheme.label)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             } else {
-                SectionCard("Timeline") {
-                    VStack(spacing: 10) {
-                        ForEach(sortedEntries) { entry in
-                            entryRow(entry)
-                        }
-                    }
+                ForEach(sessions, id: \.key) { session in
+                    sessionCard(session)
                 }
             }
         }
@@ -50,18 +55,49 @@ struct HistoryView: View {
         }
     }
 
+    private func sessionCard(_ session: (key: String, date: Date, entries: [DrinkEntry])) -> some View {
+        let total = session.entries.reduce(0) { $0 + $1.standardDrinks }
+        let isToday = SessionClock.key(for: .now) == session.key
+
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(isToday ? "Tonight" : sessionDateLabel(session.date))
+                        .font(NightTheme.sectionFont.weight(.bold))
+                        .foregroundStyle(.white)
+                    Text(weekdayLabel(session.date))
+                        .font(NightTheme.captionFont)
+                        .foregroundStyle(NightTheme.labelSoft)
+                }
+                Spacer()
+                Text(DisplayFormatter.standardDrinks(total))
+                    .font(NightTheme.bodyFont.weight(.semibold))
+                    .foregroundStyle(NightTheme.accentSoft)
+            }
+
+            Divider().overlay(Color.white.opacity(0.10))
+
+            VStack(spacing: 8) {
+                ForEach(session.entries) { entry in
+                    entryRow(entry)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassCard()
+    }
+
     private func entryRow(_ entry: DrinkEntry) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text(entry.servingName ?? entry.category.title)
-                        .font(NightTheme.sectionFont)
+                        .font(NightTheme.bodyFont.weight(.semibold))
                         .foregroundStyle(.white)
 
                     Text("\(entry.category.title) · \(Int(entry.volumeMl))ml · \(entry.abvPercent, specifier: "%.1f")%")
-                        .font(NightTheme.bodyFont)
+                        .font(NightTheme.captionFont)
                         .foregroundStyle(NightTheme.label)
-                        .fixedSize(horizontal: false, vertical: true)
 
                     Text(entry.timestamp, style: .time)
                         .font(NightTheme.captionFont)
@@ -71,7 +107,7 @@ struct HistoryView: View {
                 Spacer(minLength: 8)
 
                 Text(DisplayFormatter.standardDrinks(entry.standardDrinks))
-                    .font(NightTheme.bodyFont.weight(.semibold))
+                    .font(NightTheme.captionFont.weight(.semibold))
                     .foregroundStyle(NightTheme.accentSoft)
             }
 
@@ -79,7 +115,7 @@ struct HistoryView: View {
                 Button(role: .destructive) {
                     store.deleteEntries(ids: Set([entry.id]))
                 } label: {
-                    Label("Delete log", systemImage: "trash")
+                    Label("Delete", systemImage: "trash")
                         .font(NightTheme.captionFont.weight(.bold))
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -87,15 +123,18 @@ struct HistoryView: View {
                 .tint(NightTheme.warning)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.white.opacity(0.08))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
-                )
-        )
+    }
+
+    private func sessionDateLabel(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter.string(from: date)
+    }
+
+    private func weekdayLabel(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE"
+        return formatter.string(from: date) + " night"
     }
 }
