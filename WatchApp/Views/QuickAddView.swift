@@ -61,6 +61,10 @@ struct QuickAddView: View {
         store.sessionSnapshot.totalStandardDrinks > 0.001
     }
 
+    private var hasActiveLoad: Bool {
+        hasSessionDrinks && store.sessionSnapshot.state != .cleared
+    }
+
     private var currentEffectiveStandardDrinks: Double {
         store.sessionSnapshot.effectiveStandardDrinks
     }
@@ -94,7 +98,7 @@ struct QuickAddView: View {
                     .lineLimit(2)
                     .minimumScaleFactor(0.85)
 
-                if hasSessionDrinks && !store.hasMarkedDoneTonight {
+                if hasActiveLoad && !store.hasMarkedDoneTonight {
                     Button {
                         hydrationConfirmed = false
                         rideConfirmed = false
@@ -116,7 +120,7 @@ struct QuickAddView: View {
                     .buttonStyle(.plain)
                 }
 
-                if hasSessionDrinks {
+                if hasActiveLoad {
                     quickSessionStatusCard
                 }
 
@@ -139,10 +143,10 @@ struct QuickAddView: View {
                             openDetail(for: preset)
                         } label: {
                             HStack(spacing: 8) {
-                                Image(systemName: symbol(for: preset.category))
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundStyle(tint(for: preset.category))
-                                    .frame(width: 18)
+                                Image(customAssetName(for: preset.category))
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 26, height: 26)
 
                                 VStack(alignment: .leading, spacing: 1) {
                                     Text(preset.category.title)
@@ -499,14 +503,10 @@ struct QuickAddView: View {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 36), spacing: 6)], spacing: 6) {
                 ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
                     let appeared = drinkIconsAppeared.indices.contains(index) ? drinkIconsAppeared[index] : false
-                    ZStack {
-                        Circle()
-                            .fill(watchTint(for: entry.category).opacity(0.22))
-                            .frame(width: 36, height: 36)
-                        Image(systemName: symbol(for: entry.category))
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(watchTint(for: entry.category))
-                    }
+                    Image(customAssetName(for: entry.category))
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 36, height: 36)
                     .offset(x: appeared ? 0 : 50, y: appeared ? 0 : 8)
                     .opacity(appeared ? 1 : 0)
                 }
@@ -527,7 +527,7 @@ struct QuickAddView: View {
         }
     }
 
-    private func watchTint(for category: DrinkCategory) -> Color {
+    private func watchColorForCategory(for category: DrinkCategory) -> Color {
         switch category {
         case .beer: Color(red: 0.99, green: 0.79, blue: 0.34)
         case .wine: Color(red: 0.98, green: 0.52, blue: 0.58)
@@ -1130,18 +1130,18 @@ struct QuickAddView: View {
         return "\(label)\(Int(preset.defaultVolumeMl))ml · \(String(format: "%.1f", preset.defaultABV))%"
     }
 
-    private func symbol(for category: DrinkCategory) -> String {
+    private func customAssetName(for category: DrinkCategory) -> String {
         switch category {
-        case .beer: return "mug.fill"
-        case .wine: return "wineglass.fill"
-        case .shot: return "drop.fill"
-        case .cocktail: return "takeoutbag.and.cup.and.straw.fill"
-        case .spirits: return "flame.fill"
-        case .custom: return "slider.horizontal.3"
+        case .beer: return "Beer"
+        case .wine: return "Wine"
+        case .shot: return "Shot"
+        case .cocktail: return "Cocotail"
+        case .spirits: return "Spirit"
+        case .custom: return "Custom"
         }
     }
 
-    private func tint(for category: DrinkCategory) -> Color {
+    private func colorForCategory(for category: DrinkCategory) -> Color {
         switch category {
         case .beer: return Color(red: 1.0, green: 0.76, blue: 0.23)
         case .wine: return Color(red: 0.88, green: 0.42, blue: 0.58)

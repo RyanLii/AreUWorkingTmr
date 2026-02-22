@@ -55,6 +55,10 @@ struct TodayView: View {
         store.sessionSnapshot.totalStandardDrinks > 0.001
     }
 
+    private var hasActiveLoad: Bool {
+        hasSessionDrinks && store.sessionSnapshot.state != .cleared
+    }
+
     private var statusSnapshot: SessionSnapshot {
         store.sessionSnapshot
     }
@@ -87,11 +91,11 @@ struct TodayView: View {
         AppScreenScaffold {
             header
 
-            if hasSessionDrinks && !store.hasMarkedDoneTonight {
+            if hasActiveLoad && !store.hasMarkedDoneTonight {
                 doneTonightCard
             }
 
-            if hasSessionDrinks {
+            if hasActiveLoad {
                 statusCard
             }
 
@@ -269,14 +273,10 @@ struct TodayView: View {
     private func quickAddTile(_ preset: DrinkPreset) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                ZStack {
-                    Circle()
-                        .fill(tint(for: preset.category).opacity(0.24))
-                        .frame(width: 28, height: 28)
-                    Image(systemName: symbol(for: preset.category))
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(tint(for: preset.category))
-                }
+                Image(customAssetName(for: preset.category))
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 30, height: 30)
 
                 Spacer(minLength: 2)
 
@@ -1093,14 +1093,10 @@ struct TodayView: View {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 52), spacing: 8)], spacing: 8) {
                 ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
                     let appeared = drinkIconsAppeared.indices.contains(index) ? drinkIconsAppeared[index] : false
-                    ZStack {
-                        Circle()
-                            .fill(tint(for: entry.category).opacity(0.22))
-                            .frame(width: 52, height: 52)
-                        Image(systemName: symbol(for: entry.category))
-                            .font(.system(size: 22, weight: .bold))
-                            .foregroundStyle(tint(for: entry.category))
-                    }
+                    Image(customAssetName(for: entry.category))
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 48, height: 48)
                     .offset(x: appeared ? 0 : 60, y: appeared ? 0 : 10)
                     .opacity(appeared ? 1 : 0)
                 }
@@ -1235,18 +1231,18 @@ struct TodayView: View {
         return "\(label)\(Int(preset.defaultVolumeMl))ml · \(String(format: "%.1f", preset.defaultABV))%"
     }
 
-    private func symbol(for category: DrinkCategory) -> String {
+    private func customAssetName(for category: DrinkCategory) -> String {
         switch category {
-        case .beer: return "mug.fill"
-        case .wine: return "wineglass.fill"
-        case .shot: return "drop.fill"
-        case .cocktail: return "takeoutbag.and.cup.and.straw.fill"
-        case .spirits: return "flame.fill"
-        case .custom: return "slider.horizontal.3"
+        case .beer: return "Beer"
+        case .wine: return "Wine"
+        case .shot: return "Shot"
+        case .cocktail: return "Cocotail"
+        case .spirits: return "Spirit"
+        case .custom: return "Custom"
         }
     }
 
-    private func tint(for category: DrinkCategory) -> Color {
+    private func colorForCategory(for category: DrinkCategory) -> Color {
         switch category {
         case .beer: return Color(red: 0.99, green: 0.79, blue: 0.34)
         case .wine: return Color(red: 0.98, green: 0.52, blue: 0.58)
