@@ -36,6 +36,8 @@ struct TodayView: View {
     @State private var manualVolumeMl: Int = 180
 
     @State private var showDoneTonightSheet = false
+    @State private var showLoadCurve = false
+    @State private var showNerdConfirm = false
     @State private var hydrationConfirmed = false
     @State private var rideConfirmed = false
     @State private var alarmConfirmed = false
@@ -110,6 +112,21 @@ struct TodayView: View {
         .sheet(isPresented: $showDoneTonightSheet) {
             doneTonightSheet
         }
+        .sheet(isPresented: $showLoadCurve) {
+            BodyLoadChartView()
+                .environmentObject(store)
+        }
+        .alert("You're checking this right now?", isPresented: $showNerdConfirm) {
+            Button("Show me the data") {
+                UserDefaults.standard.set(true, forKey: "nerd.curve.seen")
+                showLoadCurve = true
+            }
+            Button("Fair point", role: .cancel) {
+                UserDefaults.standard.set(true, forKey: "nerd.curve.seen")
+            }
+        } message: {
+            Text("You've had a few tonight and you want your pharmacokinetics breakdown. Honestly? Respect. 🧪")
+        }
     }
 
     private var header: some View {
@@ -167,11 +184,11 @@ struct TodayView: View {
                         DisplayFormatter.standardDrinks(statusSnapshot.totalStandardDrinks)
                     )
                     statusDetailRow(
-                        "In body now",
+                        "Active load",
                         DisplayFormatter.standardDrinks(statusEffectiveStandardDrinks)
                     )
                     statusDetailRow(
-                        "Still absorbing",
+                        "In absorption",
                         DisplayFormatter.standardDrinks(statusSnapshot.pendingAbsorptionStandardDrinks)
                     )
                     statusDetailRow(
@@ -199,9 +216,33 @@ struct TodayView: View {
                         )
                     }
 
-                    Text("Nerd math only. Estimate, not legal or medical advice.")
+                    Text("0.8 std/hr metabolism · 30 min absorption window · estimates only")
                         .font(NightTheme.captionFont)
                         .foregroundStyle(NightTheme.label)
+
+                    Button {
+                        if UserDefaults.standard.bool(forKey: "nerd.curve.seen") {
+                            showLoadCurve = true
+                        } else {
+                            showNerdConfirm = true
+                        }
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "waveform.path.ecg")
+                                .font(.system(size: 10, weight: .semibold))
+                            Text("View load curve")
+                                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        }
+                        .foregroundStyle(NightTheme.accentSoft)
+                        .padding(.vertical, 6)
+                        .padding(.horizontal, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(NightTheme.accentSoft.opacity(0.12))
+                        )
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    }
+                    .buttonStyle(.plain)
                 }
                 .padding(.top, 4)
             } label: {

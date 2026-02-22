@@ -679,6 +679,32 @@ final class AppStore: ObservableObject {
         }
     }
 
+    func bodyLoadSeries(now: Date = .now) -> (points: [(date: Date, load: Double)], entries: [DrinkEntry]) {
+        let sessionDrinks = sessionEntries(now: now)
+        guard !sessionDrinks.isEmpty else { return ([], []) }
+        let effectiveProfile = effectiveProfileForSession(now: now, updatePublishedState: false)
+        guard let sessionStart = sessionDrinks.map(\.timestamp).min() else { return ([], []) }
+        let end = sessionSnapshot.projectedZeroTime
+        guard end > sessionStart else { return ([], []) }
+
+        let step: TimeInterval = 5 * 60
+        var points: [(date: Date, load: Double)] = []
+        var t = sessionStart
+
+        while t <= end {
+            let snap = estimationService.recalculate(entries: sessionDrinks, profile: effectiveProfile, now: t)
+            points.append((date: t, load: snap.effectiveStandardDrinks))
+            t += step
+        }
+
+        if points.last.map({ $0.date < end }) ?? true {
+            let snap = estimationService.recalculate(entries: sessionDrinks, profile: effectiveProfile, now: end)
+            points.append((date: end, load: snap.effectiveStandardDrinks))
+        }
+
+        return (points, sessionDrinks)
+    }
+
     // MARK: - Remote apply (no re-broadcast to avoid loops)
 
     func applyRemoteDrinks(_ remoteEntries: [DrinkEntry]) {
