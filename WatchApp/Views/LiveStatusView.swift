@@ -4,6 +4,7 @@ struct LiveStatusView: View {
     @EnvironmentObject private var store: AppStore
     @State private var showDetails = false
     @State private var clearTrendPulse = false
+    @State private var statusChipPulse = false
     @State private var progressAnchorToken: String = ""
     @State private var progressAnchorSessionStart: Date?
     @State private var progressAnchorProjectedZero: Date = .now
@@ -26,17 +27,7 @@ struct LiveStatusView: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.85)
                     Spacer()
-                    Text(buzzStatus.title)
-                        .font(WatchNightTheme.captionFont)
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.78)
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 2)
-                        .background(
-                            Capsule()
-                                .fill(liveChipColor.opacity(0.34))
-                        )
+                    statusBadgePill
                 }
 
                 Text(statusMoodCopy)
@@ -46,18 +37,6 @@ struct LiveStatusView: View {
                     .fixedSize(horizontal: false, vertical: true)
 
                 VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text("Cooling off progress")
-                            .font(WatchNightTheme.captionFont)
-                            .foregroundStyle(WatchNightTheme.label)
-                        Spacer()
-                        SwiftUI.TimelineView(.periodic(from: .now, by: 15)) { context in
-                            Text("\(Int((dynamicCooledOffProgress(at: context.date) * 100).rounded()))% cooled off")
-                                .font(WatchNightTheme.captionFont.weight(.bold))
-                                .foregroundStyle(.white)
-                        }
-                    }
-
                     SwiftUI.TimelineView(.periodic(from: .now, by: 15)) { context in
                         let progress = dynamicCooledOffProgress(at: context.date)
                         let recovery = recoveryFraction()
@@ -87,72 +66,84 @@ struct LiveStatusView: View {
                                 .frame(width: 5, height: 5)
                         }
                     }
+
+                    Text("Model estimate only — actual recovery varies by person. Not medical or legal advice.")
+                        .font(.system(size: 9, weight: .regular, design: .rounded))
+                        .foregroundStyle(WatchNightTheme.label.opacity(0.55))
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .watchCard()
                 .onAppear { syncStableProgressAnchor() }
                 .onChange(of: store.sessionSnapshot.lastDrinkTime) { _, _ in syncStableProgressAnchor() }
                 .onChange(of: store.sessionSnapshot.totalStandardDrinks) { _, _ in syncStableProgressAnchor() }
 
-                HStack {
-                    Spacer()
+                VStack(alignment: .leading, spacing: 0) {
                     Button {
-                        showDetails.toggle()
-                    } label: {
-                        HStack(spacing: 4) {
-                            Text(showDetails ? "Hide details" : "More details")
-                            Image(systemName: showDetails ? "chevron.up.circle.fill" : "chevron.down.circle")
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                            showDetails.toggle()
                         }
-                        .font(WatchNightTheme.captionFont)
-                        .foregroundStyle(WatchNightTheme.accentSoft)
+                    } label: {
+                        HStack {
+                            Text("Nerd stuff")
+                                .font(WatchNightTheme.captionFont)
+                                .foregroundStyle(WatchNightTheme.label)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(WatchNightTheme.captionFont.weight(.semibold))
+                                .foregroundStyle(WatchNightTheme.accentSoft)
+                                .rotationEffect(.degrees(showDetails ? 90 : 0))
+                        }
                     }
                     .buttonStyle(.plain)
-                }
 
-                if showDetails {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Nerd stuff")
-                            .font(WatchNightTheme.captionFont)
-                            .foregroundStyle(WatchNightTheme.labelSoft)
+                    if showDetails {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Divider()
+                                .overlay(Color.white.opacity(0.12))
+                                .padding(.vertical, 6)
 
-                        metricRow(
-                            "Total logged",
-                            DisplayFormatter.standardDrinks(store.sessionSnapshot.totalStandardDrinks)
-                        )
-                        metricRow(
-                            "In body now",
-                            DisplayFormatter.standardDrinks(store.sessionSnapshot.effectiveStandardDrinks)
-                        )
-                        metricRow(
-                            "Still absorbing",
-                            DisplayFormatter.standardDrinks(store.sessionSnapshot.pendingAbsorptionStandardDrinks)
-                        )
-                        metricRow(
-                            "Metabolized",
-                            DisplayFormatter.standardDrinks(store.sessionSnapshot.metabolizedStandardDrinks)
-                        )
-                        metricRow(
-                            "Estimated peak",
-                            "\(DisplayFormatter.standardDrinks(store.sessionSnapshot.estimatedPeakStandardDrinks)) at \(DisplayFormatter.eta(store.sessionSnapshot.estimatedPeakTime))"
-                        )
-                        metricRow("Feel human", DisplayFormatter.eta(store.sessionSnapshot.projectedRecoveryTime))
-                        metricRow("Full clear", DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime))
+                            metricRow(
+                                "Total logged",
+                                DisplayFormatter.standardDrinks(store.sessionSnapshot.totalStandardDrinks)
+                            )
+                            metricRow(
+                                "In body now",
+                                DisplayFormatter.standardDrinks(store.sessionSnapshot.effectiveStandardDrinks)
+                            )
+                            metricRow(
+                                "Still absorbing",
+                                DisplayFormatter.standardDrinks(store.sessionSnapshot.pendingAbsorptionStandardDrinks)
+                            )
+                            metricRow(
+                                "Metabolized",
+                                DisplayFormatter.standardDrinks(store.sessionSnapshot.metabolizedStandardDrinks)
+                            )
+                            metricRow(
+                                "Estimated peak",
+                                "\(DisplayFormatter.standardDrinks(store.sessionSnapshot.estimatedPeakStandardDrinks)) at \(DisplayFormatter.eta(store.sessionSnapshot.estimatedPeakTime))"
+                            )
+                            metricRow("Feel human", DisplayFormatter.eta(store.sessionSnapshot.projectedRecoveryTime))
+                            metricRow("Full clear", DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime))
 
-                        if let lastDrink = store.sessionSnapshot.lastDrinkTime {
-                            metricRow("Last drink", DisplayFormatter.eta(lastDrink))
+                            if let lastDrink = store.sessionSnapshot.lastDrinkTime {
+                                metricRow("Last drink", DisplayFormatter.eta(lastDrink))
+                            }
+
+                            if store.sessionSnapshot.clearingElapsed > 1,
+                               (store.sessionSnapshot.state == .clearing || store.sessionSnapshot.state == .cleared) {
+                                metricRow("Clearing for", DisplayFormatter.duration(store.sessionSnapshot.clearingElapsed))
+                            }
+
+                            Text("Nerd math only. Estimate, not legal or medical advice.")
+                                .font(WatchNightTheme.captionFont)
+                                .foregroundStyle(WatchNightTheme.label)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.top, 2)
                         }
-
-                        if store.sessionSnapshot.clearingElapsed > 1,
-                           (store.sessionSnapshot.state == .clearing || store.sessionSnapshot.state == .cleared) {
-                            metricRow("Clearing for", DisplayFormatter.duration(store.sessionSnapshot.clearingElapsed))
-                        }
-
-                        Text("Nerd math only. Estimate, not legal or medical advice.")
-                            .font(WatchNightTheme.captionFont)
-                            .foregroundStyle(WatchNightTheme.label)
-                            .fixedSize(horizontal: false, vertical: true)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                     }
-                    .watchCard()
                 }
+                .watchCard()
 
                 if store.sessionSnapshot.totalStandardDrinks <= 0 {
                     Text("No drinks logged yet.")
@@ -164,6 +155,35 @@ struct LiveStatusView: View {
             .padding(.top, 6)
             .padding(.bottom, 10)
         }
+    }
+
+    private var statusBadgePill: some View {
+        Text(buzzStatus.title)
+            .font(.system(size: 11, weight: .black, design: .rounded))
+            .foregroundStyle(.white)
+            .shadow(color: Color.black.opacity(0.42), radius: 1, x: 0, y: 1)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                liveChipColor.opacity(0.96),
+                                Color.black.opacity(0.58)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay(
+                        Capsule()
+                            .stroke(Color.white.opacity(0.36), lineWidth: 1.1)
+                    )
+            )
+            .shadow(color: liveChipColor.opacity(statusChipPulse ? 0.56 : 0.30), radius: statusChipPulse ? 10 : 6, y: 2)
+            .scaleEffect(statusChipPulse ? 1.02 : 1.0)
+            .onAppear { startStatusChipPulseIfNeeded() }
     }
 
     private var liveChipColor: Color {
@@ -189,7 +209,6 @@ struct LiveStatusView: View {
         if store.sessionSnapshot.state == .clearing && !isCleared {
             return "\(buzzStatus.description)"
         }
-
         return buzzStatus.description
     }
 
@@ -252,7 +271,7 @@ struct LiveStatusView: View {
             ZStack(alignment: .leading) {
                 Capsule()
                     .fill(Color.white.opacity(0.14))
-                    .frame(height: 10)
+                    .frame(height: 14)
 
                 if width > 0 {
                     let recoveryStop = min(max(recoveryX / width, 0), 1)
@@ -270,14 +289,14 @@ struct LiveStatusView: View {
                                 endPoint: .trailing
                             )
                         )
-                        .frame(width: width, height: 10)
+                        .frame(width: width, height: 14)
                         .clipShape(Capsule())
                         .animation(.linear(duration: 0.5), value: clamped)
 
                     if recoveryX > 4 && recoveryX < totalWidth - 4 {
                         Rectangle()
                             .fill(Color.white.opacity(0.65))
-                            .frame(width: 1.5, height: 8)
+                            .frame(width: 1.5, height: 12)
                             .offset(x: recoveryX - 0.75)
                     }
                 }
@@ -290,13 +309,20 @@ struct LiveStatusView: View {
                 startClearTrendPulseIfNeeded()
             }
         }
-        .frame(height: 10)
+        .frame(height: 14)
     }
 
     private func startClearTrendPulseIfNeeded() {
         guard !clearTrendPulse else { return }
         withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
             clearTrendPulse = true
+        }
+    }
+
+    private func startStatusChipPulseIfNeeded() {
+        guard !statusChipPulse else { return }
+        withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
+            statusChipPulse = true
         }
     }
 

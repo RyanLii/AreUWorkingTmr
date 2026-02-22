@@ -38,6 +38,7 @@ struct QuickAddView: View {
         workingTomorrow: false
     )
     @State private var detailScrollToBottomToken = 0
+    @State private var showStatusDetails = false
     @State private var progressAnchorToken: String = ""
     @State private var progressAnchorSessionStart: Date?
     @State private var progressAnchorProjectedZero: Date = .now
@@ -214,44 +215,18 @@ struct QuickAddView: View {
     private var quickSessionStatusCard: some View {
         VStack(alignment: .leading, spacing: 7) {
             HStack {
-                Text("Chill ETA")
-                    .font(WatchNightTheme.captionFont)
-                    .foregroundStyle(WatchNightTheme.labelSoft)
-                Spacer()
-                Text(buzzStatus.title)
-                    .font(WatchNightTheme.captionFont)
+                Text("Status")
+                    .font(WatchNightTheme.bodyStrong)
                     .foregroundStyle(.white)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.78)
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 2)
-                    .background(
-                        Capsule()
-                            .fill(statusBadgeColor.opacity(0.36))
-                    )
-            }
-
-            Text(isCleared ? "All good" : DisplayFormatter.countdown(store.sessionSnapshot.remainingToZero))
-                .font(WatchNightTheme.bodyStrong)
-                .foregroundStyle(.white)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
-
-            Text(isCleared ? "You are all good now." : statusMoodCopy)
-                .font(WatchNightTheme.bodyFont)
-                .foregroundStyle(isCleared ? WatchNightTheme.mint : WatchNightTheme.warning)
-
-            HStack {
-                Text("Cooling off progress")
-                    .font(WatchNightTheme.captionFont)
-                    .foregroundStyle(WatchNightTheme.labelSoft)
                 Spacer()
-                SwiftUI.TimelineView(.periodic(from: .now, by: 15)) { context in
-                    Text("\(Int((dynamicCooledOffProgress(at: context.date) * 100).rounded()))% cooled off")
-                        .font(WatchNightTheme.captionFont.weight(.bold))
-                        .foregroundStyle(.white)
-                }
+                statusBadgePill
             }
+
+            Text(statusMoodCopy)
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .foregroundStyle(statusBadgeColor.opacity(0.90))
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
 
             SwiftUI.TimelineView(.periodic(from: .now, by: 15)) { context in
                 let progress = dynamicCooledOffProgress(at: context.date)
@@ -283,12 +258,105 @@ struct QuickAddView: View {
                 }
             }
 
-            Text("Nerd math only. Estimate, not legal or medical advice.")
-                .font(WatchNightTheme.captionFont)
-                .foregroundStyle(WatchNightTheme.labelSoft)
+            Text("Model estimate only — actual recovery varies by person. Not medical or legal advice.")
+                .font(.system(size: 9, weight: .regular, design: .rounded))
+                .foregroundStyle(WatchNightTheme.label.opacity(0.55))
                 .fixedSize(horizontal: false, vertical: true)
+
+            VStack(alignment: .leading, spacing: 0) {
+                Button {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                        showStatusDetails.toggle()
+                    }
+                } label: {
+                    HStack {
+                        Text("Nerd stuff")
+                            .font(WatchNightTheme.captionFont)
+                            .foregroundStyle(WatchNightTheme.label)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(WatchNightTheme.captionFont.weight(.semibold))
+                            .foregroundStyle(WatchNightTheme.accentSoft)
+                            .rotationEffect(.degrees(showStatusDetails ? 90 : 0))
+                    }
+                }
+                .buttonStyle(.plain)
+
+                if showStatusDetails {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Divider()
+                            .overlay(Color.white.opacity(0.12))
+                            .padding(.vertical, 6)
+
+                        statusMetricRow("Total logged", DisplayFormatter.standardDrinks(store.sessionSnapshot.totalStandardDrinks))
+                        statusMetricRow("In body now", DisplayFormatter.standardDrinks(store.sessionSnapshot.effectiveStandardDrinks))
+                        statusMetricRow("Still absorbing", DisplayFormatter.standardDrinks(store.sessionSnapshot.pendingAbsorptionStandardDrinks))
+                        statusMetricRow("Metabolized", DisplayFormatter.standardDrinks(store.sessionSnapshot.metabolizedStandardDrinks))
+                        statusMetricRow("Estimated peak", "\(DisplayFormatter.standardDrinks(store.sessionSnapshot.estimatedPeakStandardDrinks)) at \(DisplayFormatter.eta(store.sessionSnapshot.estimatedPeakTime))")
+                        statusMetricRow("Feel human", DisplayFormatter.eta(store.sessionSnapshot.projectedRecoveryTime))
+                        statusMetricRow("Full clear", DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime))
+
+                        if let lastDrink = store.sessionSnapshot.lastDrinkTime {
+                            statusMetricRow("Last drink", DisplayFormatter.eta(lastDrink))
+                        }
+
+                        if store.sessionSnapshot.clearingElapsed > 1,
+                           (store.sessionSnapshot.state == .clearing || store.sessionSnapshot.state == .cleared) {
+                            statusMetricRow("Clearing for", DisplayFormatter.duration(store.sessionSnapshot.clearingElapsed))
+                        }
+
+                        Text("Nerd math only. Estimate, not legal or medical advice.")
+                            .font(WatchNightTheme.captionFont)
+                            .foregroundStyle(WatchNightTheme.label)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, 2)
+                    }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+            }
         }
         .watchCard(highlighted: true)
+    }
+
+    private func statusMetricRow(_ title: String, _ value: String) -> some View {
+        HStack {
+            Text(title)
+                .font(WatchNightTheme.captionFont)
+                .foregroundStyle(WatchNightTheme.labelSoft)
+            Spacer()
+            Text(value)
+                .font(WatchNightTheme.bodyFont.weight(.semibold))
+                .foregroundStyle(.white)
+                .lineLimit(2)
+                .minimumScaleFactor(0.74)
+                .multilineTextAlignment(.trailing)
+        }
+    }
+
+    private var statusBadgePill: some View {
+        Text(buzzStatus.title)
+            .font(.system(size: 11, weight: .black, design: .rounded))
+            .foregroundStyle(.white)
+            .shadow(color: Color.black.opacity(0.42), radius: 1, x: 0, y: 1)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                statusBadgeColor.opacity(0.96),
+                                Color.black.opacity(0.58)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay(
+                        Capsule()
+                            .stroke(Color.white.opacity(0.36), lineWidth: 1.1)
+                    )
+            )
     }
 
     private var statusBadgeColor: Color {
@@ -377,7 +445,7 @@ struct QuickAddView: View {
             ZStack(alignment: .leading) {
                 Capsule()
                     .fill(Color.white.opacity(0.14))
-                    .frame(height: 10)
+                    .frame(height: 14)
 
                 if width > 0 {
                     let recoveryStop = min(max(recoveryX / width, 0), 1)
@@ -395,14 +463,14 @@ struct QuickAddView: View {
                                 endPoint: .trailing
                             )
                         )
-                        .frame(width: width, height: 10)
+                        .frame(width: width, height: 14)
                         .clipShape(Capsule())
                         .animation(.linear(duration: 0.5), value: clamped)
 
                     if recoveryX > 4 && recoveryX < totalWidth - 4 {
                         Rectangle()
                             .fill(Color.white.opacity(0.65))
-                            .frame(width: 1.5, height: 8)
+                            .frame(width: 1.5, height: 12)
                             .offset(x: recoveryX - 0.75)
                     }
                 }
@@ -412,7 +480,7 @@ struct QuickAddView: View {
                     .stroke(Color.white.opacity(0.2), lineWidth: 1)
             )
         }
-        .frame(height: 10)
+        .frame(height: 14)
     }
 
     private var doneTonightSheet: some View {
