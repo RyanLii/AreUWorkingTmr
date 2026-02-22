@@ -51,6 +51,7 @@ final class DrinkRecordModel {
 @Model
 final class UserProfileModel {
     @Attribute(.unique) var id: String
+    // Legacy profile fields retained for compatibility with existing stores.
     var weightKg: Double
     var heightCm: Double
     var biologicalSexRaw: String
@@ -63,42 +64,30 @@ final class UserProfileModel {
 
     init(profile: UserProfile, id: String = "primary") {
         self.id = id
-        self.weightKg = profile.weightKg
-        self.heightCm = profile.heightCm
-        self.biologicalSexRaw = profile.biologicalSex.rawValue
+        self.weightKg = 70
+        self.heightCm = 170
+        self.biologicalSexRaw = "other"
         self.unitPreferenceRaw = profile.unitPreference.rawValue
         self.regionStandardRaw = profile.regionStandard.rawValue
         self.workingTomorrow = profile.workingTomorrow
-        self.homeLatitude = profile.homeLocation?.latitude
-        self.homeLongitude = profile.homeLocation?.longitude
+        self.homeLatitude = nil
+        self.homeLongitude = nil
         self.drinkPreferencesJSON = Self.encode(preferences: profile.drinkPreferences)
     }
 
     var domain: UserProfile {
         UserProfile(
-            weightKg: weightKg,
-            heightCm: heightCm,
-            biologicalSex: BiologicalSex(rawValue: biologicalSexRaw) ?? .other,
             unitPreference: UnitPreference(rawValue: unitPreferenceRaw) ?? .metric,
             regionStandard: RegionStandard(rawValue: regionStandardRaw) ?? .au10g,
             workingTomorrow: workingTomorrow,
-            homeLocation: {
-                guard let homeLatitude, let homeLongitude else { return nil }
-                return LocationSnapshot(latitude: homeLatitude, longitude: homeLongitude)
-            }(),
             drinkPreferences: Self.decode(preferencesJSON: drinkPreferencesJSON)
         )
     }
 
     func update(from profile: UserProfile) {
-        weightKg = profile.weightKg
-        heightCm = profile.heightCm
-        biologicalSexRaw = profile.biologicalSex.rawValue
         unitPreferenceRaw = profile.unitPreference.rawValue
         regionStandardRaw = profile.regionStandard.rawValue
         workingTomorrow = profile.workingTomorrow
-        homeLatitude = profile.homeLocation?.latitude
-        homeLongitude = profile.homeLocation?.longitude
         drinkPreferencesJSON = Self.encode(preferences: profile.drinkPreferences)
     }
 

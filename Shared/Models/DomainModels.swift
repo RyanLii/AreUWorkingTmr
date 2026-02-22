@@ -29,20 +29,6 @@ enum DrinkSource: String, Codable {
     case edit
 }
 
-enum BiologicalSex: String, Codable, CaseIterable {
-    case male
-    case female
-    case other
-
-    var widmarkConstant: Double {
-        switch self {
-        case .male: 0.68
-        case .female: 0.55
-        case .other: 0.615
-        }
-    }
-}
-
 enum UnitPreference: String, Codable, CaseIterable {
     case metric
     case imperial
@@ -69,20 +55,6 @@ enum RegionStandard: String, Codable, CaseIterable {
         }
     }
 
-    // Baseline full-license legal BAC limit used for ETA estimation text.
-    // This is a simplified regional mapping, not legal advice.
-    var legalDriveBACLimit: Double {
-        switch self {
-        case .us14g: 0.08
-        case .au10g: 0.05
-        case .uk8g: 0.08
-        }
-    }
-
-    var legalDriveBACLimitText: String {
-        String(format: "%.2f", legalDriveBACLimit)
-    }
-
     static func defaultForCurrentLocale(locale: Locale = .current) -> RegionStandard {
         let regionIdentifier = locale.region?.identifier.uppercased()
         switch regionIdentifier {
@@ -100,46 +72,15 @@ enum RegionStandard: String, Codable, CaseIterable {
     }
 }
 
-enum IntoxicationState: String, Codable, CaseIterable {
-    case clear
-    case light
-    case social
-    case tipsy
-    case wavy
-    case high
-
-    var title: String {
-        switch self {
-        case .clear: "Clear"
-        case .light: "Light buzz"
-        case .social: "Social buzz"
-        case .tipsy: "Tipsy"
-        case .wavy: "Wavy"
-        case .high: "High risk"
-        }
-    }
-
-    var recoveryHint: String {
-        switch self {
-        case .clear: "Back to baseline"
-        case .light: "Settling"
-        case .social: "Take it easy"
-        case .tipsy: "Water first"
-        case .wavy: "Recovery mode"
-        case .high: "Safety mode"
-        }
-    }
-}
-
 struct DrinkPreset: Identifiable, Hashable {
-    let id: UUID
+    let id: String
     let name: String
     let category: DrinkCategory
     let defaultVolumeMl: Double
     let defaultABV: Double
 
-    init(id: UUID = UUID(), name: String, category: DrinkCategory, defaultVolumeMl: Double, defaultABV: Double) {
-        self.id = id
+    init(id: String? = nil, name: String, category: DrinkCategory, defaultVolumeMl: Double, defaultABV: Double) {
+        self.id = id ?? category.rawValue
         self.name = name
         self.category = category
         self.defaultVolumeMl = defaultVolumeMl
@@ -224,32 +165,20 @@ struct DrinkEntry: Identifiable, Codable, Hashable {
 }
 
 struct UserProfile: Codable, Hashable {
-    var weightKg: Double
-    var heightCm: Double
-    var biologicalSex: BiologicalSex
     var unitPreference: UnitPreference
     var regionStandard: RegionStandard
     var workingTomorrow: Bool
-    var homeLocation: LocationSnapshot?
     var drinkPreferences: [String: DrinkPreference]
 
     init(
-        weightKg: Double,
-        heightCm: Double = 170,
-        biologicalSex: BiologicalSex,
         unitPreference: UnitPreference,
         regionStandard: RegionStandard,
         workingTomorrow: Bool = false,
-        homeLocation: LocationSnapshot?,
         drinkPreferences: [String: DrinkPreference] = [:]
     ) {
-        self.weightKg = weightKg
-        self.heightCm = heightCm
-        self.biologicalSex = biologicalSex
         self.unitPreference = unitPreference
         self.regionStandard = regionStandard
         self.workingTomorrow = workingTomorrow
-        self.homeLocation = homeLocation
         self.drinkPreferences = drinkPreferences
     }
 
@@ -267,13 +196,9 @@ struct UserProfile: Codable, Hashable {
     }
 
     static let `default` = UserProfile(
-        weightKg: 70,
-        heightCm: 170,
-        biologicalSex: .other,
         unitPreference: .metric,
         regionStandard: .defaultForCurrentLocale(),
         workingTomorrow: false,
-        homeLocation: nil,
         drinkPreferences: [:]
     )
 }
@@ -281,12 +206,50 @@ struct UserProfile: Codable, Hashable {
 struct SessionSnapshot: Equatable {
     var date: Date
     var totalStandardDrinks: Double
-    var estimatedBAC: Double
-    var intoxicationState: IntoxicationState
-    var saferDriveTime: Date
-    var remainingToSaferDrive: TimeInterval
+    var state: BodyLoadState = .cleared
+    var effectiveStandardDrinks: Double = 0
+    var absorbedStandardDrinks: Double = 0
+    var pendingAbsorptionStandardDrinks: Double = 0
+    var metabolizedStandardDrinks: Double = 0
+    var projectedZeroTime: Date = .now
+    var remainingToZero: TimeInterval = 0
+    var projectedRecoveryTime: Date = .now
+    var estimatedPeakStandardDrinks: Double = 0
+    var estimatedPeakTime: Date = .now
+    var lastDrinkTime: Date?
+    var clearingStartedAt: Date?
+    var clearingElapsed: TimeInterval = 0
     var hydrationPlanMl: Int
     var recommendElectrolytes: Bool
+}
+
+enum BodyLoadState: String, Codable, CaseIterable {
+    case preAbsorption = "pre_absorption"
+    case absorbing = "absorbing"
+    case clearing = "clearing"
+    case cleared = "cleared"
+
+    var title: String {
+        switch self {
+        case .preAbsorption: "Pre-absorption"
+        case .absorbing: "Absorbing"
+        case .clearing: "Clearing"
+        case .cleared: "Cleared"
+        }
+    }
+
+    var supportiveCopy: String {
+        switch self {
+        case .preAbsorption:
+            "Just logged. Body response may still be delayed."
+        case .absorbing:
+            "Body load is rising. Consider slowing down."
+        case .clearing:
+            "Body load is falling. Keep hydrating and resting."
+        case .cleared:
+            "Model estimates this session has cleared."
+        }
+    }
 }
 
 enum ReminderType: String, Codable {
@@ -321,6 +284,7 @@ struct LocationStayContext {
     let stayedDuration: TimeInterval
     let movedDistanceMeters: Double
     let lastDrinkLoggedAt: Date?
+    let lastMissedLogReminderAt: Date?
     let now: Date
 }
 

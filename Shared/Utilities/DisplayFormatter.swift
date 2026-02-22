@@ -5,10 +5,6 @@ enum DisplayFormatter {
         String(format: "%.1f std", value)
     }
 
-    static func bac(_ value: Double) -> String {
-        String(format: "BAC %.3f", value)
-    }
-
     static func eta(_ date: Date, now: Date = .now) -> String {
         let calendar = Calendar.current
         let timeFormatter = DateFormatter()
@@ -36,6 +32,26 @@ enum DisplayFormatter {
             return "\(minutes)m remaining"
         }
         return "\(hours)h \(minutes)m remaining"
+    }
+
+    static func countdown(_ interval: TimeInterval) -> String {
+        let seconds = max(0, Int(interval))
+        let hours = seconds / 3600
+        let minutes = (seconds % 3600) / 60
+        if hours == 0 {
+            return "\(minutes)m"
+        }
+        return "\(hours)h \(minutes)m"
+    }
+
+    static func duration(_ interval: TimeInterval) -> String {
+        let seconds = max(0, Int(interval))
+        let hours = seconds / 3600
+        let minutes = (seconds % 3600) / 60
+        if hours == 0 {
+            return "\(minutes)m"
+        }
+        return "\(hours)h \(minutes)m"
     }
 
     static func volume(_ ml: Int, unit: UnitPreference) -> String {

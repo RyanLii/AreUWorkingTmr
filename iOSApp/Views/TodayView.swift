@@ -14,14 +14,20 @@ private struct TodayDrinkDetailTemplate {
     let title: String
     let servings: [TodayServingOption]
     let abvOptions: [Double]
-    let supportsManualVolume: Bool
 }
 
 struct TodayView: View {
     @EnvironmentObject private var store: AppStore
     @EnvironmentObject private var locationMonitor: LocationMonitor
+    @Environment(\.openURL) private var openURL
 
     @State private var statusDetailsExpanded = false
+    @State private var statusChipPulse = false
+    @State private var clearBarSweep: CGFloat = -0.35
+    @State private var clearBarSweepActive = false
+    @State private var progressAnchorToken: String = ""
+    @State private var progressAnchorSessionStart: Date?
+    @State private var progressAnchorProjectedZero: Date = .now
 
     @State private var activeCategory: DrinkCategory?
     @State private var selectedServing: TodayServingOption?
@@ -33,6 +39,12 @@ struct TodayView: View {
     @State private var hydrationConfirmed = false
     @State private var rideConfirmed = false
     @State private var alarmConfirmed = false
+    @State private var drinkIconsAppeared: [Bool] = []
+
+    private var sessionDrinkEntries: [DrinkEntry] {
+        SessionClock.entriesInCurrentSession(store.entries, now: .now, calendar: .current)
+            .sorted { $0.timestamp < $1.timestamp }
+    }
 
     private var allPresets: [DrinkPreset] {
         store.quickAddPresets()
@@ -42,17 +54,32 @@ struct TodayView: View {
         store.sessionSnapshot.totalStandardDrinks > 0.001
     }
 
-    private var isWithinLegalLimit: Bool {
-        store.sessionSnapshot.remainingToSaferDrive <= 0
+    private var hasActiveLoad: Bool {
+        hasSessionDrinks && store.sessionSnapshot.state != .cleared
     }
 
-    private var isHighRiskState: Bool {
-        switch store.sessionSnapshot.intoxicationState {
-        case .wavy, .high:
-            return true
-        default:
-            return false
-        }
+    private var statusSnapshot: SessionSnapshot {
+        store.sessionSnapshot
+    }
+
+    private var statusEffectiveStandardDrinks: Double {
+        statusSnapshot.effectiveStandardDrinks
+    }
+
+    private var statusIsCleared: Bool {
+        statusSnapshot.state == .cleared
+    }
+
+    private var currentEffectiveStandardDrinks: Double {
+        store.sessionSnapshot.effectiveStandardDrinks
+    }
+
+    private var buzzStatus: BuzzStatusDescriptor {
+        BuzzStatusDescriptor.from(snapshot: statusSnapshot)
+    }
+
+    private var isHeavyLoad: Bool {
+        currentEffectiveStandardDrinks >= 5 || store.sessionSnapshot.totalStandardDrinks >= 8
     }
 
     private var checklistCompletedCount: Int {
@@ -63,11 +90,11 @@ struct TodayView: View {
         AppScreenScaffold {
             header
 
-            if hasSessionDrinks {
+            if hasActiveLoad && !store.hasMarkedDoneTonight {
                 doneTonightCard
             }
 
-            if hasSessionDrinks {
+            if hasActiveLoad {
                 statusCard
             }
 
@@ -104,7 +131,7 @@ struct TodayView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             HStack(spacing: 8) {
-                Label("Live estimate", systemImage: "waveform.path.ecg")
+                Label("Live standard drinks", systemImage: "waveform.path.ecg")
                 Label("Watch first", systemImage: "applewatch")
             }
             .font(NightTheme.captionFont)
@@ -113,92 +140,91 @@ struct TodayView: View {
     }
 
     private var statusCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Live Pulse")
+                Text("Status")
                     .font(NightTheme.sectionFont)
                     .foregroundStyle(.white)
 
                 Spacer()
 
-                Text(statusBadgeText)
-                    .font(NightTheme.captionFont)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Capsule().fill(statusBadgeColor.opacity(0.34)))
+                statusBadgePill
             }
 
-            HStack(spacing: 10) {
-                statChip(
-                    title: "State",
-                    value: store.sessionSnapshot.intoxicationState.title,
-                    accent: statusBadgeColor
-                )
-                statChip(
-                    title: "BAC",
-                    value: DisplayFormatter.bac(store.sessionSnapshot.estimatedBAC),
-                    accent: NightTheme.accentSoft
-                )
-            }
+            Text(statusMoodCopy)
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .foregroundStyle(statusBadgeColor.opacity(0.90))
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+                .fixedSize(horizontal: false, vertical: true)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Drive lower-risk")
-                    .font(NightTheme.captionFont)
-                    .foregroundStyle(NightTheme.label)
-
-                Text(driveReadinessText(for: store.sessionSnapshot))
-                    .font(NightTheme.statFont)
-                    .foregroundStyle(.white)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.72)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Text(driveRemainingText(for: store.sessionSnapshot.remainingToSaferDrive))
-                    .font(NightTheme.bodyFont)
-                    .foregroundStyle(isWithinLegalLimit ? NightTheme.success : NightTheme.warning)
-
-                if !isWithinLegalLimit {
-                    ProgressView(value: safetyProgress)
-                        .tint(NightTheme.warning)
-                }
-            }
-
-            Text(nextSafetyMove)
-                .font(NightTheme.bodyFont)
-                .foregroundStyle(isWithinLegalLimit ? NightTheme.mint : NightTheme.label)
+            statusRecoveryBlock
 
             DisclosureGroup(isExpanded: $statusDetailsExpanded) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Label(
-                        "Local threshold reference: BAC <= \(legalThresholdText)",
-                        systemImage: "gauge.with.dots.needle.33percent"
+                    statusDetailRow(
+                        "Total logged",
+                        DisplayFormatter.standardDrinks(statusSnapshot.totalStandardDrinks)
                     )
-                    .font(NightTheme.captionFont)
-                    .foregroundStyle(NightTheme.label)
-
-                    Label(
-                        isWithinLegalLimit
-                            ? "Estimate is now at or below local threshold."
-                            : "Estimate is still above local threshold.",
-                        systemImage: isWithinLegalLimit ? "checkmark.shield.fill" : "hourglass"
+                    statusDetailRow(
+                        "In body now",
+                        DisplayFormatter.standardDrinks(statusEffectiveStandardDrinks)
                     )
-                    .font(NightTheme.captionFont)
-                    .foregroundStyle(isWithinLegalLimit ? NightTheme.success : NightTheme.warning)
+                    statusDetailRow(
+                        "Still absorbing",
+                        DisplayFormatter.standardDrinks(statusSnapshot.pendingAbsorptionStandardDrinks)
+                    )
+                    statusDetailRow(
+                        "Metabolized",
+                        DisplayFormatter.standardDrinks(statusSnapshot.metabolizedStandardDrinks)
+                    )
+                    statusDetailRow(
+                        "Estimated peak",
+                        "\(DisplayFormatter.standardDrinks(statusSnapshot.estimatedPeakStandardDrinks)) at \(DisplayFormatter.eta(statusSnapshot.estimatedPeakTime))"
+                    )
+                    statusDetailRow(
+                        "Feel human",
+                        DisplayFormatter.eta(statusSnapshot.projectedRecoveryTime)
+                    )
+                    statusDetailRow(
+                        "Full clear",
+                        DisplayFormatter.eta(statusSnapshot.projectedZeroTime)
+                    )
 
-                    Text("Estimate only. If unsure, choose a ride.")
+                    if statusSnapshot.clearingElapsed > 1,
+                       (statusSnapshot.state == .clearing || statusSnapshot.state == .cleared) {
+                        statusDetailRow(
+                            "Clearing for",
+                            DisplayFormatter.duration(statusSnapshot.clearingElapsed)
+                        )
+                    }
+
+                    Text("Nerd math only. Estimate, not legal or medical advice.")
                         .font(NightTheme.captionFont)
                         .foregroundStyle(NightTheme.label)
                 }
                 .padding(.top, 4)
             } label: {
-                Text("Detailed status")
+                Text("Nerd stuff")
                     .font(NightTheme.captionFont)
                     .foregroundStyle(NightTheme.label)
             }
             .tint(NightTheme.accent)
         }
         .glassCard(.high)
+        .animation(.spring(response: 0.5, dampingFraction: 0.82), value: buzzStatus.level)
+        .onAppear {
+            syncStableProgressAnchor()
+        }
+        .onChange(of: statusSnapshot.lastDrinkTime) { _, _ in
+            syncStableProgressAnchor()
+        }
+        .onChange(of: statusSnapshot.totalStandardDrinks) { _, _ in
+            syncStableProgressAnchor()
+        }
+        .onChange(of: statusSnapshot.remainingToZero) { _, _ in
+            syncStableProgressAnchor()
+        }
     }
 
     private var undoCard: some View {
@@ -246,14 +272,10 @@ struct TodayView: View {
     private func quickAddTile(_ preset: DrinkPreset) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                ZStack {
-                    Circle()
-                        .fill(tint(for: preset.category).opacity(0.24))
-                        .frame(width: 28, height: 28)
-                    Image(systemName: symbol(for: preset.category))
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(tint(for: preset.category))
-                }
+                Image(customAssetName(for: preset.category))
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 30 * iconScale(for: preset.category), height: 30 * iconScale(for: preset.category))
 
                 Spacer(minLength: 2)
 
@@ -306,14 +328,14 @@ struct TodayView: View {
 
     private var doneTonightCard: some View {
         Button {
-            store.markDoneTonight()
             hydrationConfirmed = false
             rideConfirmed = false
             alarmConfirmed = false
+            drinkIconsAppeared = []
             showDoneTonightSheet = true
         } label: {
             HStack {
-                Label("I'm Done Tonight", systemImage: "moon.stars.fill")
+                Label("Cut Me Off", systemImage: "moon.stars.fill")
                     .font(NightTheme.bodyFont.weight(.bold))
                     .foregroundStyle(.white)
                 Spacer()
@@ -342,18 +364,16 @@ struct TodayView: View {
 
                     ScrollView(showsIndicators: false) {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("I'm Done Tonight")
-                                .font(NightTheme.titleFont)
-                                .foregroundStyle(.white)
-                                .lineLimit(2)
-                                .minimumScaleFactor(0.72)
-                                .fixedSize(horizontal: false, vertical: true)
+                            HStack {
+                                Spacer()
+                                Button("Close") {
+                                    showDoneTonightSheet = false
+                                }
+                                .font(NightTheme.captionFont.weight(.bold))
+                                .foregroundStyle(NightTheme.accent)
+                            }
 
-                            Text(doneTonightSummary)
-                                .font(NightTheme.bodyFont)
-                                .foregroundStyle(NightTheme.label)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .glassCard()
+                            drinkSummaryView
 
                             VStack(alignment: .leading, spacing: 10) {
                                 HStack {
@@ -366,6 +386,10 @@ struct TodayView: View {
                                         .foregroundStyle(NightTheme.accentSoft)
                                 }
 
+                                Text("Tap each item to check it off.")
+                                    .font(NightTheme.captionFont)
+                                    .foregroundStyle(NightTheme.label)
+
                                 doneToggleButton(
                                     title: "Hydrated",
                                     subtitle: "Finish your water target",
@@ -376,9 +400,9 @@ struct TodayView: View {
                                 }
 
                                 doneToggleButton(
-                                    title: "Ride sorted",
-                                    subtitle: "No driving tonight",
-                                    icon: "car.fill",
+                                    title: "Mate check-in",
+                                    subtitle: "Texted someone you trust",
+                                    icon: "message.fill",
                                     confirmed: rideConfirmed
                                 ) {
                                     rideConfirmed.toggle()
@@ -395,13 +419,35 @@ struct TodayView: View {
                             }
                             .glassCard()
 
-                            if isHighRiskState {
+                            Button {
+                                sendBuddyText()
+                            } label: {
+                                Label("Text Mate", systemImage: "message.fill")
+                                    .font(NightTheme.bodyFont.weight(.semibold))
+                                    .foregroundStyle(.white)
+                                    .lineLimit(2)
+                                    .minimumScaleFactor(0.84)
+                                    .multilineTextAlignment(.center)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                            .fill(Color.white.opacity(0.10))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                                    .stroke(Color.white.opacity(0.20), lineWidth: 1)
+                                            )
+                                    )
+                            }
+                            .buttonStyle(.plain)
+
+                            if isHeavyLoad {
                                 VStack(alignment: .leading, spacing: 8) {
-                                    Text("Safety mode")
+                                    Text("Recovery mode")
                                         .font(NightTheme.sectionFont)
                                         .foregroundStyle(.white)
 
-                                    Text("Stay with friends, stop logging new drinks, and lock your ride before leaving.")
+                                    Text("Big night logged. Switch to water, light food, and rest.")
                                         .font(NightTheme.bodyFont)
                                         .foregroundStyle(NightTheme.label)
                                         .fixedSize(horizontal: false, vertical: true)
@@ -410,9 +456,10 @@ struct TodayView: View {
                             }
 
                             Button {
+                                store.markDoneTonight()
                                 showDoneTonightSheet = false
                             } label: {
-                                Label("Close", systemImage: "checkmark.circle.fill")
+                                Label("Done", systemImage: "checkmark.circle.fill")
                                     .font(NightTheme.bodyFont.weight(.bold))
                                     .foregroundStyle(.white)
                                     .lineLimit(2)
@@ -435,14 +482,6 @@ struct TodayView: View {
                 }
                 .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
             }
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        showDoneTonightSheet = false
-                    }
-                    .tint(NightTheme.accent)
-                }
-            }
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
@@ -457,8 +496,9 @@ struct TodayView: View {
     ) -> some View {
         Button(action: action) {
             HStack(spacing: 10) {
-                Image(systemName: confirmed ? "checkmark.circle.fill" : icon)
+                Image(systemName: icon)
                     .foregroundStyle(confirmed ? NightTheme.mint : NightTheme.accentSoft)
+                    .frame(width: 16)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
@@ -474,6 +514,10 @@ struct TodayView: View {
                 }
 
                 Spacer()
+
+                Image(systemName: confirmed ? "checkmark.circle.fill" : "circle")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(confirmed ? NightTheme.mint : NightTheme.labelSoft)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
@@ -497,7 +541,6 @@ struct TodayView: View {
             defaultABV: selectedABV
         )
 
-        let projectedSnapshot = store.projectedSnapshot(adding: workingPreset, count: quantity)
         let perDrinkStd = estimatedStandardDrinks(volumeMl: currentVolume, abv: selectedABV)
         let totalStd = perDrinkStd * Double(quantity)
 
@@ -519,38 +562,40 @@ struct TodayView: View {
                             .minimumScaleFactor(0.75)
                             .fixedSize(horizontal: false, vertical: true)
 
-                        if template.supportsManualVolume {
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Text("Volume")
-                                        .font(NightTheme.captionFont)
-                                        .foregroundStyle(NightTheme.label)
-                                    Spacer()
-                                    Text("\(manualVolumeMl)ml")
-                                        .font(NightTheme.bodyFont)
-                                        .foregroundStyle(.white)
-                                }
-
-                                Stepper(value: $manualVolumeMl, in: 20...2000, step: 10) {
-                                    EmptyView()
-                                }
-                                .labelsHidden()
-                            }
-                            .glassCard()
-                        } else {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Serving")
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Volume")
                                     .font(NightTheme.captionFont)
                                     .foregroundStyle(NightTheme.label)
+                                Spacer()
+                                Text("\(manualVolumeMl)ml")
+                                    .font(NightTheme.bodyFont)
+                                    .foregroundStyle(.white)
+                            }
 
+                            Slider(
+                                value: Binding(
+                                    get: { Double(manualVolumeMl) },
+                                    set: { newValue in
+                                        manualVolumeMl = Int(newValue.rounded())
+                                        selectedServing = nil
+                                    }
+                                ),
+                                in: 20...2000,
+                                step: 10
+                            )
+                            .tint(NightTheme.accent)
+
+                            if !template.servings.isEmpty {
                                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                                     ForEach(template.servings) { option in
                                         Button {
                                             selectedServing = option
+                                            manualVolumeMl = Int(option.volumeMl)
                                         } label: {
                                             VStack(alignment: .leading, spacing: 2) {
                                                 Text(option.name)
-                                                    .font(NightTheme.bodyFont.weight(.semibold))
+                                                    .font(NightTheme.captionFont.weight(.semibold))
                                                     .foregroundStyle(.white)
                                                 Text(option.subtitle)
                                                     .font(NightTheme.captionFont)
@@ -558,22 +603,19 @@ struct TodayView: View {
                                             }
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                             .padding(.horizontal, 10)
-                                            .padding(.vertical, 8)
+                                            .padding(.vertical, 7)
                                             .background(
-                                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                Capsule()
                                                     .fill(option.id == selectedServing?.id ? NightTheme.accent.opacity(0.28) : Color.white.opacity(0.08))
-                                                    .overlay(
-                                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                                            .stroke(Color.white.opacity(0.18), lineWidth: 1)
-                                                    )
                                             )
                                         }
+                                        .contentShape(Rectangle())
                                         .buttonStyle(.plain)
                                     }
                                 }
                             }
-                            .glassCard()
                         }
+                        .glassCard()
 
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
@@ -633,47 +675,6 @@ struct TodayView: View {
                         }
                         .glassCard()
 
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Impact Preview")
-                                .font(NightTheme.captionFont)
-                                .foregroundStyle(NightTheme.label)
-
-                            HStack {
-                                Text("Drive lower-risk")
-                                    .font(NightTheme.captionFont)
-                                    .foregroundStyle(NightTheme.label)
-                                Spacer()
-                                Text(driveReadinessText(for: projectedSnapshot))
-                                    .font(NightTheme.bodyFont.weight(.semibold))
-                                    .foregroundStyle(.white)
-                                    .lineLimit(2)
-                                    .minimumScaleFactor(0.82)
-                                    .multilineTextAlignment(.trailing)
-                            }
-
-                            Text(driveRemainingText(for: projectedSnapshot.remainingToSaferDrive))
-                                .font(NightTheme.captionFont)
-                                .foregroundStyle(projectedSnapshot.remainingToSaferDrive <= 0 ? NightTheme.mint : NightTheme.warning)
-
-                            if hasSessionDrinks {
-                                Text(etaDeltaText(from: store.sessionSnapshot.saferDriveTime, to: projectedSnapshot.saferDriveTime))
-                                    .font(NightTheme.captionFont)
-                                    .foregroundStyle(NightTheme.label)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            } else {
-                                Text("First log sets your baseline estimate tonight.")
-                                    .font(NightTheme.captionFont)
-                                    .foregroundStyle(NightTheme.label)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-
-                            Text("Estimate only, not legal advice.")
-                                .font(NightTheme.captionFont)
-                                .foregroundStyle(NightTheme.label)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .glassCard(.high)
-
                         Button {
                             store.addQuickDrink(
                                 preset: workingPreset,
@@ -705,7 +706,7 @@ struct TodayView: View {
                             )
                             activeCategory = nil
                         } label: {
-                            Label("Use Default", systemImage: "bolt.fill")
+                            Label("Log Saved Default", systemImage: "bolt.fill")
                                 .font(NightTheme.bodyFont)
                                 .foregroundStyle(.white)
                                 .lineLimit(2)
@@ -727,7 +728,7 @@ struct TodayView: View {
                         Button {
                             saveCurrentAsDefault(for: category)
                         } label: {
-                            Label("Set As Default", systemImage: "star.fill")
+                            Label("Save Current as Default", systemImage: "star.fill")
                                 .font(NightTheme.bodyFont)
                                 .foregroundStyle(.white)
                                 .lineLimit(2)
@@ -760,6 +761,9 @@ struct TodayView: View {
                 }
                 .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
             }
+            .onAppear {
+                seedDetailState(for: category, resetQuantity: false)
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Close") {
@@ -768,64 +772,361 @@ struct TodayView: View {
                     .tint(NightTheme.accent)
                 }
             }
-        }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
+    }
+    .presentationDetents([.large])
+    .presentationDragIndicator(.visible)
     }
 
-    private var statusBadgeText: String {
-        isWithinLegalLimit ? "Lower risk" : store.sessionSnapshot.intoxicationState.title
+    private var statusBadgePill: some View {
+        Text(buzzStatus.title)
+            .font(.system(size: 14, weight: .black, design: .rounded))
+            .foregroundStyle(.white)
+            .shadow(color: Color.black.opacity(0.42), radius: 1, x: 0, y: 1)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                statusBadgeColor.opacity(0.96),
+                                Color.black.opacity(0.58)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay(
+                        Capsule()
+                            .stroke(Color.white.opacity(0.36), lineWidth: 1.1)
+                    )
+            )
+            .shadow(color: statusBadgeColor.opacity(statusChipPulse ? 0.56 : 0.30), radius: statusChipPulse ? 14 : 8, y: 2)
+            .scaleEffect(statusChipPulse ? 1.02 : 1.0)
+            .onAppear {
+                startStatusChipPulseIfNeeded()
+            }
+    }
+
+    private var statusRecoveryBlock: some View {
+        Group {
+            if !statusIsCleared && statusSnapshot.remainingToZero > 0 {
+                TimelineView(.periodic(from: .now, by: 0.5)) { context in
+                    let cooledProgress = dynamicCooledOffProgress(at: context.date)
+                    let recoveryFraction = dynamicRecoveryFraction()
+                    VStack(alignment: .leading, spacing: 6) {
+                        remainingLoadBar(progress: cooledProgress, recoveryFraction: recoveryFraction)
+                        HStack {
+                            HStack(spacing: 4) {
+                                Circle()
+                                    .fill(NightTheme.warning)
+                                    .frame(width: 6, height: 6)
+                                Text("Feel human \(DisplayFormatter.eta(statusSnapshot.projectedRecoveryTime))")
+                                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(NightTheme.warning.opacity(0.9))
+                            }
+                            Spacer()
+                            HStack(spacing: 4) {
+                                Text("Full clear \(DisplayFormatter.eta(displayProjectedZeroTime))")
+                                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(NightTheme.label)
+                                Circle()
+                                    .fill(Color(red: 0.36, green: 0.76, blue: 0.92))
+                                    .frame(width: 6, height: 6)
+                            }
+                        }
+                        Text("Model estimate only — actual recovery varies by person. Not medical or legal advice.")
+                            .font(.system(size: 9, weight: .regular, design: .rounded))
+                            .foregroundStyle(NightTheme.label.opacity(0.55))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .transition(.identity)
+            }
+        }
     }
 
     private var statusBadgeColor: Color {
-        if isWithinLegalLimit { return NightTheme.mint }
-        switch store.sessionSnapshot.intoxicationState {
-        case .clear, .light: return NightTheme.accentSoft
-        case .social, .tipsy: return NightTheme.warning
-        case .wavy, .high: return Color.red.opacity(0.8)
-        }
-    }
-
-    private var nextSafetyMove: String {
-        if isWithinLegalLimit {
-            return "Estimate says you're likely back in range. Keep hydrating and wind down."
-        }
-
-        switch store.sessionSnapshot.intoxicationState {
-        case .clear, .light:
-            return "Easy pace. Keep logging each drink for a cleaner ETA."
-        case .social:
-            return "Add water now to keep tomorrow smoother."
-        case .tipsy:
-            return "Water + food now. Slow the pace for a better landing."
+        switch buzzStatus.level {
+        case .underTheRadar:
+            return NightTheme.mint
+        case .goodVibes:
+            return Color(red: 0.76, green: 0.91, blue: 0.52)
+        case .buzzin:
+            return NightTheme.accentSoft
         case .wavy:
-            return "Stop here, lock a ride, and stay with your people."
-        case .high:
-            return "Safety mode: sit down, hydrate, and get support."
+            return NightTheme.warning
+        case .onFire:
+            return Color(red: 0.98, green: 0.48, blue: 0.23)
+        case .tooLit:
+            return Color(red: 0.95, green: 0.30, blue: 0.24)
+        case .takeItEasyZone:
+            return Color(red: 0.78, green: 0.18, blue: 0.20)
         }
     }
 
-    private var legalThresholdText: String {
-        store.profile.regionStandard.legalDriveBACLimitText
+    private var statusMoodCopy: String {
+        if statusSnapshot.state == .clearing && !statusIsCleared {
+            return "\(buzzStatus.description)"
+        }
+
+        return buzzStatus.description
     }
 
-    private var safetyProgress: Double {
-        let threshold = max(store.profile.regionStandard.legalDriveBACLimit, 0.001)
-        let bac = max(store.sessionSnapshot.estimatedBAC, 0)
-        return min(max(1 - (bac / (threshold * 2)), 0), 1)
+    private var statusRecoveryHeadline: String {
+        if statusIsCleared {
+            return "You are all good now."
+        }
+
+        return "Feeling better around \(DisplayFormatter.eta(statusSnapshot.projectedRecoveryTime))."
+    }
+
+    private var statusRecoveryCountdown: String {
+        if statusIsCleared {
+            return "All good"
+        }
+
+        let remaining = max(0, statusSnapshot.projectedRecoveryTime.timeIntervalSince(.now))
+        return DisplayFormatter.countdown(remaining)
+    }
+
+    private func dynamicRemainingToZero(at now: Date) -> TimeInterval {
+        if !progressAnchorToken.isEmpty {
+            return max(0, progressAnchorProjectedZero.timeIntervalSince(now))
+        }
+
+        let elapsed = max(0, now.timeIntervalSince(statusSnapshot.date))
+        return max(0, statusSnapshot.remainingToZero - elapsed)
+    }
+
+    private func dynamicCooledOffProgress(at now: Date) -> Double {
+        let start = progressAnchorSessionStart
+            ?? currentSessionFirstDrinkTime
+            ?? statusSnapshot.lastDrinkTime
+            ?? statusSnapshot.date
+        let end = !progressAnchorToken.isEmpty ? progressAnchorProjectedZero : statusSnapshot.projectedZeroTime
+        let total = end.timeIntervalSince(start)
+        guard total > 1 else { return statusIsCleared ? 1 : 0 }
+        return min(max(now.timeIntervalSince(start) / total, 0), 1)
+    }
+
+    private func dynamicRecoveryFraction() -> Double {
+        let start = progressAnchorSessionStart
+            ?? currentSessionFirstDrinkTime
+            ?? statusSnapshot.lastDrinkTime
+            ?? statusSnapshot.date
+        let end = !progressAnchorToken.isEmpty ? progressAnchorProjectedZero : statusSnapshot.projectedZeroTime
+        let total = end.timeIntervalSince(start)
+        guard total > 1 else { return 0.85 }
+        return min(max(statusSnapshot.projectedRecoveryTime.timeIntervalSince(start) / total, 0), 1)
+    }
+
+    private func cooldownFlavorCopy(progress: Double) -> String {
+        if progress > 0.75 {
+            return "Still pretty up there. Sip water and pace it."
+        }
+
+        if progress > 0.45 {
+            return "Cruisin' now. Keep it steady, mate."
+        }
+
+        if progress > 0.20 {
+            return "Winding down. Nearly back to normal."
+        }
+
+        return "Home stretch. You are almost all good."
+    }
+
+    private func remainingLoadBar(progress: Double, recoveryFraction: Double) -> some View {
+        let barHeight: CGFloat = 20
+        let runnerSize: CGFloat = barHeight
+
+        return GeometryReader { proxy in
+            let clamped = min(max(progress, 0), 1)
+            let totalWidth = proxy.size.width
+            let width = max(0, totalWidth * clamped)
+            let recoveryX = max(0, min(totalWidth * min(max(recoveryFraction, 0), 1), totalWidth))
+            let glowWidth = max(22, width * 0.24)
+
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(Color.white.opacity(0.14))
+                    .frame(height: barHeight)
+
+                if width > 0 {
+                    let recoveryStop = min(max(recoveryX / width, 0), 1)
+
+                    ZStack(alignment: .leading) {
+                        Rectangle()
+                            .fill(
+                                LinearGradient(
+                                    stops: [
+                                        .init(color: NightTheme.mint.opacity(0.95), location: 0),
+                                        .init(color: NightTheme.warning.opacity(0.88), location: recoveryStop),
+                                        .init(color: Color(red: 0.20, green: 0.60, blue: 0.95), location: min(recoveryStop + 0.001, 1)),
+                                        .init(color: Color(red: 0.40, green: 0.82, blue: 1.00), location: 1)
+                                    ],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        Color.white.opacity(0.02),
+                                        Color.white.opacity(0.36),
+                                        Color.white.opacity(0.02)
+                                    ],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .frame(width: glowWidth, height: barHeight)
+                            .offset(x: (width + glowWidth) * clearBarSweep - glowWidth)
+                            .blendMode(.screen)
+                    }
+                    .frame(width: width, height: barHeight)
+                    .clipShape(Capsule())
+                    .animation(.linear(duration: 0.5), value: clamped)
+
+                    LottieView(animationName: "Running character")
+                        .frame(width: runnerSize, height: runnerSize)
+                        .offset(x: max(0, width - runnerSize))
+                        .animation(.linear(duration: 0.5), value: clamped)
+                }
+
+                if recoveryX > 6 && recoveryX < totalWidth - 6 {
+                    Rectangle()
+                        .fill(Color.white.opacity(0.65))
+                        .frame(width: 1.5, height: barHeight - 4)
+                        .offset(x: recoveryX - 0.75)
+                }
+            }
+            .overlay(
+                Capsule()
+                    .stroke(Color.white.opacity(0.24), lineWidth: 1)
+            )
+            .onAppear {
+                startClearBarSweepIfNeeded()
+            }
+        }
+        .frame(height: barHeight)
+    }
+
+    private func startStatusChipPulseIfNeeded() {
+        guard !statusChipPulse else { return }
+        withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
+            statusChipPulse = true
+        }
+    }
+
+    private func startClearBarSweepIfNeeded() {
+        guard !clearBarSweepActive else { return }
+        clearBarSweepActive = true
+        clearBarSweep = -0.35
+        withAnimation(.linear(duration: 1.1).repeatForever(autoreverses: false)) {
+            clearBarSweep = 1.2
+        }
+    }
+
+    private var progressSessionToken: String {
+        let lastDrinkEpoch = Int(statusSnapshot.lastDrinkTime?.timeIntervalSince1970 ?? 0)
+        let totalBucket = Int((statusSnapshot.totalStandardDrinks * 1000).rounded())
+        return "\(lastDrinkEpoch)-\(totalBucket)"
+    }
+
+    private var currentSessionFirstDrinkTime: Date? {
+        let session = SessionClock.entriesInCurrentSession(store.entries, now: .now, calendar: .current)
+        return session.map(\.timestamp).min()
+    }
+
+    private var displayProjectedZeroTime: Date {
+        let reference = !progressAnchorToken.isEmpty ? progressAnchorProjectedZero : statusSnapshot.projectedZeroTime
+        let roundedMinute = floor(reference.timeIntervalSince1970 / 60) * 60
+        return Date(timeIntervalSince1970: roundedMinute)
+    }
+
+    private func syncStableProgressAnchor() {
+        if statusSnapshot.totalStandardDrinks <= 0 || statusSnapshot.state == .cleared {
+            progressAnchorToken = ""
+            progressAnchorSessionStart = nil
+            progressAnchorProjectedZero = statusSnapshot.projectedZeroTime
+            return
+        }
+
+        let token = progressSessionToken
+        guard token != progressAnchorToken else { return }
+
+        progressAnchorToken = token
+        progressAnchorSessionStart = currentSessionFirstDrinkTime
+            ?? statusSnapshot.lastDrinkTime
+            ?? statusSnapshot.date
+        progressAnchorProjectedZero = statusSnapshot.projectedZeroTime
     }
 
     private var doneTonightSummary: String {
-        let eta = DisplayFormatter.eta(store.sessionSnapshot.saferDriveTime)
-        if isHighRiskState {
-            return "You're currently in a high-risk state. Prioritize water, stay with friends, and avoid driving. Current estimate settles around \(eta)."
+        let baselineTime = DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime)
+        let liveAmount = DisplayFormatter.standardDrinks(currentEffectiveStandardDrinks)
+
+        if isHeavyLoad {
+            return "Big night logged. About \(liveAmount) is still active. Switch to water and rest. Baseline trends around \(baselineTime)."
         }
 
-        if store.sessionSnapshot.remainingToSaferDrive > 0 {
-            return "Good call wrapping up. Current estimate settles around \(eta). Keep water and pace your landing."
+        if store.sessionSnapshot.remainingToZero > 0 {
+            return "Good call wrapping up. About \(liveAmount) is still active. Baseline trends around \(baselineTime)."
         }
 
-        return "Good call wrapping up. You're currently in a lower-risk range; keep hydrating and set yourself up for tomorrow."
+        return "Good call wrapping up. You're near baseline now. Hydrate and set yourself up for tomorrow."
+    }
+
+    private var drinkSummaryView: some View {
+        let entries = sessionDrinkEntries
+        return VStack(alignment: .leading, spacing: 10) {
+            Text("Tonight's haul")
+                .font(NightTheme.captionFont)
+                .foregroundStyle(NightTheme.label)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 52), spacing: 8)], spacing: 8) {
+                ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
+                    let appeared = drinkIconsAppeared.indices.contains(index) ? drinkIconsAppeared[index] : false
+                    Image(customAssetName(for: entry.category))
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 48 * iconScale(for: entry.category), height: 48 * iconScale(for: entry.category))
+                    .offset(x: appeared ? 0 : 60, y: appeared ? 0 : 10)
+                    .opacity(appeared ? 1 : 0)
+                }
+            }
+        }
+        .glassCard(.high)
+        .onAppear {
+            let entries = sessionDrinkEntries
+            drinkIconsAppeared = Array(repeating: false, count: entries.count)
+            for i in entries.indices {
+                DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.09 + 0.1) {
+                    withAnimation(.spring(response: 0.38, dampingFraction: 0.62)) {
+                        guard drinkIconsAppeared.indices.contains(i) else { return }
+                        drinkIconsAppeared[i] = true
+                    }
+                }
+            }
+        }
+    }
+
+    private func statusDetailRow(_ title: String, _ value: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text(title)
+                .font(NightTheme.captionFont)
+                .foregroundStyle(NightTheme.label)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 8)
+            Text(value)
+                .font(NightTheme.captionFont.weight(.semibold))
+                .foregroundStyle(.white)
+                .multilineTextAlignment(.trailing)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     private func statChip(title: String, value: String, accent: Color) -> some View {
@@ -850,35 +1151,6 @@ struct TodayView: View {
         )
     }
 
-    private func etaDeltaText(from baseline: Date, to projected: Date) -> String {
-        let seconds = max(0, Int(projected.timeIntervalSince(baseline)))
-        guard seconds > 60 else {
-            return "Logging this keeps ETA about the same."
-        }
-
-        let hours = seconds / 3600
-        let minutes = (seconds % 3600) / 60
-        if hours == 0 {
-            return "Adds around \(minutes)m to your estimate."
-        }
-
-        return "Adds around \(hours)h \(minutes)m to your estimate."
-    }
-
-    private func driveReadinessText(for snapshot: SessionSnapshot) -> String {
-        if snapshot.remainingToSaferDrive <= 0 {
-            return "Likely under local limit now"
-        }
-        return DisplayFormatter.eta(snapshot.saferDriveTime)
-    }
-
-    private func driveRemainingText(for interval: TimeInterval) -> String {
-        if interval <= 0 {
-            return "No wait estimated"
-        }
-        return DisplayFormatter.remaining(interval)
-    }
-
     private func addDefaultDrink(_ preset: DrinkPreset) {
         store.addQuickDrink(
             preset: preset,
@@ -886,12 +1158,20 @@ struct TodayView: View {
         )
     }
 
+    private func sendBuddyText() {
+        let body = "Hey, heading home now. Can you check in on me?"
+        guard
+            let encoded = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+            let url = URL(string: "sms:&body=\(encoded)")
+        else {
+            return
+        }
+
+        openURL(url)
+    }
+
     private func openDetail(for preset: DrinkPreset) {
-        let template = detailTemplate(for: preset.category, region: store.profile.regionStandard)
-        selectedServing = template.servings.first(where: { abs($0.volumeMl - preset.defaultVolumeMl) < 0.1 }) ?? template.servings.first
-        selectedABV = preset.defaultABV
-        manualVolumeMl = Int(preset.defaultVolumeMl.rounded())
-        quantity = 1
+        seedDetailState(for: preset.category, preset: preset, resetQuantity: true)
         activeCategory = preset.category
     }
 
@@ -906,14 +1186,25 @@ struct TodayView: View {
             volumeMl: volume,
             abvPercent: selectedABV
         )
+
+        seedDetailState(for: category, resetQuantity: false)
+    }
+
+    private func seedDetailState(for category: DrinkCategory, preset: DrinkPreset? = nil, resetQuantity: Bool) {
+        let workingPreset = preset ?? store.preset(for: category)
+        selectedABV = workingPreset.defaultABV
+        manualVolumeMl = Int(workingPreset.defaultVolumeMl.rounded())
+
+        if resetQuantity {
+            quantity = 1
+        }
+
+        let template = detailTemplate(for: category, region: store.profile.regionStandard)
+        selectedServing = template.servings.first(where: { abs($0.volumeMl - workingPreset.defaultVolumeMl) < 0.1 })
     }
 
     private func currentVolumeMl(category: DrinkCategory, defaultPreset: DrinkPreset) -> Double {
-        if category == .custom {
-            return Double(manualVolumeMl)
-        }
-
-        return selectedServing?.volumeMl ?? defaultPreset.defaultVolumeMl
+        Double(manualVolumeMl)
     }
 
     private func estimatedStandardDrinks(volumeMl: Double, abv: Double) -> Double {
@@ -927,18 +1218,18 @@ struct TodayView: View {
         return "\(label)\(Int(preset.defaultVolumeMl))ml · \(String(format: "%.1f", preset.defaultABV))%"
     }
 
-    private func symbol(for category: DrinkCategory) -> String {
+    private func customAssetName(for category: DrinkCategory) -> String {
         switch category {
-        case .beer: return "mug.fill"
-        case .wine: return "wineglass.fill"
-        case .shot: return "drop.fill"
-        case .cocktail: return "takeoutbag.and.cup.and.straw.fill"
-        case .spirits: return "flame.fill"
-        case .custom: return "slider.horizontal.3"
+        case .beer: return "Beer"
+        case .wine: return "Wine"
+        case .shot: return "Shot"
+        case .cocktail: return "Cocotail"
+        case .spirits: return "Spirit"
+        case .custom: return "Custom"
         }
     }
 
-    private func tint(for category: DrinkCategory) -> Color {
+    private func colorForCategory(for category: DrinkCategory) -> Color {
         switch category {
         case .beer: return Color(red: 0.99, green: 0.79, blue: 0.34)
         case .wine: return Color(red: 0.98, green: 0.52, blue: 0.58)
@@ -949,39 +1240,25 @@ struct TodayView: View {
         }
     }
 
+    private func iconScale(for category: DrinkCategory) -> CGFloat {
+        switch category {
+        case .shot, .custom: return 1.35
+        default: return 1.0
+        }
+    }
+
     private func detailTemplate(for category: DrinkCategory, region: RegionStandard) -> TodayDrinkDetailTemplate {
         switch category {
         case .beer:
-            let servings: [TodayServingOption]
-            switch region {
-            case .au10g:
-                servings = [
-                    TodayServingOption(id: "beer_pot", name: "Pot", volumeMl: 285),
-                    TodayServingOption(id: "beer_schooner", name: "Schooner", volumeMl: 425),
-                    TodayServingOption(id: "beer_pint_au", name: "Pint", volumeMl: 570),
-                    TodayServingOption(id: "beer_longneck", name: "Longneck", volumeMl: 750)
-                ]
-            case .uk8g:
-                servings = [
-                    TodayServingOption(id: "beer_half_pint", name: "Half Pint", volumeMl: 284),
-                    TodayServingOption(id: "beer_pint_uk", name: "Pint", volumeMl: 568),
-                    TodayServingOption(id: "beer_can_uk", name: "Can", volumeMl: 440),
-                    TodayServingOption(id: "beer_bottle_uk", name: "Bottle", volumeMl: 500)
-                ]
-            case .us14g:
-                servings = [
-                    TodayServingOption(id: "beer_can", name: "12oz Can", volumeMl: 355),
-                    TodayServingOption(id: "beer_pint_us", name: "16oz Pint", volumeMl: 473),
-                    TodayServingOption(id: "beer_tallboy", name: "Tallboy", volumeMl: 473),
-                    TodayServingOption(id: "beer_bomber", name: "Bomber", volumeMl: 650)
-                ]
-            }
-
             return TodayDrinkDetailTemplate(
                 title: "Beer",
-                servings: servings,
-                abvOptions: [3.5, 4.2, 5.0, 6.0, 7.5, 9.0],
-                supportsManualVolume: false
+                servings: [
+                    TodayServingOption(id: "beer_schooner", name: "Schooner", volumeMl: 425),
+                    TodayServingOption(id: "beer_pint", name: "Pint", volumeMl: 568),
+                    TodayServingOption(id: "beer_bottle", name: "Bottle", volumeMl: 330),
+                    TodayServingOption(id: "beer_can", name: "Can", volumeMl: 375)
+                ],
+                abvOptions: [3.5, 4.2, 5.0, 6.0, 7.5, 9.0]
             )
 
         case .wine:
@@ -1009,12 +1286,10 @@ struct TodayView: View {
                     TodayServingOption(id: "wine_bottle_us", name: "Bottle", volumeMl: 750)
                 ]
             }
-
             return TodayDrinkDetailTemplate(
                 title: "Wine",
                 servings: servings,
-                abvOptions: [9.0, 11.0, 12.0, 13.5, 15.0],
-                supportsManualVolume: false
+                abvOptions: [9.0, 11.0, 12.0, 13.5, 15.0]
             )
 
         case .shot:
@@ -1039,12 +1314,10 @@ struct TodayView: View {
                     TodayServingOption(id: "shot_double_us", name: "Double", volumeMl: 60)
                 ]
             }
-
             return TodayDrinkDetailTemplate(
                 title: "Shot",
                 servings: servings,
-                abvOptions: [30.0, 35.0, 40.0, 45.0, 50.0],
-                supportsManualVolume: false
+                abvOptions: [30.0, 35.0, 40.0, 45.0, 50.0]
             )
 
         case .cocktail:
@@ -1056,8 +1329,7 @@ struct TodayView: View {
                     TodayServingOption(id: "cocktail_tall", name: "Tall", volumeMl: 250),
                     TodayServingOption(id: "cocktail_jumbo", name: "Jumbo", volumeMl: 330)
                 ],
-                abvOptions: [8.0, 12.0, 16.0, 20.0, 24.0],
-                supportsManualVolume: false
+                abvOptions: [8.0, 12.0, 16.0, 20.0, 24.0]
             )
 
         case .spirits:
@@ -1069,16 +1341,14 @@ struct TodayView: View {
                     TodayServingOption(id: "spirits_double", name: "Double", volumeMl: 60),
                     TodayServingOption(id: "spirits_large", name: "Large", volumeMl: 90)
                 ],
-                abvOptions: [35.0, 40.0, 45.0, 50.0, 55.0],
-                supportsManualVolume: false
+                abvOptions: [35.0, 40.0, 45.0, 50.0, 55.0]
             )
 
         case .custom:
             return TodayDrinkDetailTemplate(
                 title: "Custom",
                 servings: [],
-                abvOptions: [5.0, 8.0, 12.0, 18.0, 30.0, 40.0],
-                supportsManualVolume: true
+                abvOptions: [5.0, 8.0, 12.0, 18.0, 30.0, 40.0]
             )
         }
     }

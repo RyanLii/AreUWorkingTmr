@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 5.10
 import PackageDescription
 
 let package = Package(
@@ -21,6 +21,7 @@ let package = Package(
                 "Services/DrinkParser.swift",
                 "Services/EstimationService.swift",
                 "Services/ReminderService.swift",
+                "Utilities/BuzzStatus.swift",
                 "Utilities/DisplayFormatter.swift"
             ]
         ),

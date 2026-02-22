@@ -1,0 +1,85 @@
+{
+  "defaults": {
+    "default_duration_minutes": 30,
+    "metabolism_rate_sd_per_hour": 0.8,
+    "absorption_lag_minutes": 15,
+    "min_absorption_duration_minutes": 20,
+    "burst_merge_window_minutes": 2,
+    "sample_step_minutes": 1
+  },
+  "scenarios": [
+    {
+      "name": "lag_single_drink",
+      "horizon_min": 120,
+      "drinks": [
+        { "v": 1.0, "start_min": 0 }
+      ],
+      "checkpoints_min": [0, 10, 15, 20, 30, 45]
+    },
+    {
+      "name": "single_drink_v1",
+      "horizon_min": 180,
+      "drinks": [
+        { "v": 1.0, "start_min": 0 }
+      ]
+    },
+    {
+      "name": "two_back_to_back_v1",
+      "horizon_min": 240,
+      "drinks": [
+        { "v": 1.0, "start_min": 0 },
+        { "v": 1.0, "start_min": 30 }
+      ]
+    },
+    {
+      "name": "rapid_three_shots",
+      "horizon_min": 300,
+      "drinks": [
+        { "v": 1.0, "start_min": 0 },
+        { "v": 1.0, "start_min": 8 },
+        { "v": 1.0, "start_min": 16 }
+      ]
+    },
+    {
+      "name": "mixed_values_staggered",
+      "horizon_min": 360,
+      "drinks": [
+        { "v": 0.6, "start_min": 0 },
+        { "v": 1.4, "start_min": 18 },
+        { "v": 0.8, "start_min": 47 },
+        { "v": 1.1, "start_min": 95 }
+      ]
+    },
+    {
+      "name": "long_gap_second_drink",
+      "horizon_min": 360,
+      "drinks": [
+        { "v": 1.0, "start_min": 0 },
+        { "v": 1.0, "start_min": 180 }
+      ],
+      "checkpoints_min": [180, 195, 210]
+    },
+    {
+      "name": "two_drinks_then_5h_then_one",
+      "horizon_min": 420,
+      "drinks": [
+        { "v": 1.0, "start_min": 0 },
+        { "v": 1.0, "start_min": 30 },
+        { "v": 1.0, "start_min": 330 }
+      ],
+      "checkpoints_min": [330, 345, 360]
+    },
+    {
+      "name": "one_minute_five_drinks_burst",
+      "horizon_min": 240,
+      "drinks": [
+        { "v": 1.0, "start_min": 0.0 },
+        { "v": 1.0, "start_min": 0.2 },
+        { "v": 1.0, "start_min": 0.4 },
+        { "v": 1.0, "start_min": 0.6 },
+        { "v": 1.0, "start_min": 0.8 }
+      ],
+      "checkpoints_min": [0, 1, 5, 10, 15, 20, 30, 45, 60]
+    }
+  ]
+}

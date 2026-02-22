@@ -16,28 +16,28 @@
   - `Quick Add` (Beer/Wine/Shot/Cocktail/Spirits/Custom)
   - category detail logging with size + ABV + count + `Use Default`
   - watch-side permission/runtime loop for standalone operation
-    - HealthKit read (when available) updates weight/biological sex inputs
     - location monitoring (when available) drives missed-log + home-arrival hooks
-    - graceful fallback when Health/location is unavailable
+    - graceful fallback when location is unavailable
   - regional serving templates (US/AU/UK) for beer/wine/shot defaults
-  - `Impact Preview` before logging (estimated drive-time impact)
+  - `Impact Preview` before logging (effective standard drinks + baseline projection)
   - `Voice Log` (dictation text parser -> structured drink entries)
-  - `Live Status` (state, BAC estimate, likely drive-time estimate)
+  - `Live Status` (dynamic effective standard drinks in body)
   - `Timeline` (recent entries)
 - iPhone companion:
-  - `Today`, `History`, `Profile`, `Reminders`, `Privacy`
+  - `Today`, `Settings`
+  - `Settings` includes `History`, `Reminders`, `Privacy`
   - first-launch onboarding with explicit estimate acknowledgment
-  - permission controls for Notifications, Location, HealthKit read
-  - HealthKit profile merge when authorization is available
+  - permission controls for Notifications + Location
   - location-monitor hooks for missed-log and home-hydration reminders
   - in-app review prompt milestones based on completed nights
 - Shared core domain:
   - standard-drink conversion with regional definitions (US/AU/UK)
-  - personalized Widmark-style BAC estimate
-  - minute-level BAC timeline sampling for tighter ETA precision
-  - category-aware non-linear absorption curve + sex-aware metabolism rate
-  - near-term peak-aware intoxication state to avoid rapid-log underreporting
-  - region-based drive-threshold estimates using local legal-limit mapping (AU/US/UK)
+  - dynamic in-body standard-drink model:
+    - linear absorption per drink over 30 minutes
+    - previous drink absorption window closes when next drink starts
+    - constant metabolism rate `0.8 std/hour` from first drink
+    - live `N(t) = absorbed - metabolized`, clamped at zero
+    - projected baseline time when `N(t)` reaches zero
   - hydration recommendation by body-weight + drink load
 - Architecture:
   - `AppStore` refactored with protocol-injected session policy + persistence
@@ -97,7 +97,8 @@ swift scripts/generate_app_icon_master.swift artifacts/icon-build/icon-master-10
 - This app is a sweet night companion.
 - It is not a spending tracker and not a behavior-shaming tool.
 - It focuses on one thing only: helping tonight end safer and tomorrow feel better.
-- BAC and drive-time outputs are friendly estimates only; they are not legal advice or legal proof.
+- It does not provide BAC or driving/legal guidance.
+- Standard-drink outputs are friendly behavioral estimates only, not medical advice.
 
 ## 1.1 backlog
 

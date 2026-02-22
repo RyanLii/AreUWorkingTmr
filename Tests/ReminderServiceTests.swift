@@ -7,12 +7,27 @@ import XCTest
 final class ReminderServiceTests: XCTestCase {
     private let service = DefaultReminderService()
 
+    private func snapshot(total: Double, hydration: Int = 900, electrolytes: Bool = false) -> SessionSnapshot {
+        SessionSnapshot(
+            date: Date(timeIntervalSince1970: 1_700_000_000),
+            totalStandardDrinks: total,
+            effectiveStandardDrinks: max(0, total - 0.5),
+            absorbedStandardDrinks: total,
+            metabolizedStandardDrinks: 0.5,
+            projectedZeroTime: Date(timeIntervalSince1970: 1_700_000_000 + 3600),
+            remainingToZero: 3600,
+            hydrationPlanMl: hydration,
+            recommendElectrolytes: electrolytes
+        )
+    }
+
     func testMissedLogReminderTriggersWhenLeavingAfterStay() {
         let now = Date()
         let context = LocationStayContext(
             stayedDuration: 21 * 60,
             movedDistanceMeters: 260,
             lastDrinkLoggedAt: now.addingTimeInterval(-16 * 60),
+            lastMissedLogReminderAt: nil,
             now: now
         )
 
@@ -27,6 +42,7 @@ final class ReminderServiceTests: XCTestCase {
             stayedDuration: 25 * 60,
             movedDistanceMeters: 220,
             lastDrinkLoggedAt: now.addingTimeInterval(-10 * 60),
+            lastMissedLogReminderAt: nil,
             now: now
         )
 
@@ -40,6 +56,7 @@ final class ReminderServiceTests: XCTestCase {
             stayedDuration: 15 * 60,
             movedDistanceMeters: 260,
             lastDrinkLoggedAt: now.addingTimeInterval(-40 * 60),
+            lastMissedLogReminderAt: nil,
             now: now
         )
 
@@ -53,6 +70,7 @@ final class ReminderServiceTests: XCTestCase {
             stayedDuration: 25 * 60,
             movedDistanceMeters: 120,
             lastDrinkLoggedAt: now.addingTimeInterval(-40 * 60),
+            lastMissedLogReminderAt: nil,
             now: now
         )
 
@@ -60,77 +78,73 @@ final class ReminderServiceTests: XCTestCase {
         XCTAssertTrue(events.isEmpty)
     }
 
-    func testHomeHydrationReminderOnlyAfterDelay() {
+    func testMissedLogReminderDoesNotTriggerWhenRecentReminderAlreadySent() {
         let now = Date()
-        let snapshot = SessionSnapshot(
-            date: now,
-            totalStandardDrinks: 4,
-            estimatedBAC: 0.06,
-            intoxicationState: .social,
-            saferDriveTime: now,
-            remainingToSaferDrive: 0,
-            hydrationPlanMl: 1200,
-            recommendElectrolytes: true
+        let context = LocationStayContext(
+            stayedDuration: 24 * 60,
+            movedDistanceMeters: 260,
+            lastDrinkLoggedAt: now.addingTimeInterval(-40 * 60),
+            lastMissedLogReminderAt: now.addingTimeInterval(-8 * 60),
+            now: now
         )
 
-        let early = HomeArrivalContext(
-            arrivedAt: now.addingTimeInterval(-10 * 60),
+        let events = service.evaluateLocationTransition(context: context)
+        XCTAssertTrue(events.isEmpty)
+    }
+
+    func testHomeHydrationReminderSchedulesTwentyMinutesAfterArrival() {
+        let now = Date()
+        let context = HomeArrivalContext(
+            arrivedAt: now,
             now: now,
             hasHydrationReminderBeenSent: false
         )
-        XCTAssertTrue(service.evaluateHomeArrival(context: early, snapshot: snapshot).isEmpty)
+        let events = service.evaluateHomeArrival(context: context, snapshot: snapshot(total: 4))
+        XCTAssertEqual(events.count, 1)
+        guard let triggerTime = events.first?.triggerTime else {
+            XCTFail("Expected home hydration event")
+            return
+        }
+        XCTAssertEqual(triggerTime.timeIntervalSince(now), 20 * 60, accuracy: 1)
+    }
 
+    func testHomeHydrationReminderTriggersImmediatelyWhenAlreadyPastDelay() {
+        let now = Date()
         let delayed = HomeArrivalContext(
             arrivedAt: now.addingTimeInterval(-25 * 60),
             now: now,
             hasHydrationReminderBeenSent: false
         )
-        XCTAssertEqual(service.evaluateHomeArrival(context: delayed, snapshot: snapshot).count, 1)
+        let events = service.evaluateHomeArrival(context: delayed, snapshot: snapshot(total: 4))
+        XCTAssertEqual(events.count, 1)
+        guard let triggerTime = events.first?.triggerTime else {
+            XCTFail("Expected home hydration event")
+            return
+        }
+        XCTAssertEqual(triggerTime.timeIntervalSince(now), 0, accuracy: 1)
     }
 
     func testHomeHydrationReminderOnlyOncePerSession() {
         let now = Date()
-        let snapshot = SessionSnapshot(
-            date: now,
-            totalStandardDrinks: 3,
-            estimatedBAC: 0.05,
-            intoxicationState: .social,
-            saferDriveTime: now,
-            remainingToSaferDrive: 0,
-            hydrationPlanMl: 900,
-            recommendElectrolytes: false
-        )
-
-        let alreadySent = HomeArrivalContext(
+        let context = HomeArrivalContext(
             arrivedAt: now.addingTimeInterval(-30 * 60),
             now: now,
             hasHydrationReminderBeenSent: true
         )
 
-        let events = service.evaluateHomeArrival(context: alreadySent, snapshot: snapshot)
+        let events = service.evaluateHomeArrival(context: context, snapshot: snapshot(total: 3))
         XCTAssertTrue(events.isEmpty)
     }
 
     func testHomeHydrationReminderRequiresLoggedDrinks() {
         let now = Date()
-        let soberSnapshot = SessionSnapshot(
-            date: now,
-            totalStandardDrinks: 0,
-            estimatedBAC: 0,
-            intoxicationState: .clear,
-            saferDriveTime: now,
-            remainingToSaferDrive: 0,
-            hydrationPlanMl: 600,
-            recommendElectrolytes: false
-        )
-
         let context = HomeArrivalContext(
             arrivedAt: now.addingTimeInterval(-30 * 60),
             now: now,
             hasHydrationReminderBeenSent: false
         )
 
-        let events = service.evaluateHomeArrival(context: context, snapshot: soberSnapshot)
+        let events = service.evaluateHomeArrival(context: context, snapshot: snapshot(total: 0, hydration: 600))
         XCTAssertTrue(events.isEmpty)
     }
 }

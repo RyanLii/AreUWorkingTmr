@@ -11,37 +11,47 @@
 		191AE0B9280A130F031BB854 /* AreUWorkingTmrWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 28A99D3BB1FD2F24D4C40298 /* AreUWorkingTmrWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		19D43EEF6759952F92C70486 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6BFF8F395727E210F82C200 /* TodayView.swift */; };
 		1EDB3D412EF1E149638AB558 /* DisplayFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F054CE612E2C81E5632656 /* DisplayFormatter.swift */; };
-		25C6CD585E058EB7BFD16CE9 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 984BA16F6A37E0812139F38E /* ProfileView.swift */; };
 		2C5567B17142A38965E52F0C /* EstimationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0D2809A0D5A478DE450294 /* EstimationService.swift */; };
 		2F904501EE9394A3AC95BF5E /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38784054EA12747F620E058D /* Theme.swift */; };
 		304F1B8B7690DBB33D199475 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5614B0440491A76516A2A69A /* PersistenceController.swift */; };
+		32588EBFDC944847D9F9D23A /* Shimmer in Frameworks */ = {isa = PBXBuildFile; productRef = 02D9C122C7575D26E52AB97E /* Shimmer */; };
 		39BFD3B3829EECFFA3FD6E94 /* SettingsHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229336DE8B915506FC4616F5 /* SettingsHubView.swift */; };
 		3F3E1BAE8568E8EBFF163CBB /* QuickAddView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25E490B26863E63F1AACA368 /* QuickAddView.swift */; };
 		415C498B93AB629BEF12C616 /* DomainModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B8E282AB31F06D4F8C9F16 /* DomainModels.swift */; };
+		42DA09309FF02B8407000583 /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 679E7F82AA11DD3B34B6EFC6 /* WatchConnectivity.framework */; };
 		4438E207250456DA1C8E85BE /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFEDB9F8ED0255803A65F93E /* ReminderService.swift */; };
 		46D061EFD6916CBB803672F7 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2538157D4B06C4869E3F2B9D /* HistoryView.swift */; };
 		48656F907CF089F43DEFCE2C /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B337A264CBB826B069F98979 /* RootTabView.swift */; };
 		48EA006C4FE0835ADCC72E13 /* EstimationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C62F8E844D4DC07A640BAE4 /* EstimationServiceTests.swift */; };
 		4B74A2C6F42EF85BEEC943B9 /* DomainModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B8E282AB31F06D4F8C9F16 /* DomainModels.swift */; };
 		4DA5851922647F2ECAB10DE8 /* PrivacyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E6D7A2B7E0D5FF96E21D45C /* PrivacyView.swift */; };
+		5027F5003BDE3659F456BBF9 /* BuzzStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A4D763FB8769DCAC94F0F6D /* BuzzStatus.swift */; };
 		50C11B4137A236ED95C72E53 /* AreUWorkingTmrApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63CDAEA51FA9DEE0271F7368 /* AreUWorkingTmrApp.swift */; };
 		5521D03A52BBD36A8464137E /* AreUWorkingTmrWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB521D2D3E07474E345C759 /* AreUWorkingTmrWatchApp.swift */; };
 		62BF9748C10839272EE72E0F /* DrinkParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A61C3149EBB796A7238C563 /* DrinkParser.swift */; };
 		65300875CB6C9A5A049133D1 /* WatchPermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75FED9377F58DC4ADD1FA942 /* WatchPermissionManager.swift */; };
 		66E4F47D4369CD5C94AB03BD /* WatchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04AC2023EBDABA6D80DD16E2 /* WatchRootView.swift */; };
 		66EFF32A3EA5FE5A34EB016C /* RemindersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE9B7650854EC74EC8BB18B /* RemindersView.swift */; };
+		7524D11236011D7F0B1B19C0 /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 679E7F82AA11DD3B34B6EFC6 /* WatchConnectivity.framework */; };
 		7A8C9B77D3EF471712E5B997 /* WatchLocationMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D32EA39ED61D4BFDB9AB500F /* WatchLocationMonitor.swift */; };
 		7B41530F701FC30AE337FED8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9AAA65E762E58D6B375DECC3 /* Assets.xcassets */; };
+		7B8F7E4C64A9339C036FF9F2 /* ConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C98EE30A7F4C2739B5B335FE /* ConnectivityService.swift */; };
 		7CB518A5C337CE795D4AC984 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F56984A24D1CF9F16055277 /* TimelineView.swift */; };
 		7F2BBB0B4C68A144538B4340 /* DisplayFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F054CE612E2C81E5632656 /* DisplayFormatter.swift */; };
 		7F7E74C17BD462007161C867 /* LocationMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D7CDD37617C6A38D28A1E1 /* LocationMonitor.swift */; };
 		844D0B586438C9FFB5FD8FF1 /* DisplayFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F054CE612E2C81E5632656 /* DisplayFormatter.swift */; };
 		85D9A0A3551129DE46F7F5BB /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 065D72303F83C17078FA0A00 /* SwiftDataModels.swift */; };
 		894CFDC0CC6B4C64FF379EE6 /* VoiceLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EBC278ABE286C1A4A07B8F /* VoiceLogView.swift */; };
+		8B4661A3108EAD89CD3D8AC4 /* ConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C98EE30A7F4C2739B5B335FE /* ConnectivityService.swift */; };
+		8C9A5688CCB1470E400C8CD0 /* PhoneConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7DBBA2297417E5E63FE9AE8 /* PhoneConnectivityManager.swift */; };
+		8F57CC868C07643167F1E5CF /* Running character.json in Resources */ = {isa = PBXBuildFile; fileRef = CEFC61446BDEE2A31325E422 /* Running character.json */; };
 		956FDEAACD7595C14BE6C241 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5614B0440491A76516A2A69A /* PersistenceController.swift */; };
+		9F39FB115E103DF2A9DFEDD9 /* ConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C98EE30A7F4C2739B5B335FE /* ConnectivityService.swift */; };
+		A39F261438271588F0B7480A /* BuzzStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A4D763FB8769DCAC94F0F6D /* BuzzStatus.swift */; };
 		A587BBAF520DCCA7F762030A /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFEDB9F8ED0255803A65F93E /* ReminderService.swift */; };
 		A62773078471C9DB44B380EB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C110590027DD105351C1BC94 /* Assets.xcassets */; };
 		A6F74530B65479B6BE5ADC7C /* ReminderServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3358E82BED9408F78908DF40 /* ReminderServiceTests.swift */; };
+		ABC779DD67C56E7F456A2450 /* BuzzStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A4D763FB8769DCAC94F0F6D /* BuzzStatus.swift */; };
 		ADD367165CB99BA6F04CCB58 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E4846124C3BCE913296FAF4 /* OnboardingView.swift */; };
 		B03319810C4C7DCEFED619E1 /* WatchTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F73567E4C42BFAE5B51EE7E3 /* WatchTheme.swift */; };
 		B1B47A9A4A36F2179E373907 /* DomainModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B8E282AB31F06D4F8C9F16 /* DomainModels.swift */; };
@@ -49,6 +59,8 @@
 		B715B49B104C14D39CE60969 /* EstimationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0D2809A0D5A478DE450294 /* EstimationService.swift */; };
 		B85088DC115B81262E9A9A1A /* LiveStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5722B75F3F0CBD40B642C755 /* LiveStatusView.swift */; };
 		BBAE7B9A4CA25557BD00F47A /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E7068AFCC1F70E81B421F9 /* AppStore.swift */; };
+		C9842B0363220ED4D6EC9CDC /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = B150F00F5390E76030C11256 /* Lottie */; };
+		CB23D632A61D9280C76FD549 /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDB92FF5B74F89C0D0178AAA /* WatchConnectivityManager.swift */; };
 		D207AB4207DAD5204AB2D812 /* DrinkParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A83082139CD4379076104C0A /* DrinkParserTests.swift */; };
 		D37E0B0F9D74DDDAE53201AE /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 065D72303F83C17078FA0A00 /* SwiftDataModels.swift */; };
 		D7B890045B2A5FE881B6DBCC /* DrinkParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A61C3149EBB796A7238C563 /* DrinkParser.swift */; };
@@ -56,6 +68,7 @@
 		E260BB59B1AD454D53275BFB /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E7068AFCC1F70E81B421F9 /* AppStore.swift */; };
 		E5221CE5366292F008208238 /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFEDB9F8ED0255803A65F93E /* ReminderService.swift */; };
 		EB91D7B577797968613D4235 /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E7068AFCC1F70E81B421F9 /* AppStore.swift */; };
+		EEBA745527CFE3BD47AF717A /* LottieView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D39104866B2808A16C2A67A /* LottieView.swift */; };
 		F71375569C02BCA43BA00BD3 /* PermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C5E6962BE0E385510311EEB /* PermissionManager.swift */; };
 		F9D27A6275B3F0360F52ECD5 /* SessionClockTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4236A3CD907EE833E02E68EB /* SessionClockTests.swift */; };
 		FD315B68E5053140EA927FA4 /* EstimationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0D2809A0D5A478DE450294 /* EstimationService.swift */; };
@@ -100,35 +113,62 @@
 		2E4846124C3BCE913296FAF4 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		3358E82BED9408F78908DF40 /* ReminderServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderServiceTests.swift; sourceTree = "<group>"; };
 		38784054EA12747F620E058D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		3D39104866B2808A16C2A67A /* LottieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottieView.swift; sourceTree = "<group>"; };
 		4236A3CD907EE833E02E68EB /* SessionClockTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionClockTests.swift; sourceTree = "<group>"; };
 		42776EAFA9A2351E2666C5DB /* AreUWorkingTmr.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AreUWorkingTmr.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4A4D763FB8769DCAC94F0F6D /* BuzzStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuzzStatus.swift; sourceTree = "<group>"; };
 		5614B0440491A76516A2A69A /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		5722B75F3F0CBD40B642C755 /* LiveStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveStatusView.swift; sourceTree = "<group>"; };
 		5E0D2809A0D5A478DE450294 /* EstimationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EstimationService.swift; sourceTree = "<group>"; };
 		63CDAEA51FA9DEE0271F7368 /* AreUWorkingTmrApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AreUWorkingTmrApp.swift; sourceTree = "<group>"; };
+		679E7F82AA11DD3B34B6EFC6 /* WatchConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WatchConnectivity.framework; path = System/Library/Frameworks/WatchConnectivity.framework; sourceTree = SDKROOT; };
 		6C5E6962BE0E385510311EEB /* PermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionManager.swift; sourceTree = "<group>"; };
 		75FED9377F58DC4ADD1FA942 /* WatchPermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchPermissionManager.swift; sourceTree = "<group>"; };
 		7E6D7A2B7E0D5FF96E21D45C /* PrivacyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyView.swift; sourceTree = "<group>"; };
 		81B8E282AB31F06D4F8C9F16 /* DomainModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainModels.swift; sourceTree = "<group>"; };
 		89CC4CF280B4C3D8F90F825A /* AppScreenScaffold.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppScreenScaffold.swift; sourceTree = "<group>"; };
-		984BA16F6A37E0812139F38E /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		9AAA65E762E58D6B375DECC3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A83082139CD4379076104C0A /* DrinkParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkParserTests.swift; sourceTree = "<group>"; };
 		A9E7068AFCC1F70E81B421F9 /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
 		ABEDEC44B8C504AF4F3F1914 /* AreUWorkingTmrTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AreUWorkingTmrTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B2EBC278ABE286C1A4A07B8F /* VoiceLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceLogView.swift; sourceTree = "<group>"; };
 		B337A264CBB826B069F98979 /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
+		BDB92FF5B74F89C0D0178AAA /* WatchConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityManager.swift; sourceTree = "<group>"; };
 		BFB521D2D3E07474E345C759 /* AreUWorkingTmrWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AreUWorkingTmrWatchApp.swift; sourceTree = "<group>"; };
 		C110590027DD105351C1BC94 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C98EE30A7F4C2739B5B335FE /* ConnectivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityService.swift; sourceTree = "<group>"; };
 		CB4411EDE4DADD64920E2961 /* AreUWorkingTmrWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AreUWorkingTmrWatch.entitlements; sourceTree = "<group>"; };
+		CEFC61446BDEE2A31325E422 /* Running character.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "Running character.json"; sourceTree = "<group>"; };
 		CFEDB9F8ED0255803A65F93E /* ReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderService.swift; sourceTree = "<group>"; };
 		D32EA39ED61D4BFDB9AB500F /* WatchLocationMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchLocationMonitor.swift; sourceTree = "<group>"; };
 		D6BFF8F395727E210F82C200 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		F3F054CE612E2C81E5632656 /* DisplayFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayFormatter.swift; sourceTree = "<group>"; };
 		F73567E4C42BFAE5B51EE7E3 /* WatchTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTheme.swift; sourceTree = "<group>"; };
+		F7DBBA2297417E5E63FE9AE8 /* PhoneConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneConnectivityManager.swift; sourceTree = "<group>"; };
 		FBCD03B4EE69C1EC9EBF6925 /* AreUWorkingTmr.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AreUWorkingTmr.entitlements; sourceTree = "<group>"; };
 		FDE9B7650854EC74EC8BB18B /* RemindersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1859525B112942ED191DDB98 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				32588EBFDC944847D9F9D23A /* Shimmer in Frameworks */,
+				C9842B0363220ED4D6EC9CDC /* Lottie in Frameworks */,
+				42DA09309FF02B8407000583 /* WatchConnectivity.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8440A78FEA2341BA0BDB48BB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7524D11236011D7F0B1B19C0 /* WatchConnectivity.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		2F35FB26B3D2322AA1B4A47B /* WatchApp */ = {
@@ -141,6 +181,14 @@
 				711692F3BC9DE1ED097F727A /* Views */,
 			);
 			path = WatchApp;
+			sourceTree = "<group>";
+		};
+		359561837C5237926523B897 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				679E7F82AA11DD3B34B6EFC6 /* WatchConnectivity.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		3A78278CB7E9A0CA6D47D618 /* Tests */ = {
@@ -199,6 +247,7 @@
 			children = (
 				11D7CDD37617C6A38D28A1E1 /* LocationMonitor.swift */,
 				6C5E6962BE0E385510311EEB /* PermissionManager.swift */,
+				F7DBBA2297417E5E63FE9AE8 /* PhoneConnectivityManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -207,9 +256,9 @@
 			isa = PBXGroup;
 			children = (
 				2538157D4B06C4869E3F2B9D /* HistoryView.swift */,
+				3D39104866B2808A16C2A67A /* LottieView.swift */,
 				2E4846124C3BCE913296FAF4 /* OnboardingView.swift */,
 				7E6D7A2B7E0D5FF96E21D45C /* PrivacyView.swift */,
-				984BA16F6A37E0812139F38E /* ProfileView.swift */,
 				FDE9B7650854EC74EC8BB18B /* RemindersView.swift */,
 				229336DE8B915506FC4616F5 /* SettingsHubView.swift */,
 				D6BFF8F395727E210F82C200 /* TodayView.swift */,
@@ -236,6 +285,7 @@
 			isa = PBXGroup;
 			children = (
 				A9E7068AFCC1F70E81B421F9 /* AppStore.swift */,
+				C98EE30A7F4C2739B5B335FE /* ConnectivityService.swift */,
 				1A61C3149EBB796A7238C563 /* DrinkParser.swift */,
 				5E0D2809A0D5A478DE450294 /* EstimationService.swift */,
 				5614B0440491A76516A2A69A /* PersistenceController.swift */,
@@ -248,6 +298,7 @@
 			isa = PBXGroup;
 			children = (
 				9AAA65E762E58D6B375DECC3 /* Assets.xcassets */,
+				CEFC61446BDEE2A31325E422 /* Running character.json */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -255,6 +306,7 @@
 		BF8C9ED33437D6D11E90B08A /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				BDB92FF5B74F89C0D0178AAA /* WatchConnectivityManager.swift */,
 				D32EA39ED61D4BFDB9AB500F /* WatchLocationMonitor.swift */,
 				75FED9377F58DC4ADD1FA942 /* WatchPermissionManager.swift */,
 			);
@@ -264,6 +316,7 @@
 		D1E6AE059A7F21B23F6108A4 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				4A4D763FB8769DCAC94F0F6D /* BuzzStatus.swift */,
 				F3F054CE612E2C81E5632656 /* DisplayFormatter.swift */,
 			);
 			path = Utilities;
@@ -294,6 +347,7 @@
 				E30134B4761C2803EEE329EA /* Shared */,
 				3A78278CB7E9A0CA6D47D618 /* Tests */,
 				2F35FB26B3D2322AA1B4A47B /* WatchApp */,
+				359561837C5237926523B897 /* Frameworks */,
 				464AA79E56D6F8AAF6CFE942 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -307,6 +361,7 @@
 			buildPhases = (
 				E176FB7925D597EE41F92DB4 /* Sources */,
 				6A23FB09AE801149CE131EB3 /* Resources */,
+				1859525B112942ED191DDB98 /* Frameworks */,
 				DB361F18C475F4508CFECFBF /* Embed Watch Content */,
 			);
 			buildRules = (
@@ -316,6 +371,8 @@
 			);
 			name = AreUWorkingTmr;
 			packageProductDependencies = (
+				02D9C122C7575D26E52AB97E /* Shimmer */,
+				B150F00F5390E76030C11256 /* Lottie */,
 			);
 			productName = AreUWorkingTmr;
 			productReference = 42776EAFA9A2351E2666C5DB /* AreUWorkingTmr.app */;
@@ -344,6 +401,7 @@
 			buildPhases = (
 				83983110B0CE61D3E288F70A /* Sources */,
 				CB8E1C36D1AF8C793ABC8977 /* Resources */,
+				8440A78FEA2341BA0BDB48BB /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -388,6 +446,10 @@
 			);
 			mainGroup = FAD8AA136E6662FC41A2E194;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A3C4754F09E9A78CD6C3977D /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */,
+				E1F6F3D6B5C958B187CAE2D3 /* XCRemoteSwiftPackageReference "lottie-ios" */,
+			);
 			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
@@ -405,6 +467,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7B41530F701FC30AE337FED8 /* Assets.xcassets in Resources */,
+				8F57CC868C07643167F1E5CF /* Running character.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -425,6 +488,8 @@
 			files = (
 				EB91D7B577797968613D4235 /* AppStore.swift in Sources */,
 				5521D03A52BBD36A8464137E /* AreUWorkingTmrWatchApp.swift in Sources */,
+				5027F5003BDE3659F456BBF9 /* BuzzStatus.swift in Sources */,
+				9F39FB115E103DF2A9DFEDD9 /* ConnectivityService.swift in Sources */,
 				844D0B586438C9FFB5FD8FF1 /* DisplayFormatter.swift in Sources */,
 				4B74A2C6F42EF85BEEC943B9 /* DomainModels.swift in Sources */,
 				B2CD788811A5DF56EA81572A /* DrinkParser.swift in Sources */,
@@ -436,6 +501,7 @@
 				FE6E4A7CF0BB3F944821C716 /* SwiftDataModels.swift in Sources */,
 				7CB518A5C337CE795D4AC984 /* TimelineView.swift in Sources */,
 				894CFDC0CC6B4C64FF379EE6 /* VoiceLogView.swift in Sources */,
+				CB23D632A61D9280C76FD549 /* WatchConnectivityManager.swift in Sources */,
 				7A8C9B77D3EF471712E5B997 /* WatchLocationMonitor.swift in Sources */,
 				65300875CB6C9A5A049133D1 /* WatchPermissionManager.swift in Sources */,
 				66E4F47D4369CD5C94AB03BD /* WatchRootView.swift in Sources */,
@@ -448,6 +514,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				E260BB59B1AD454D53275BFB /* AppStore.swift in Sources */,
+				A39F261438271588F0B7480A /* BuzzStatus.swift in Sources */,
+				8B4661A3108EAD89CD3D8AC4 /* ConnectivityService.swift in Sources */,
 				7F2BBB0B4C68A144538B4340 /* DisplayFormatter.swift in Sources */,
 				B1B47A9A4A36F2179E373907 /* DomainModels.swift in Sources */,
 				62BF9748C10839272EE72E0F /* DrinkParser.swift in Sources */,
@@ -469,17 +537,20 @@
 				09C19C87B64D647463B88695 /* AppScreenScaffold.swift in Sources */,
 				BBAE7B9A4CA25557BD00F47A /* AppStore.swift in Sources */,
 				50C11B4137A236ED95C72E53 /* AreUWorkingTmrApp.swift in Sources */,
+				ABC779DD67C56E7F456A2450 /* BuzzStatus.swift in Sources */,
+				7B8F7E4C64A9339C036FF9F2 /* ConnectivityService.swift in Sources */,
 				1EDB3D412EF1E149638AB558 /* DisplayFormatter.swift in Sources */,
 				415C498B93AB629BEF12C616 /* DomainModels.swift in Sources */,
 				D7B890045B2A5FE881B6DBCC /* DrinkParser.swift in Sources */,
 				FD315B68E5053140EA927FA4 /* EstimationService.swift in Sources */,
 				46D061EFD6916CBB803672F7 /* HistoryView.swift in Sources */,
 				7F7E74C17BD462007161C867 /* LocationMonitor.swift in Sources */,
+				EEBA745527CFE3BD47AF717A /* LottieView.swift in Sources */,
 				ADD367165CB99BA6F04CCB58 /* OnboardingView.swift in Sources */,
 				F71375569C02BCA43BA00BD3 /* PermissionManager.swift in Sources */,
 				D948EC3A29A2C3A86B8BD2FC /* PersistenceController.swift in Sources */,
+				8C9A5688CCB1470E400C8CD0 /* PhoneConnectivityManager.swift in Sources */,
 				4DA5851922647F2ECAB10DE8 /* PrivacyView.swift in Sources */,
-				25C6CD585E058EB7BFD16CE9 /* ProfileView.swift in Sources */,
 				E5221CE5366292F008208238 /* ReminderService.swift in Sources */,
 				66EFF32A3EA5FE5A34EB016C /* RemindersView.swift in Sources */,
 				48656F907CF089F43DEFCE2C /* RootTabView.swift in Sources */,
@@ -510,8 +581,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Hydration guidance and recovery updates can be written to Health when you choose.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger missed-log and home-arrival reminders when available.";
 				INFOPLIST_KEY_WKApplication_WKSupportsRunningWithoutiOSApp = YES;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.nestroundlabs.AreUWorkingTmr;
@@ -533,8 +602,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Hydration guidance and recovery updates can be written to Health when you choose.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger missed-log and home-arrival reminders when available.";
 				INFOPLIST_KEY_WKApplication_WKSupportsRunningWithoutiOSApp = YES;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.nestroundlabs.AreUWorkingTmr;
@@ -574,10 +641,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
-				INFOPLIST_KEY_ENABLE_HEALTHKIT_INTEGRATION = YES;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Hydration guidance and recovery updates can be written to Health when you choose.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders in the background.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -604,10 +668,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
-				INFOPLIST_KEY_ENABLE_HEALTHKIT_INTEGRATION = YES;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Weight data improves estimate accuracy.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Hydration guidance and recovery updates can be written to Health when you choose.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders in the background.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location helps trigger drink-log and home-hydration reminders.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -804,6 +865,38 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A3C4754F09E9A78CD6C3977D /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/markiv/SwiftUI-Shimmer";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.1;
+			};
+		};
+		E1F6F3D6B5C958B187CAE2D3 /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		02D9C122C7575D26E52AB97E /* Shimmer */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3C4754F09E9A78CD6C3977D /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */;
+			productName = Shimmer;
+		};
+		B150F00F5390E76030C11256 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E1F6F3D6B5C958B187CAE2D3 /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 82906091BABF32952ED2A43D /* Project object */;
 }

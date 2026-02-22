@@ -136,15 +136,17 @@ final class AppStore: ObservableObject {
     @Published var profile: UserProfile = .default
     @Published private(set) var reminders: [ReminderEvent] = []
     @Published private(set) var hasMarkedDoneTonight = false
+    @Published private(set) var doneTonightAt: Date?
     @Published private(set) var effectiveWorkingTomorrow = false
     @Published private(set) var isWorkingTomorrowAuto = true
     @Published private(set) var sessionSnapshot: SessionSnapshot = SessionSnapshot(
         date: .now,
         totalStandardDrinks: 0,
-        estimatedBAC: 0,
-        intoxicationState: .clear,
-        saferDriveTime: .now,
-        remainingToSaferDrive: 0,
+        effectiveStandardDrinks: 0,
+        absorbedStandardDrinks: 0,
+        metabolizedStandardDrinks: 0,
+        projectedZeroTime: .now,
+        remainingToZero: 0,
         hydrationPlanMl: 600,
         recommendElectrolytes: false
     )
@@ -156,6 +158,8 @@ final class AppStore: ObservableObject {
     private let sessionPolicy: AppStoreSessionPolicy
     private var modelContext: ModelContext?
 
+    weak var connectivity: ConnectivityService?
+
     private var hasHomeHydrationReminderBeenSent = false
     private var hasMorningCheckInScheduled = false
     private var activeSessionKey: String?
@@ -165,7 +169,7 @@ final class AppStore: ObservableObject {
     private let reviewPromptMilestones: Set<Int> = [3, 8, 15]
 
     private static let customBasePreset = DrinkPreset(
-        id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
+        id: "custom",
         name: "Custom",
         category: .custom,
         defaultVolumeMl: 180,
@@ -269,7 +273,9 @@ final class AppStore: ObservableObject {
         guard count > 0 else { return }
         refreshSessionStateIfNeeded(now: .now)
         hasMarkedDoneTonight = false
+        doneTonightAt = nil
 
+        var newEntries: [DrinkEntry] = []
         for _ in 0..<count {
             let entry = estimationService.makeEntry(
                 category: preset.category,
@@ -283,8 +289,10 @@ final class AppStore: ObservableObject {
             )
             entries.append(entry)
             persist(entry: entry)
+            newEntries.append(entry)
         }
 
+        connectivity?.sendDrinksAdded(newEntries)
         recalculateSnapshot(now: .now)
     }
 
@@ -294,7 +302,9 @@ final class AppStore: ObservableObject {
         let fallbackPreset = preset(for: parsed.category)
         let quantity = max(parsed.quantity, 1)
         hasMarkedDoneTonight = false
+        doneTonightAt = nil
 
+        var newEntries: [DrinkEntry] = []
         for _ in 0..<quantity {
             let volume = parsed.volumeMl ?? fallbackPreset.defaultVolumeMl
             let abv = parsed.abvPercent ?? fallbackPreset.defaultABV
@@ -310,8 +320,10 @@ final class AppStore: ObservableObject {
             )
             entries.append(entry)
             persist(entry: entry)
+            newEntries.append(entry)
         }
 
+        connectivity?.sendDrinksAdded(newEntries)
         recalculateSnapshot(now: .now)
     }
 
@@ -330,16 +342,18 @@ final class AppStore: ObservableObject {
 
         entries.removeAll(where: { $0.id == last.id })
         deletePersistedEntries(ids: [last.id])
+        connectivity?.sendDrinksDeleted([last.id])
         recalculateSnapshot(now: now)
         return true
     }
 
     func deleteEntries(at offsets: IndexSet) {
-        let ids = offsets.compactMap { entries[safe: $0]?.id }
+        let ids = Set(offsets.compactMap { entries[safe: $0]?.id })
         for index in offsets.sorted(by: >) where entries.indices.contains(index) {
             entries.remove(at: index)
         }
-        deletePersistedEntries(ids: Set(ids))
+        deletePersistedEntries(ids: ids)
+        connectivity?.sendDrinksDeleted(ids)
         recalculateSnapshot(now: .now)
     }
 
@@ -347,6 +361,7 @@ final class AppStore: ObservableObject {
         guard !ids.isEmpty else { return }
         entries.removeAll(where: { ids.contains($0.id) })
         deletePersistedEntries(ids: ids)
+        connectivity?.sendDrinksDeleted(ids)
         recalculateSnapshot(now: .now)
     }
 
@@ -356,6 +371,10 @@ final class AppStore: ObservableObject {
         }
     }
 
+    func refreshSnapshot(now: Date = .now) {
+        recalculateSnapshot(now: now)
+    }
+
     func updateProfile(_ newProfile: UserProfile) {
         if newProfile.workingTomorrow != profile.workingTomorrow {
             hasManualWorkingTomorrowForSession = true
@@ -363,38 +382,18 @@ final class AppStore: ObservableObject {
 
         profile = newProfile
         persist(profile: newProfile)
+        connectivity?.sendProfileUpdated(newProfile)
         recalculateSnapshot(now: .now)
     }
 
-    // Prefer Health-provided metrics when available, but keep manual values as fallback.
-    func updateProfileFromHealth(weightKg: Double?, biologicalSex: BiologicalSex?) {
-        var next = profile
-        var didChange = false
-
-        if let weightKg {
-            let clampedWeight = min(max(weightKg, 35), 220)
-            if abs(clampedWeight - next.weightKg) > 0.01 {
-                next.weightKg = clampedWeight
-                didChange = true
-            }
-        }
-
-        if let biologicalSex, biologicalSex != next.biologicalSex {
-            next.biologicalSex = biologicalSex
-            didChange = true
-        }
-
-        guard didChange else { return }
-
-        profile = next
-        persist(profile: next)
-        recalculateSnapshot(now: .now)
-    }
-
-    func markDoneTonight() {
-        refreshSessionStateIfNeeded(now: .now)
+    func markDoneTonight(now: Date = .now) {
+        refreshSessionStateIfNeeded(now: now)
         hasMarkedDoneTonight = true
-        scheduleMorningCheckInIfNeeded(now: .now)
+        doneTonightAt = now
+        connectivity?.sendDoneTonight()
+        // Fallback schedule so hydration support still works even when home-location detection is unavailable.
+        handleHomeArrival(arrivedAt: now, now: now)
+        scheduleMorningCheckInIfNeeded(now: now)
         registerDoneSessionForReview()
     }
 
@@ -402,6 +401,7 @@ final class AppStore: ObservableObject {
         entries = []
         reminders = []
         hasMarkedDoneTonight = false
+        doneTonightAt = nil
         hasHomeHydrationReminderBeenSent = false
         hasMorningCheckInScheduled = false
         hasManualWorkingTomorrowForSession = false
@@ -411,6 +411,7 @@ final class AppStore: ObservableObject {
         isWorkingTomorrowAuto = true
         reviewRequestNonce = 0
         UserDefaults.standard.removeObject(forKey: reviewSessionsCountKey)
+        cancelAllScheduledReminders()
         recalculateSnapshot(now: .now)
         clearPersistedModels()
     }
@@ -424,6 +425,7 @@ final class AppStore: ObservableObject {
             stayedDuration: stayedDuration,
             movedDistanceMeters: movedDistanceMeters,
             lastDrinkLoggedAt: currentSession.last?.timestamp,
+            lastMissedLogReminderAt: currentSessionLastReminderTime(type: .missedLog, now: now),
             now: now
         )
 
@@ -500,15 +502,20 @@ final class AppStore: ObservableObject {
     private func refreshSessionStateIfNeeded(now: Date) {
         let key = sessionPolicy.sessionKey(for: now)
         guard key != activeSessionKey else { return }
+        let hasExistingSession = activeSessionKey != nil
 
         activeSessionKey = key
         hasMarkedDoneTonight = false
+        doneTonightAt = nil
         hasHomeHydrationReminderBeenSent = false
         hasMorningCheckInScheduled = false
         hasManualWorkingTomorrowForSession = false
 
         let window = sessionPolicy.sessionInterval(containing: now)
         reminders.removeAll(where: { !window.contains($0.triggerTime) })
+        if hasExistingSession {
+            cancelAllScheduledReminders()
+        }
     }
 
     private func scheduleMorningCheckInIfNeeded(now: Date) {
@@ -516,12 +523,15 @@ final class AppStore: ObservableObject {
         guard sessionSnapshot.totalStandardDrinks > 0 else { return }
 
         let checkInTime = sessionPolicy.nextMorningCheckInDate(after: now)
+        let total = sessionSnapshot.totalStandardDrinks
         let message: String
 
-        if effectiveWorkingTomorrow {
-            message = "Morning check: how are you feeling? Water + a light breakfast can help before work."
+        if total >= 6 {
+            message = "Morning check: big night. Sip water slowly, eat something light, and take it easy today."
+        } else if total >= 3 {
+            message = "Morning check: hope you slept well. A glass of water and a proper breakfast will set you up."
         } else {
-            message = "Morning check: hope you slept well. Sip some water and take it easy."
+            message = "Morning check: light night — you should be feeling pretty good. Stay hydrated."
         }
 
         let event = ReminderEvent(
@@ -588,14 +598,7 @@ final class AppStore: ObservableObject {
 
         do {
             let loaded = try persistence.load(modelContext: modelContext, fallbackProfile: profile)
-            if loaded.profile.biologicalSex == .other {
-                profile = loaded.profile
-            } else {
-                var migrated = loaded.profile
-                migrated.biologicalSex = .other
-                profile = migrated
-                persist(profile: migrated)
-            }
+            profile = loaded.profile
             entries = loaded.entries
             recalculateSnapshot(now: .now)
         } catch {
@@ -660,6 +663,57 @@ final class AppStore: ObservableObject {
         if reviewPromptMilestones.contains(nextCount) {
             reviewRequestNonce += 1
         }
+    }
+
+    private func currentSessionLastReminderTime(type: ReminderType, now: Date) -> Date? {
+        let window = sessionPolicy.sessionInterval(containing: now)
+        return reminders
+            .filter { $0.type == type && window.contains($0.triggerTime) }
+            .map(\.triggerTime)
+            .max()
+    }
+
+    private func cancelAllScheduledReminders() {
+        Task {
+            await reminderService.cancelAllScheduledNotifications()
+        }
+    }
+
+    // MARK: - Remote apply (no re-broadcast to avoid loops)
+
+    func applyRemoteDrinks(_ remoteEntries: [DrinkEntry]) {
+        var changed = false
+        for entry in remoteEntries {
+            guard !entries.contains(where: { $0.id == entry.id }) else { continue }
+            entries.append(entry)
+            persist(entry: entry)
+            changed = true
+        }
+        guard changed else { return }
+        entries.sort { $0.timestamp < $1.timestamp }
+        recalculateSnapshot(now: .now)
+    }
+
+    func applyRemoteDelete(_ ids: Set<UUID>) {
+        guard !ids.isEmpty else { return }
+        let before = entries.count
+        entries.removeAll(where: { ids.contains($0.id) })
+        guard entries.count != before else { return }
+        deletePersistedEntries(ids: ids)
+        recalculateSnapshot(now: .now)
+    }
+
+    func applyRemoteProfile(_ remoteProfile: UserProfile) {
+        guard remoteProfile != profile else { return }
+        profile = remoteProfile
+        persist(profile: remoteProfile)
+        recalculateSnapshot(now: .now)
+    }
+
+    func applyRemoteDoneTonight() {
+        guard !hasMarkedDoneTonight else { return }
+        hasMarkedDoneTonight = true
+        doneTonightAt = .now
     }
 }
 

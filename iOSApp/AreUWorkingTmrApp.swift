@@ -7,6 +7,7 @@ struct AreUWorkingTmrApp: App {
     @StateObject private var store = AppStore()
     @StateObject private var permissionManager = PermissionManager()
     @StateObject private var locationMonitor = LocationMonitor()
+    @StateObject private var connectivity = PhoneConnectivityManager()
 
     private let modelContainer: ModelContainer
 
@@ -22,8 +23,10 @@ struct AreUWorkingTmrApp: App {
                 .environmentObject(permissionManager)
                 .environmentObject(locationMonitor)
                 .onAppear {
+                    connectivity.store = store
+                    store.connectivity = connectivity
+
                     permissionManager.refreshStatus()
-                    syncHealthProfileIfAvailable()
 
                     if permissionManager.locationAuthorized {
                         locationMonitor.start()
@@ -43,24 +46,8 @@ struct AreUWorkingTmrApp: App {
                         locationMonitor.stop()
                     }
                 }
-                .onChange(of: permissionManager.healthKitAuthorized) { _, authorized in
-                    guard authorized else { return }
-                    syncHealthProfileIfAvailable()
-                }
         }
         .modelContainer(modelContainer)
-    }
-
-    private func syncHealthProfileIfAvailable() {
-        Task {
-            let healthProfile = await permissionManager.loadLatestHealthProfile()
-            await MainActor.run {
-                store.updateProfileFromHealth(
-                    weightKg: healthProfile.weightKg,
-                    biologicalSex: healthProfile.biologicalSex
-                )
-            }
-        }
     }
 
     private func configureNavigationBarAppearance() {

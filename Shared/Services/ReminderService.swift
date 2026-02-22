@@ -5,6 +5,7 @@ protocol ReminderService {
     func evaluateLocationTransition(context: LocationStayContext) -> [ReminderEvent]
     func evaluateHomeArrival(context: HomeArrivalContext, snapshot: SessionSnapshot) -> [ReminderEvent]
     func scheduleNotifications(events: [ReminderEvent]) async
+    func cancelAllScheduledNotifications() async
 }
 
 struct DefaultReminderService: ReminderService {
@@ -22,10 +23,15 @@ struct DefaultReminderService: ReminderService {
             return []
         }
 
+        if let lastMissedLogReminderAt = context.lastMissedLogReminderAt,
+           context.now.timeIntervalSince(lastMissedLogReminderAt) <= missedLogCooldown {
+            return []
+        }
+
         let event = ReminderEvent(
             type: .missedLog,
             triggerTime: context.now,
-            context: "Quick check: want to add your last drink so tonight's ETA stays accurate?"
+            context: "Quick check: want to add your last drink so tonight's live standard-drink trend stays accurate?"
         )
         return [event]
     }
@@ -33,16 +39,18 @@ struct DefaultReminderService: ReminderService {
     func evaluateHomeArrival(context: HomeArrivalContext, snapshot: SessionSnapshot) -> [ReminderEvent] {
         guard snapshot.totalStandardDrinks > 0 else { return [] }
         guard !context.hasHydrationReminderBeenSent else { return [] }
-        guard context.now.timeIntervalSince(context.arrivedAt) >= homeReminderDelay else { return [] }
 
-        var message = "You made it home. Sip around \(snapshot.hydrationPlanMl) ml water tonight."
+        var message = "Landing check: sip around \(snapshot.hydrationPlanMl) ml water tonight."
         if snapshot.recommendElectrolytes {
             message += " If you have electrolytes, now is a great time."
         }
 
+        let delayedTrigger = context.arrivedAt.addingTimeInterval(homeReminderDelay)
+        let triggerTime = max(delayedTrigger, context.now)
+
         let event = ReminderEvent(
             type: .homeHydration,
-            triggerTime: context.now,
+            triggerTime: triggerTime,
             context: message
         )
 
@@ -61,7 +69,7 @@ struct DefaultReminderService: ReminderService {
             let secondsUntilTrigger = max(1, event.triggerTime.timeIntervalSinceNow)
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: secondsUntilTrigger, repeats: false)
             let request = UNNotificationRequest(
-                identifier: event.id.uuidString,
+                identifier: notificationIdentifier(for: event),
                 content: content,
                 trigger: trigger
             )
@@ -76,6 +84,11 @@ struct DefaultReminderService: ReminderService {
         }
     }
 
+    func cancelAllScheduledNotifications() async {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests()
+    }
+
     private func title(for type: ReminderType) -> String {
         switch type {
         case .missedLog:
@@ -84,6 +97,18 @@ struct DefaultReminderService: ReminderService {
             return "Sweet home nudge"
         case .morningCheckIn:
             return "Morning check-in"
+        }
+    }
+
+    private func notificationIdentifier(for event: ReminderEvent) -> String {
+        switch event.type {
+        case .missedLog:
+            let bucket = Int(event.triggerTime.timeIntervalSince1970 / missedLogCooldown)
+            return "reminder.missed_log.\(bucket)"
+        case .homeHydration:
+            return "reminder.home_hydration.\(SessionClock.key(for: event.triggerTime))"
+        case .morningCheckIn:
+            return "reminder.morning_check_in.\(SessionClock.key(for: event.triggerTime))"
         }
     }
 }

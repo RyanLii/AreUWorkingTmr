@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import StoreKit
+import Combine
 
 struct RootTabView: View {
     enum Tab: Hashable {
@@ -11,7 +12,6 @@ struct RootTabView: View {
     @Environment(\.requestReview) private var requestReview
     @EnvironmentObject private var store: AppStore
     @EnvironmentObject private var permissionManager: PermissionManager
-    @EnvironmentObject private var locationMonitor: LocationMonitor
 
     @AppStorage("has_seen_commercial_onboarding") private var hasSeenOnboarding = false
 
@@ -19,6 +19,7 @@ struct RootTabView: View {
     @State private var showOnboarding = false
     @State private var selectedTab: Tab = .today
     @State private var autoTabTask: Task<Void, Never>?
+    private let liveRefreshTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
     var body: some View {
         ZStack {
@@ -59,7 +60,6 @@ struct RootTabView: View {
             guard !didBind else { return }
             didBind = true
             store.bind(modelContext: modelContext)
-            locationMonitor.homeLocation = store.profile.homeLocation?.coordinate
 
             #if targetEnvironment(simulator)
             if ProcessInfo.processInfo.environment["SKIP_ONBOARDING"] == "1" {
@@ -78,11 +78,11 @@ struct RootTabView: View {
                 showOnboarding = true
             }
         }
-        .onChange(of: store.profile.homeLocation) { _, _ in
-            locationMonitor.homeLocation = store.profile.homeLocation?.coordinate
-        }
         .onChange(of: store.reviewRequestNonce) { _, _ in
             requestReview()
+        }
+        .onReceive(liveRefreshTimer) { _ in
+            store.refreshSnapshot()
         }
         .onDisappear {
             autoTabTask?.cancel()
@@ -95,7 +95,7 @@ struct RootTabView: View {
     private func parseTab(_ raw: String) -> Tab? {
         switch raw.lowercased() {
         case "today": return .today
-        case "settings", "history", "profile", "reminders", "privacy": return .settings
+        case "settings", "history", "reminders", "privacy": return .settings
         default: return nil
         }
     }

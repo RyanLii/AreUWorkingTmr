@@ -5,7 +5,8 @@ struct HistoryView: View {
     @Environment(\.editMode) private var editMode
 
     private var sortedEntries: [DrinkEntry] {
-        store.entries.sorted(by: { $0.timestamp > $1.timestamp })
+        SessionClock.entriesInCurrentSession(store.entries, now: .now)
+            .sorted(by: { $0.timestamp > $1.timestamp })
     }
 
     private var isEditing: Bool {
@@ -14,11 +15,6 @@ struct HistoryView: View {
 
     var body: some View {
         AppScreenScaffold {
-            ScreenIntroCard(
-                title: "Session Timeline",
-                subtitle: "Track each log and clean up anything accidental."
-            )
-
             if sortedEntries.isEmpty {
                 SectionCard("Timeline") {
                     Text("No drinks logged yet")
@@ -39,47 +35,56 @@ struct HistoryView: View {
                 }
             }
         }
-        .navigationTitle("History")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            EditButton()
-                .tint(NightTheme.accent)
+            ToolbarItem(placement: .principal) {
+                Text("History")
+                    .font(NightTheme.sectionFont.weight(.bold))
+                    .foregroundStyle(.white)
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                EditButton()
+                    .tint(NightTheme.accent)
+            }
         }
     }
 
     private func entryRow(_ entry: DrinkEntry) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(entry.servingName ?? entry.category.title)
-                    .font(NightTheme.sectionFont)
-                    .foregroundStyle(.white)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(entry.servingName ?? entry.category.title)
+                        .font(NightTheme.sectionFont)
+                        .foregroundStyle(.white)
 
-                Text("\(entry.category.title) · \(Int(entry.volumeMl))ml · \(entry.abvPercent, specifier: "%.1f")%")
-                    .font(NightTheme.bodyFont)
-                    .foregroundStyle(NightTheme.label)
-                    .fixedSize(horizontal: false, vertical: true)
+                    Text("\(entry.category.title) · \(Int(entry.volumeMl))ml · \(entry.abvPercent, specifier: "%.1f")%")
+                        .font(NightTheme.bodyFont)
+                        .foregroundStyle(NightTheme.label)
+                        .fixedSize(horizontal: false, vertical: true)
 
-                Text(entry.timestamp, style: .time)
-                    .font(NightTheme.captionFont)
-                    .foregroundStyle(NightTheme.labelSoft)
-            }
+                    Text(entry.timestamp, style: .time)
+                        .font(NightTheme.captionFont)
+                        .foregroundStyle(NightTheme.labelSoft)
+                }
 
-            Spacer(minLength: 8)
+                Spacer(minLength: 8)
 
-            VStack(alignment: .trailing, spacing: 8) {
                 Text(DisplayFormatter.standardDrinks(entry.standardDrinks))
                     .font(NightTheme.bodyFont.weight(.semibold))
                     .foregroundStyle(NightTheme.accentSoft)
+            }
 
-                if isEditing {
-                    Button(role: .destructive) {
-                        store.deleteEntries(ids: Set([entry.id]))
-                    } label: {
-                        Label("Delete", systemImage: "trash")
-                            .font(NightTheme.captionFont.weight(.bold))
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(NightTheme.warning)
+            if isEditing {
+                Button(role: .destructive) {
+                    store.deleteEntries(ids: Set([entry.id]))
+                } label: {
+                    Label("Delete log", systemImage: "trash")
+                        .font(NightTheme.captionFont.weight(.bold))
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .buttonStyle(.borderedProminent)
+                .tint(NightTheme.warning)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

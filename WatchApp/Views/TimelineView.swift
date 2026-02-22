@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TimelineView: View {
     @EnvironmentObject private var store: AppStore
+    @State private var isEditing = false
 
     private var sessionEntries: [DrinkEntry] {
         SessionClock.entriesInCurrentSession(store.entries, now: .now)
@@ -11,11 +12,26 @@ struct TimelineView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Timeline")
-                    .font(WatchNightTheme.titleFont)
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
+                HStack {
+                    Text("Timeline")
+                        .font(WatchNightTheme.titleFont)
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+
+                    Spacer()
+
+                    if !sessionEntries.isEmpty {
+                        Button(isEditing ? "Done" : "Edit") {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                isEditing.toggle()
+                            }
+                        }
+                        .font(WatchNightTheme.captionFont.weight(.semibold))
+                        .foregroundStyle(WatchNightTheme.accentSoft)
+                        .buttonStyle(.plain)
+                    }
+                }
 
                 if sessionEntries.isEmpty {
                     Text("No drinks yet")
@@ -24,37 +40,56 @@ struct TimelineView: View {
                         .watchCard()
                 } else {
                     ForEach(sessionEntries.prefix(20)) { entry in
-                        HStack(spacing: 8) {
-                            Image(systemName: symbol(for: entry.category))
-                                .font(.caption)
-                                .foregroundStyle(WatchNightTheme.accent)
-                                .frame(width: 16)
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(spacing: 8) {
+                                Image(systemName: symbol(for: entry.category))
+                                    .font(.caption)
+                                    .foregroundStyle(WatchNightTheme.accent)
+                                    .frame(width: 16)
 
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(entry.servingName ?? entry.category.title)
-                                    .font(WatchNightTheme.bodyFont)
-                                    .foregroundStyle(.white)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(entry.servingName ?? entry.category.title)
+                                        .font(WatchNightTheme.bodyFont)
+                                        .foregroundStyle(.white)
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.75)
+
+                                    Text("\(Int(entry.volumeMl))ml · \(entry.abvPercent, specifier: "%.1f")%")
+                                        .font(WatchNightTheme.captionFont)
+                                        .foregroundStyle(WatchNightTheme.labelSoft)
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.74)
+
+                                    Text(entry.timestamp, style: .time)
+                                        .font(WatchNightTheme.captionFont)
+                                        .foregroundStyle(WatchNightTheme.label)
+                                }
+
+                                Spacer(minLength: 4)
+
+                                Text(DisplayFormatter.standardDrinks(entry.standardDrinks))
+                                    .font(WatchNightTheme.captionFont.weight(.bold))
+                                    .foregroundStyle(WatchNightTheme.accentSoft)
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.75)
-
-                                Text("\(Int(entry.volumeMl))ml · \(entry.abvPercent, specifier: "%.1f")%")
-                                    .font(WatchNightTheme.captionFont)
-                                    .foregroundStyle(WatchNightTheme.labelSoft)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.74)
-
-                                Text(entry.timestamp, style: .time)
-                                    .font(WatchNightTheme.captionFont)
-                                    .foregroundStyle(WatchNightTheme.label)
                             }
 
-                            Spacer(minLength: 4)
-
-                            Text(DisplayFormatter.standardDrinks(entry.standardDrinks))
-                                .font(WatchNightTheme.captionFont.weight(.bold))
-                                .foregroundStyle(WatchNightTheme.accentSoft)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.75)
+                            if isEditing {
+                                Button(role: .destructive) {
+                                    store.deleteEntries(ids: Set([entry.id]))
+                                } label: {
+                                    Label("Delete log", systemImage: "trash")
+                                        .font(WatchNightTheme.captionFont.weight(.semibold))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.vertical, 4)
+                                        .padding(.horizontal, 6)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                                .fill(Color.red.opacity(0.20))
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
                         .watchCard()
                     }
