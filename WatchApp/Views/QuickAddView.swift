@@ -594,6 +594,7 @@ struct QuickAddView: View {
                             .font(WatchNightTheme.captionFont)
                             .foregroundStyle(WatchNightTheme.label)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .watchCard(highlighted: true)
                 }
 
@@ -603,14 +604,10 @@ struct QuickAddView: View {
                     Label("Text Mate", systemImage: "message.fill")
                         .font(WatchNightTheme.bodyFont)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 6)
                         .foregroundStyle(.white)
-                        .background(
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(Color.white.opacity(0.12))
-                        )
                 }
                 .buttonStyle(.plain)
+                .frame(maxWidth: .infinity)
                 .watchCard()
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -628,6 +625,7 @@ struct QuickAddView: View {
                             .foregroundStyle(WatchNightTheme.mint)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .watchCard()
 
                 Button {

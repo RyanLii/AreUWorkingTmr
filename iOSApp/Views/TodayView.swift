@@ -452,6 +452,7 @@ struct TodayView: View {
                                         .foregroundStyle(NightTheme.label)
                                         .fixedSize(horizontal: false, vertical: true)
                                 }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                                 .glassCard(.high)
                             }
 
