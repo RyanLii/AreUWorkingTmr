@@ -114,14 +114,14 @@ struct TodayView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Are you working tomorrow?")
+            Text("Tonight matters.")
                 .font(NightTheme.titleFont)
                 .foregroundStyle(.white)
                 .lineLimit(2)
                 .minimumScaleFactor(0.75)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text("iPhone dashboard")
+            Text("Because sometimes, tomorrow does too.")
                 .font(NightTheme.subtitleFont)
                 .foregroundStyle(NightTheme.accentSoft)
 

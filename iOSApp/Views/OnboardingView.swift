@@ -17,7 +17,7 @@ struct OnboardingView: View {
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Are you working tomorrow?")
+                        Text("Last Round?")
                             .font(NightTheme.titleFont)
                             .foregroundStyle(.white)
                             .lineLimit(2)
