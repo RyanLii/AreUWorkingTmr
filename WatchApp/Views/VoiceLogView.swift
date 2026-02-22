@@ -10,13 +10,13 @@ struct VoiceLogView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Text Mate")
+                Text("Voice Log")
                     .font(WatchNightTheme.titleFont)
                     .foregroundStyle(.white)
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
 
-                Text("Type naturally. We parse and log.")
+                Text("Dictate or type what you drank.")
                     .font(WatchNightTheme.captionFont)
                     .foregroundStyle(WatchNightTheme.accentSoft)
 
@@ -45,10 +45,7 @@ struct VoiceLogView: View {
                     parseError = nil
                     input = ""
                 } label: {
-                    HStack {
-                        Image(systemName: "mic.fill")
-                        Text("Text Mate Log")
-                    }
+                    Text("Log Drink")
                     .font(WatchNightTheme.bodyFont)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 6)

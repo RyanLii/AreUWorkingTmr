@@ -8,7 +8,7 @@ struct WatchRootView: View {
     @EnvironmentObject private var permissionManager: WatchPermissionManager
     @EnvironmentObject private var locationMonitor: WatchLocationMonitor
     enum DemoTab: Hashable {
-        case quickAdd, voice, live, timeline
+        case quickAdd, voice, timeline
     }
 
     @State private var didBind = false
@@ -27,8 +27,6 @@ struct WatchRootView: View {
                     .tag(DemoTab.quickAdd)
                 VoiceLogView()
                     .tag(DemoTab.voice)
-                LiveStatusView()
-                    .tag(DemoTab.live)
                 TimelineView()
                     .tag(DemoTab.timeline)
             }
@@ -158,7 +156,7 @@ struct WatchRootView: View {
             try? await Task.sleep(nanoseconds: 2_000_000_000)
 
             store.handleHomeArrival(arrivedAt: .now)
-            selectedTab = .live
+            selectedTab = .quickAdd
             demoCaption = "Back home simulated"
             try? await Task.sleep(nanoseconds: 2_500_000_000)
 
