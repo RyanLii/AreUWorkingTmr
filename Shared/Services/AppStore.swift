@@ -523,12 +523,15 @@ final class AppStore: ObservableObject {
         guard sessionSnapshot.totalStandardDrinks > 0 else { return }
 
         let checkInTime = sessionPolicy.nextMorningCheckInDate(after: now)
+        let total = sessionSnapshot.totalStandardDrinks
         let message: String
 
-        if effectiveWorkingTomorrow {
-            message = "Morning check: how are you feeling? Water + a light breakfast can help before work."
+        if total >= 6 {
+            message = "Morning check: big night. Sip water slowly, eat something light, and take it easy today."
+        } else if total >= 3 {
+            message = "Morning check: hope you slept well. A glass of water and a proper breakfast will set you up."
         } else {
-            message = "Morning check: hope you slept well. Sip some water and take it easy."
+            message = "Morning check: light night — you should be feeling pretty good. Stay hydrated."
         }
 
         let event = ReminderEvent(
