@@ -145,8 +145,8 @@ struct PeakEasterEggOverlay: View {
         await showLine("OH WE'RE DOING THIS.", size: 38, holdMs: 1400,
                        entrance: .slam(from: 0.8, peak: 1.6), withHaptic: true)
 
-        // "TEXT YOUR BOSS NOW." — flies in from left
-        await showLine("TEXT YOUR BOSS NOW.", size: 22, holdMs: 1500,
+        // "ONE MORE ROUND NOW." — flies in from left
+        await showLine("ONE MORE ROUND!", size: 22, holdMs: 1500,
                        entrance: .fromLeft)
 
         // "JK." — instant flash, short hold

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -123,7 +123,7 @@
 		38784054EA12747F620E058D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		3D39104866B2808A16C2A67A /* LottieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottieView.swift; sourceTree = "<group>"; };
 		4236A3CD907EE833E02E68EB /* SessionClockTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionClockTests.swift; sourceTree = "<group>"; };
-		42776EAFA9A2351E2666C5DB /* AreUWorkingTmr.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AreUWorkingTmr.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		42776EAFA9A2351E2666C5DB /* AreUWorkingTmr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AreUWorkingTmr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4A4D763FB8769DCAC94F0F6D /* BuzzStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuzzStatus.swift; sourceTree = "<group>"; };
 		4ECCD2B546E0A73D15C578F9 /* PeakEasterEggOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeakEasterEggOverlay.swift; sourceTree = "<group>"; };
 		5614B0440491A76516A2A69A /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
@@ -474,7 +474,6 @@
 				A3C4754F09E9A78CD6C3977D /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */,
 				E1F6F3D6B5C958B187CAE2D3 /* XCRemoteSwiftPackageReference "lottie-ios" */,
 			);
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -671,6 +670,7 @@
 				CODE_SIGN_ENTITLEMENTS = iOSApp/AreUWorkingTmr.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 8;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
@@ -699,6 +699,7 @@
 				CODE_SIGN_ENTITLEMENTS = iOSApp/AreUWorkingTmr.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 8;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
