@@ -63,4 +63,41 @@ enum DisplayFormatter {
             return String(format: "%.1f oz", oz)
         }
     }
+
+    // Rounds to nearest 5 minutes — signals approximation, avoids false precision.
+    static func approxEta(_ date: Date, now: Date = .now) -> String {
+        let rounded = roundTo5Min(date)
+        return eta(rounded, now: now)
+    }
+
+    // Returns a 15-minute window (floor-rounded) for projected times.
+    // "Full clear around 2:45 – 3:00 AM" feels honest; exact minutes feel wrong.
+    static func etaRange(_ date: Date, now: Date = .now) -> String {
+        let lo = roundTo5Min(date.addingTimeInterval(-7.5 * 60))
+        let hi = lo.addingTimeInterval(15 * 60)
+
+        let calendar = Calendar.current
+        let timeFormatter = DateFormatter()
+        timeFormatter.timeStyle = .short
+
+        let loStr = timeFormatter.string(from: lo)
+        let hiStr = timeFormatter.string(from: hi)
+
+        if calendar.isDate(date, inSameDayAs: now) {
+            return "\(loStr) – \(hiStr)"
+        }
+        if let tomorrow = calendar.date(byAdding: .day, value: 1, to: now),
+           calendar.isDate(date, inSameDayAs: tomorrow) {
+            return "Tomorrow \(loStr) – \(hiStr)"
+        }
+        let dayFormatter = DateFormatter()
+        dayFormatter.dateFormat = "E"
+        return "\(dayFormatter.string(from: date)) \(loStr) – \(hiStr)"
+    }
+
+    private static func roundTo5Min(_ date: Date) -> Date {
+        let interval = date.timeIntervalSinceReferenceDate
+        let rounded = (interval / 300).rounded(.toNearestOrAwayFromZero) * 300
+        return Date(timeIntervalSinceReferenceDate: rounded)
+    }
 }

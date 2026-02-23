@@ -35,6 +35,14 @@ struct SettingsHubView: View {
                 ) {
                     PrivacyView()
                 }
+
+                settingsLink(
+                    title: "About",
+                    icon: "info.circle",
+                    tint: NightTheme.accentSoft
+                ) {
+                    AboutView()
+                }
             }
         }
         .navigationBarTitleDisplayMode(.inline)

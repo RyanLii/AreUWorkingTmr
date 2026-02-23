@@ -214,7 +214,7 @@ private struct ChartContent: View {
                     .position(x: px, y: py - 14)
             }
 
-            // "Feel human" dashed line + label
+            // Low load dashed line + label
             if snapshot.projectedRecoveryTime > minDate, snapshot.projectedRecoveryTime < maxDate {
                 let rx = xPos(snapshot.projectedRecoveryTime)
                 Path { p in
@@ -223,7 +223,7 @@ private struct ChartContent: View {
                 }
                 .stroke(NightTheme.success.opacity(0.65), style: StrokeStyle(lineWidth: 1, dash: [3, 5]))
 
-                Text("feel human")
+                Text("Low load threshold")
                     .font(.system(size: 9, weight: .bold, design: .rounded))
                     .foregroundStyle(NightTheme.success.opacity(0.85))
                     .position(x: rx, y: topPad - 10)

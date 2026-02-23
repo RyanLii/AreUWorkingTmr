@@ -22,7 +22,7 @@ struct BuzzStatusDescriptor: Equatable {
             return BuzzStatusDescriptor(
                 level: .underTheRadar,
                 title: "Under the radar",
-                description: "Still sober enough to regret nothing. Yet."
+                description: "Trace load. No measurable impact estimated."
             )
         }
 
@@ -30,7 +30,7 @@ struct BuzzStatusDescriptor: Equatable {
             return BuzzStatusDescriptor(
                 level: .goodVibes,
                 title: "Good vibes",
-                description: "One in. Charming and probably right."
+                description: "Light load. Within single-drink range."
             )
         }
 
@@ -38,7 +38,7 @@ struct BuzzStatusDescriptor: Equatable {
             return BuzzStatusDescriptor(
                 level: .buzzin,
                 title: "Buzzin'",
-                description: "Feeling yourself. Texts getting interesting."
+                description: "Moderate load. Absorption window active."
             )
         }
 
@@ -46,7 +46,7 @@ struct BuzzStatusDescriptor: Equatable {
             return BuzzStatusDescriptor(
                 level: .wavy,
                 title: "Wavy",
-                description: "You're funnier than usual. Objectively."
+                description: "Above common two-drink range."
             )
         }
 
@@ -54,22 +54,22 @@ struct BuzzStatusDescriptor: Equatable {
             return BuzzStatusDescriptor(
                 level: .onFire,
                 title: "On fire",
-                description: "Peak confidence. Decisions pending review."
+                description: "Approaching projected peak."
             )
         }
 
         if effective < 5.0 {
             return BuzzStatusDescriptor(
                 level: .tooLit,
-                title: "Too lit",
-                description: "Future you is already drafting an apology."
+                title: "Heavy load",
+                description: "Heavy load. Extended recovery window ahead."
             )
         }
 
         return BuzzStatusDescriptor(
             level: .takeItEasyZone,
-            title: "Take-it-easy zone",
-            description: "Full send. Your liver filed a formal complaint."
+            title: "High load zone",
+            description: "Very high load. Long clear window projected."
         )
     }
 }

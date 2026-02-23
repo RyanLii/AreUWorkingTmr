@@ -2,6 +2,21 @@ import Foundation
 import SwiftData
 import CoreLocation
 
+struct PreviousSessionSummary: Identifiable {
+    var id: String { sessionKey }
+    let sessionDate: Date
+    let sessionKey: String
+    let totalStandardDrinks: Double
+    let drinkCount: Int
+    let peakStandardDrinks: Double
+    let peakTime: Date
+    let projectedZeroTime: Date
+    let projectedRecoveryTime: Date
+    let hydrationPlanMl: Int
+    let bodyLoadPoints: [(date: Date, load: Double)]
+    let drinkTimestamps: [Date]
+}
+
 protocol AppStoreSessionPolicy {
     func sessionKey(for now: Date) -> String
     func sessionInterval(containing date: Date) -> DateInterval
@@ -677,6 +692,63 @@ final class AppStore: ObservableObject {
         Task {
             await reminderService.cancelAllScheduledNotifications()
         }
+    }
+
+    func previousSessionSummary(now: Date = .now) -> PreviousSessionSummary? {
+        let currentKey = sessionPolicy.sessionKey(for: now)
+        let previousEntries = entries.filter {
+            sessionPolicy.sessionKey(for: $0.timestamp) != currentKey
+        }
+        guard !previousEntries.isEmpty else { return nil }
+
+        guard let mostRecentKey = previousEntries
+            .map({ sessionPolicy.sessionKey(for: $0.timestamp) })
+            .max() else { return nil }
+
+        let sessionEntries = previousEntries.filter {
+            sessionPolicy.sessionKey(for: $0.timestamp) == mostRecentKey
+        }
+        guard !sessionEntries.isEmpty else { return nil }
+
+        let sessionDate = sessionPolicy.sessionInterval(
+            containing: sessionEntries[0].timestamp
+        ).start
+
+        // Evaluate at last drink time so projectedZeroTime is meaningful
+        let evalAt = sessionEntries.map(\.timestamp).max() ?? sessionDate
+        let snap = estimationService.recalculate(entries: sessionEntries, profile: profile, now: evalAt)
+
+        // Build body load series for the chart (5-min steps from first drink to projected clear)
+        let seriesStart = sessionEntries.map(\.timestamp).min() ?? sessionDate
+        let seriesEnd = snap.projectedZeroTime
+        let step: TimeInterval = 5 * 60
+        var bodyLoadPoints: [(date: Date, load: Double)] = []
+        if seriesEnd > seriesStart {
+            var t = seriesStart
+            while t <= seriesEnd {
+                let s = estimationService.recalculate(entries: sessionEntries, profile: profile, now: t)
+                bodyLoadPoints.append((date: t, load: s.effectiveStandardDrinks))
+                t += step
+            }
+            if bodyLoadPoints.last.map({ $0.date < seriesEnd }) ?? true {
+                let s = estimationService.recalculate(entries: sessionEntries, profile: profile, now: seriesEnd)
+                bodyLoadPoints.append((date: seriesEnd, load: s.effectiveStandardDrinks))
+            }
+        }
+
+        return PreviousSessionSummary(
+            sessionDate: sessionDate,
+            sessionKey: mostRecentKey,
+            totalStandardDrinks: snap.totalStandardDrinks,
+            drinkCount: sessionEntries.count,
+            peakStandardDrinks: snap.estimatedPeakStandardDrinks,
+            peakTime: snap.estimatedPeakTime,
+            projectedZeroTime: snap.projectedZeroTime,
+            projectedRecoveryTime: snap.projectedRecoveryTime,
+            hydrationPlanMl: snap.hydrationPlanMl,
+            bodyLoadPoints: bodyLoadPoints,
+            drinkTimestamps: sessionEntries.map(\.timestamp)
+        )
     }
 
     func bodyLoadSeries(now: Date = .now) -> (points: [(date: Date, load: Double)], entries: [DrinkEntry]) {

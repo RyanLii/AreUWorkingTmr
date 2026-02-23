@@ -37,11 +37,12 @@ struct TodayView: View {
 
     @State private var showDoneTonightSheet = false
     @State private var showLoadCurve = false
-    @State private var showNerdConfirm = false
     @State private var hydrationConfirmed = false
     @State private var rideConfirmed = false
     @State private var alarmConfirmed = false
     @State private var drinkIconsAppeared: [Bool] = []
+    @State private var activeSummary: PreviousSessionSummary?
+    @State private var lastShownSummaryKey: String?
 
     private var sessionDrinkEntries: [DrinkEntry] {
         SessionClock.entriesInCurrentSession(store.entries, now: .now, calendar: .current)
@@ -116,16 +117,23 @@ struct TodayView: View {
             BodyLoadChartView()
                 .environmentObject(store)
         }
-        .alert("You're checking this right now?", isPresented: $showNerdConfirm) {
-            Button("Show me the data") {
-                UserDefaults.standard.set(true, forKey: "nerd.curve.seen")
-                showLoadCurve = true
+        .sheet(item: $activeSummary, onDismiss: {
+            if let key = lastShownSummaryKey {
+                UserDefaults.standard.set(true, forKey: "summary.dismissed.\(key)")
             }
-            Button("Fair point", role: .cancel) {
-                UserDefaults.standard.set(true, forKey: "nerd.curve.seen")
+        }) { summary in
+            SessionSummaryCard(summary: summary) {
+                activeSummary = nil
             }
-        } message: {
-            Text("You've had a few tonight and you want your pharmacokinetics breakdown. Honestly? Respect. 🧪")
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+        }
+        .onAppear {
+            guard activeSummary == nil else { return }
+            guard let s = store.previousSessionSummary() else { return }
+            guard !UserDefaults.standard.bool(forKey: "summary.dismissed.\(s.sessionKey)") else { return }
+            lastShownSummaryKey = s.sessionKey
+            activeSummary = s
         }
     }
 
@@ -138,18 +146,18 @@ struct TodayView: View {
                 .minimumScaleFactor(0.75)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text("Are you working tomorrow?")
+            Text("Got plans tomorrow?")
                 .font(NightTheme.subtitleFont)
                 .foregroundStyle(NightTheme.accentSoft)
 
-            Text("Log quickly, keep pace, and land tomorrow with less chaos.")
+            Text("Track drinks in real time. See your projected peak and clearance window.")
                 .font(NightTheme.bodyFont)
                 .foregroundStyle(.white.opacity(0.92))
                 .fixedSize(horizontal: false, vertical: true)
 
             HStack(spacing: 8) {
-                Label("Live standard drinks", systemImage: "waveform.path.ecg")
-                Label("Watch first", systemImage: "applewatch")
+                Label("Live standard drinks", systemImage: "bolt.fill")
+                Label("Monitor your load", systemImage: "waveform.path.ecg")
             }
             .font(NightTheme.captionFont)
             .foregroundStyle(NightTheme.label)
@@ -168,52 +176,61 @@ struct TodayView: View {
                 statusBadgePill
             }
 
-            Text(statusMoodCopy)
-                .font(.system(size: 11, weight: .bold, design: .rounded))
-                .foregroundStyle(statusBadgeColor.opacity(0.90))
-                .lineLimit(1)
-                .minimumScaleFactor(0.85)
-                .fixedSize(horizontal: false, vertical: true)
+            statusMoodView
 
             statusRecoveryBlock
 
             DisclosureGroup(isExpanded: $statusDetailsExpanded) {
-                VStack(alignment: .leading, spacing: 8) {
-                    statusDetailRow(
-                        "Total logged",
-                        DisplayFormatter.standardDrinks(statusSnapshot.totalStandardDrinks)
-                    )
-                    statusDetailRow(
-                        "Active load",
-                        DisplayFormatter.standardDrinks(statusEffectiveStandardDrinks)
-                    )
-                    statusDetailRow(
-                        "In absorption",
-                        DisplayFormatter.standardDrinks(statusSnapshot.pendingAbsorptionStandardDrinks)
-                    )
-                    statusDetailRow(
-                        "Metabolized",
-                        DisplayFormatter.standardDrinks(statusSnapshot.metabolizedStandardDrinks)
-                    )
-                    statusDetailRow(
-                        "Estimated peak",
-                        "\(DisplayFormatter.standardDrinks(statusSnapshot.estimatedPeakStandardDrinks)) at \(DisplayFormatter.eta(statusSnapshot.estimatedPeakTime))"
-                    )
-                    statusDetailRow(
-                        "Feel human",
-                        DisplayFormatter.eta(statusSnapshot.projectedRecoveryTime)
-                    )
-                    statusDetailRow(
-                        "Full clear",
-                        DisplayFormatter.eta(statusSnapshot.projectedZeroTime)
-                    )
+                VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("SESSION TOTALS")
+                            .font(.system(size: 9, weight: .semibold, design: .rounded))
+                            .foregroundStyle(NightTheme.label.opacity(0.55))
+                        statusDetailRow(
+                            "Total logged",
+                            DisplayFormatter.standardDrinks(statusSnapshot.totalStandardDrinks)
+                        )
+                    }
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("LOAD DYNAMICS")
+                            .font(.system(size: 9, weight: .semibold, design: .rounded))
+                            .foregroundStyle(NightTheme.label.opacity(0.55))
+                        statusDetailRow(
+                            "Active load",
+                            DisplayFormatter.standardDrinks(statusEffectiveStandardDrinks)
+                        )
+                        statusDetailRow(
+                            "In absorption",
+                            DisplayFormatter.standardDrinks(statusSnapshot.pendingAbsorptionStandardDrinks)
+                        )
+                        statusDetailRow(
+                            "Metabolized",
+                            DisplayFormatter.standardDrinks(statusSnapshot.metabolizedStandardDrinks)
+                        )
+                    }
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("PEAK")
+                            .font(.system(size: 9, weight: .semibold, design: .rounded))
+                            .foregroundStyle(NightTheme.label.opacity(0.55))
+                        statusDetailRow(
+                            "Estimated peak",
+                            "\(DisplayFormatter.standardDrinks(statusSnapshot.estimatedPeakStandardDrinks)) at \(DisplayFormatter.eta(statusSnapshot.estimatedPeakTime))"
+                        )
+                    }
 
                     if statusSnapshot.clearingElapsed > 1,
                        (statusSnapshot.state == .clearing || statusSnapshot.state == .cleared) {
-                        statusDetailRow(
-                            "Clearing for",
-                            DisplayFormatter.duration(statusSnapshot.clearingElapsed)
-                        )
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("RUNTIME")
+                                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                                .foregroundStyle(NightTheme.label.opacity(0.55))
+                            statusDetailRow(
+                                "Clearing for",
+                                DisplayFormatter.duration(statusSnapshot.clearingElapsed)
+                            )
+                        }
                     }
 
                     Text("0.8 std/hr metabolism · 30 min absorption window · estimates only")
@@ -221,11 +238,7 @@ struct TodayView: View {
                         .foregroundStyle(NightTheme.label)
 
                     Button {
-                        if UserDefaults.standard.bool(forKey: "nerd.curve.seen") {
-                            showLoadCurve = true
-                        } else {
-                            showNerdConfirm = true
-                        }
+                        showLoadCurve = true
                     } label: {
                         HStack(spacing: 5) {
                             Image(systemName: "waveform.path.ecg")
@@ -312,7 +325,7 @@ struct TodayView: View {
 
     private func quickAddTile(_ preset: DrinkPreset) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
+            HStack(alignment: .center, spacing: 8) {
                 Image(customAssetName(for: preset.category))
                     .resizable()
                     .scaledToFit()
@@ -863,15 +876,15 @@ struct TodayView: View {
                                 Circle()
                                     .fill(NightTheme.warning)
                                     .frame(width: 6, height: 6)
-                                Text("Feel human \(DisplayFormatter.eta(statusSnapshot.projectedRecoveryTime))")
+                                Text("Low load begins~ \(DisplayFormatter.approxEta(statusSnapshot.projectedRecoveryTime))")
                                     .font(.system(size: 10, weight: .semibold, design: .rounded))
                                     .foregroundStyle(NightTheme.warning.opacity(0.9))
                             }
                             Spacer()
                             HStack(spacing: 4) {
-                                Text("Full clear \(DisplayFormatter.eta(displayProjectedZeroTime))")
+                                Text("Full clear around \(DisplayFormatter.etaRange(displayProjectedZeroTime))")
                                     .font(.system(size: 10, weight: .semibold, design: .rounded))
-                                    .foregroundStyle(NightTheme.label)
+                                    .foregroundStyle(Color(red: 0.36, green: 0.76, blue: 0.92).opacity(0.9))
                                 Circle()
                                     .fill(Color(red: 0.36, green: 0.76, blue: 0.92))
                                     .frame(width: 6, height: 6)
@@ -908,19 +921,36 @@ struct TodayView: View {
     }
 
     private var statusMoodCopy: String {
-        if statusSnapshot.state == .clearing && !statusIsCleared {
-            return "\(buzzStatus.description)"
-        }
+        buzzStatus.description
+    }
 
-        return buzzStatus.description
+    @ViewBuilder
+    private var statusMoodView: some View {
+        if statusSnapshot.state == .clearing && !statusIsCleared {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Body load decreasing")
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .foregroundStyle(statusBadgeColor.opacity(0.90))
+                Text("Peak passed \(DisplayFormatter.eta(statusSnapshot.estimatedPeakTime))")
+                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .foregroundStyle(NightTheme.label)
+            }
+        } else {
+            Text(statusMoodCopy)
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .foregroundStyle(statusBadgeColor.opacity(0.90))
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     private var statusRecoveryHeadline: String {
         if statusIsCleared {
-            return "You are all good now."
+            return "Load cleared."
         }
 
-        return "Feeling better around \(DisplayFormatter.eta(statusSnapshot.projectedRecoveryTime))."
+        return "Low impact est. \(DisplayFormatter.eta(statusSnapshot.projectedRecoveryTime))."
     }
 
     private var statusRecoveryCountdown: String {
@@ -965,18 +995,18 @@ struct TodayView: View {
 
     private func cooldownFlavorCopy(progress: Double) -> String {
         if progress > 0.75 {
-            return "Still pretty up there. Sip water and pace it."
+            return "Active load still elevated. Clearance in early phase."
         }
 
         if progress > 0.45 {
-            return "Cruisin' now. Keep it steady, mate."
+            return "Load declining. Past the halfway mark."
         }
 
         if progress > 0.20 {
-            return "Winding down. Nearly back to normal."
+            return "Approaching low-impact threshold."
         }
 
-        return "Home stretch. You are almost all good."
+        return "Near baseline. Final stretch."
     }
 
     private func remainingLoadBar(progress: Double, recoveryFraction: Double) -> some View {
@@ -1284,7 +1314,7 @@ struct TodayView: View {
 
     private func iconScale(for category: DrinkCategory) -> CGFloat {
         switch category {
-        case .shot, .custom: return 1.35
+        case .shot, .custom: return 1.5
         default: return 1.0
         }
     }

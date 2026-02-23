@@ -26,7 +26,7 @@ struct PrivacyView: View {
 
             SectionCard("Product") {
                 bodyText("Version: \(appVersionText)")
-                bodyText("Feedback: hello@areuworkingtmr.app")
+                bodyText("Feedback: nestroundlabs@gmail.com")
             }
 
             SectionCard("Analytics") {

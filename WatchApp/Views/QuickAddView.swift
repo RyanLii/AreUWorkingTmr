@@ -248,7 +248,7 @@ struct QuickAddView: View {
                     Circle()
                         .fill(WatchNightTheme.warning)
                         .frame(width: 5, height: 5)
-                    Text("Feel human \(DisplayFormatter.eta(store.sessionSnapshot.projectedRecoveryTime))")
+                    Text("Low load \(DisplayFormatter.eta(store.sessionSnapshot.projectedRecoveryTime))")
                         .font(WatchNightTheme.captionFont)
                         .foregroundStyle(WatchNightTheme.warning.opacity(0.9))
                         .lineLimit(1)
@@ -301,7 +301,7 @@ struct QuickAddView: View {
                         statusMetricRow("Still absorbing", DisplayFormatter.standardDrinks(store.sessionSnapshot.pendingAbsorptionStandardDrinks))
                         statusMetricRow("Metabolized", DisplayFormatter.standardDrinks(store.sessionSnapshot.metabolizedStandardDrinks))
                         statusMetricRow("Estimated peak", "\(DisplayFormatter.standardDrinks(store.sessionSnapshot.estimatedPeakStandardDrinks)) at \(DisplayFormatter.eta(store.sessionSnapshot.estimatedPeakTime))")
-                        statusMetricRow("Feel human", DisplayFormatter.eta(store.sessionSnapshot.projectedRecoveryTime))
+                        statusMetricRow("Low load", DisplayFormatter.eta(store.sessionSnapshot.projectedRecoveryTime))
                         statusMetricRow("Full clear", DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime))
 
                         if let lastDrink = store.sessionSnapshot.lastDrinkTime {

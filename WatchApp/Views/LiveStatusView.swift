@@ -97,7 +97,7 @@ struct LiveStatusView: View {
                             Circle()
                                 .fill(WatchNightTheme.warning)
                                 .frame(width: 5, height: 5)
-                            Text("Feel human \(DisplayFormatter.eta(store.sessionSnapshot.projectedRecoveryTime))")
+                            Text("Low load \(DisplayFormatter.eta(store.sessionSnapshot.projectedRecoveryTime))")
                                 .font(WatchNightTheme.captionFont)
                                 .foregroundStyle(WatchNightTheme.warning.opacity(0.9))
                                 .lineLimit(1)
@@ -171,7 +171,7 @@ struct LiveStatusView: View {
                                 "Estimated peak",
                                 "\(DisplayFormatter.standardDrinks(store.sessionSnapshot.estimatedPeakStandardDrinks)) at \(DisplayFormatter.eta(store.sessionSnapshot.estimatedPeakTime))"
                             )
-                            metricRow("Feel human", DisplayFormatter.eta(store.sessionSnapshot.projectedRecoveryTime))
+                            metricRow("Low load", DisplayFormatter.eta(store.sessionSnapshot.projectedRecoveryTime))
                             metricRow("Full clear", DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime))
 
                             if let lastDrink = store.sessionSnapshot.lastDrinkTime {
