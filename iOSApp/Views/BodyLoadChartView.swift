@@ -6,6 +6,15 @@ struct BodyLoadChartView: View {
 
     private let now = Date()
 
+    @State private var peakTapCount = 0
+    @State private var showEasterEgg = false
+    @State private var screenScale: CGFloat = 1.0
+
+    // Session-only counter — resets every app launch
+    private static var sessionEasterEggCount = 0
+
+    private let peakHaptic = UIImpactFeedbackGenerator(style: .light)
+
     var body: some View {
         let data = store.bodyLoadSeries(now: now)
 
@@ -45,7 +54,8 @@ struct BodyLoadChartView: View {
                         series: data.points,
                         drinkTimes: data.entries.map(\.timestamp),
                         snapshot: store.sessionSnapshot,
-                        now: now
+                        now: now,
+                        onPeakTap: handlePeakTap
                     )
                     .padding(.horizontal, 20)
 
@@ -58,6 +68,33 @@ struct BodyLoadChartView: View {
                         .padding(.bottom, 24)
                 }
             }
+            .scaleEffect(screenScale)
+
+            if showEasterEgg {
+                PeakEasterEggOverlay(
+                    triggerCount: Self.sessionEasterEggCount,
+                    onDismiss: { showEasterEgg = false }
+                )
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: showEasterEgg)
+    }
+
+    private func handlePeakTap() {
+        peakHaptic.impactOccurred()
+
+        // Screen pulse: 1.0 → 1.02 → 1.0
+        withAnimation(.easeOut(duration: 0.1)) { screenScale = 1.02 }
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.6).delay(0.1)) { screenScale = 1.0 }
+
+        peakTapCount += 1
+        if peakTapCount >= 3 {
+            peakTapCount = 0
+            Self.sessionEasterEggCount += 1
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                showEasterEgg = true
+            }
         }
     }
 }
@@ -67,6 +104,7 @@ private struct BodyLoadChartCanvas: View {
     let drinkTimes: [Date]
     let snapshot: SessionSnapshot
     let now: Date
+    let onPeakTap: () -> Void
 
     private let yLabelWidth: CGFloat = 38
     private let xLabelHeight: CGFloat = 26
@@ -82,7 +120,8 @@ private struct BodyLoadChartCanvas: View {
                 geo: geo,
                 yLabelWidth: yLabelWidth,
                 xLabelHeight: xLabelHeight,
-                topPad: topPad
+                topPad: topPad,
+                onPeakTap: onPeakTap
             )
         }
     }
@@ -113,6 +152,7 @@ private struct ChartContent: View {
     let yLabelWidth: CGFloat
     let xLabelHeight: CGFloat
     let topPad: CGFloat
+    let onPeakTap: () -> Void
 
     // Derived geometry
     private var chartW: CGFloat { geo.size.width - yLabelWidth }
@@ -212,6 +252,13 @@ private struct ChartContent: View {
                     .font(.system(size: 9, weight: .bold, design: .rounded))
                     .foregroundStyle(NightTheme.accentSoft)
                     .position(x: px, y: py - 14)
+
+                // Invisible tap target (44pt for easy tapping)
+                Color.clear
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+                    .onTapGesture { onPeakTap() }
+                    .position(x: px, y: py)
             }
 
             // Low load dashed line + label
