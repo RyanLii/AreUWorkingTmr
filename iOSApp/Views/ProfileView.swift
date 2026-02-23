@@ -5,8 +5,62 @@ struct ProfileView: View {
 
     private var profile: UserProfile { store.profile }
 
+    @State private var weightInput: String = ""
+    @FocusState private var weightFocused: Bool
+
+    private func estimatedRateText(for weightKg: Double) -> String {
+        let rate = min(max(weightKg * 0.114 / profile.regionStandard.gramsPerStandardDrink, 0.5), 1.2)
+        return String(format: "Est. %.2f std/hr for your region", rate)
+    }
+
     var body: some View {
         AppScreenScaffold {
+            SectionCard("Body Metrics") {
+                bodyText("Add your weight for a personalised metabolism rate. Leave it empty and the model uses 0.8 std/hr — the population average.")
+
+                Divider().overlay(Color.white.opacity(0.12))
+
+                HStack {
+                    Text("Weight")
+                        .font(NightTheme.bodyFont)
+                        .foregroundStyle(.white)
+                    Spacer()
+                    HStack(spacing: 6) {
+                        TextField("—", text: $weightInput)
+                            .font(NightTheme.bodyFont.weight(.medium))
+                            .foregroundStyle(NightTheme.accentSoft)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .focused($weightFocused)
+                            .frame(width: 64)
+                            .onChange(of: weightFocused) { _, focused in
+                                if !focused { commitWeight() }
+                            }
+                        Text("kg")
+                            .font(NightTheme.bodyFont)
+                            .foregroundStyle(NightTheme.label)
+                        if !weightInput.isEmpty {
+                            Button {
+                                weightInput = ""
+                                var p = profile
+                                p.weightKg = nil
+                                store.updateProfile(p)
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(NightTheme.labelSoft)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+
+                if let kg = profile.weightKg {
+                    Text(estimatedRateText(for: kg))
+                        .font(NightTheme.captionFont)
+                        .foregroundStyle(NightTheme.accentSoft)
+                }
+            }
+
             SectionCard("Standard Drinks") {
                 bodyText("\"Standard drink\" is a unit of pure alcohol. Different countries define it differently — this setting ensures the model counts correctly for your region.")
 
@@ -52,14 +106,6 @@ struct ProfileView: View {
                 }
             }
 
-            SectionCard("Body Metrics") {
-                HStack(spacing: 10) {
-                    Image(systemName: "clock.badge.questionmark")
-                        .foregroundStyle(NightTheme.labelSoft)
-                        .frame(width: 20)
-                    bodyText("Height and weight coming in a future update. These will let the model give more personalised estimates.")
-                }
-            }
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -68,7 +114,32 @@ struct ProfileView: View {
                     .font(NightTheme.sectionFont.weight(.bold))
                     .foregroundStyle(.white)
             }
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") { weightFocused = false }
+                    .foregroundStyle(NightTheme.accent)
+            }
         }
+        .onAppear {
+            weightInput = profile.weightKg.map { "\(Int($0))" } ?? ""
+        }
+    }
+
+    private func commitWeight() {
+        let trimmed = weightInput.trimmingCharacters(in: .whitespaces)
+        if trimmed.isEmpty {
+            var p = profile
+            p.weightKg = nil
+            store.updateProfile(p)
+            return
+        }
+        guard let value = Double(trimmed), value >= 20, value <= 300 else {
+            weightInput = profile.weightKg.map { "\(Int($0))" } ?? ""
+            return
+        }
+        var p = profile
+        p.weightKg = (value * 10).rounded() / 10
+        store.updateProfile(p)
     }
 
     private func pickerRow<MenuContent: View>(

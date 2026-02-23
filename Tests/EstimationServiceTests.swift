@@ -38,11 +38,12 @@ final class EstimationServiceTests: XCTestCase {
         XCTAssertEqual(config.absorptionLagMinutes, 15, accuracy: 0.0001)
         XCTAssertEqual(config.minAbsorptionDurationMinutes, 20, accuracy: 0.0001)
         XCTAssertEqual(config.burstMergeWindowMinutes, 2, accuracy: 0.0001)
-        XCTAssertEqual(config.hydrationBaseMl, 600, accuracy: 0.0001)
-        XCTAssertEqual(config.hydrationPerStandardDrinkMl, 250, accuracy: 0.0001)
-        XCTAssertEqual(config.hydrationWorkingTomorrowBoostMl, 250, accuracy: 0.0001)
-        XCTAssertEqual(config.hydrationMinMl, 300, accuracy: 0.0001)
-        XCTAssertEqual(config.hydrationMaxMl, 3000, accuracy: 0.0001)
+        XCTAssertEqual(config.hydrationTier1RateMl, 300, accuracy: 0.0001)
+        XCTAssertEqual(config.hydrationTierThreshold, 2, accuracy: 0.0001)
+        XCTAssertEqual(config.hydrationTier2RateMl, 350, accuracy: 0.0001)
+        XCTAssertEqual(config.hydrationWorkingTomorrowBoostMl, 150, accuracy: 0.0001)
+        XCTAssertEqual(config.hydrationMinMl, 200, accuracy: 0.0001)
+        XCTAssertEqual(config.hydrationMaxMl, 2000, accuracy: 0.0001)
     }
 
     func testCustomConfigCanBeInjectedWithoutTouchingAlgorithmCode() {
@@ -57,11 +58,12 @@ final class EstimationServiceTests: XCTestCase {
             minProjectionHours: 2,
             maxProjectionHours: 48,
             projectionTailHours: 1,
-            hydrationBaseMl: 600,
-            hydrationPerStandardDrinkMl: 250,
-            hydrationWorkingTomorrowBoostMl: 250,
-            hydrationMinMl: 300,
-            hydrationMaxMl: 3000
+            hydrationTier1RateMl: 300,
+            hydrationTierThreshold: 2,
+            hydrationTier2RateMl: 350,
+            hydrationWorkingTomorrowBoostMl: 150,
+            hydrationMinMl: 200,
+            hydrationMaxMl: 2000
         )
         let tunedService = DefaultEstimationService(config: tuned)
         let entry = tunedService.makeEntry(
@@ -245,7 +247,7 @@ final class EstimationServiceTests: XCTestCase {
         let now = Date(timeIntervalSince1970: 1_700_000_000)
 
         let baseline = service.recalculate(entries: [], profile: makeProfile(), now: now)
-        XCTAssertEqual(baseline.hydrationPlanMl, 600)
+        XCTAssertEqual(baseline.hydrationPlanMl, 200)
 
         let heavyEntries = (0..<20).map { i in
             service.makeEntry(
@@ -261,7 +263,7 @@ final class EstimationServiceTests: XCTestCase {
         }
 
         let heavy = service.recalculate(entries: heavyEntries, profile: makeProfile(), now: now)
-        XCTAssertLessThanOrEqual(heavy.hydrationPlanMl, 3000)
+        XCTAssertLessThanOrEqual(heavy.hydrationPlanMl, 2000)
     }
 
     func testDefaultRegionUsesLocaleMapping() {

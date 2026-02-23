@@ -92,6 +92,10 @@ extension WatchConnectivityManager: ConnectivityService {
         sendMessage(type: .doneTonight)
     }
 
+    func sendFullContext() {
+        // Watch does not initiate full-context pushes; no-op.
+    }
+
     func requestContext() {
         sendMessage(type: .contextRequest)
     }

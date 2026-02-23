@@ -446,7 +446,7 @@ struct TodayView: View {
 
                                 doneToggleButton(
                                     title: "Hydrated",
-                                    subtitle: "Finish your water target",
+                                    subtitle: "Drink \(DisplayFormatter.volume(statusSnapshot.hydrationPlanMl, unit: store.profile.unitPreference)) water tonight",
                                     icon: "drop.fill",
                                     confirmed: hydrationConfirmed
                                 ) {

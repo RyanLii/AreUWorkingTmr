@@ -169,17 +169,20 @@ struct UserProfile: Codable, Hashable {
     var regionStandard: RegionStandard
     var workingTomorrow: Bool
     var drinkPreferences: [String: DrinkPreference]
+    var weightKg: Double?
 
     init(
         unitPreference: UnitPreference,
         regionStandard: RegionStandard,
         workingTomorrow: Bool = false,
-        drinkPreferences: [String: DrinkPreference] = [:]
+        drinkPreferences: [String: DrinkPreference] = [:],
+        weightKg: Double? = nil
     ) {
         self.unitPreference = unitPreference
         self.regionStandard = regionStandard
         self.workingTomorrow = workingTomorrow
         self.drinkPreferences = drinkPreferences
+        self.weightKg = weightKg
     }
 
     func preferredPreset(for category: DrinkCategory, fallback: DrinkPreset) -> DrinkPreset {

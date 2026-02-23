@@ -33,7 +33,7 @@ final class PhoneConnectivityManager: NSObject, ObservableObject {
     // MARK: - Send full context to Watch
 
     @MainActor
-    private func sendFullContext() {
+    func sendFullContext() {
         guard let store else { return }
         let payload = ContextPayload(
             entries: store.entries,

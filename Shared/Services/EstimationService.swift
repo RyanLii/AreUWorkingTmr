@@ -31,8 +31,10 @@ struct DrinkingModelConfig: Equatable {
     var projectionTailHours: Double
 
     // Hydration guidance controls.
-    var hydrationBaseMl: Double
-    var hydrationPerStandardDrinkMl: Double
+    // Tiered: first `hydrationTierThreshold` drinks at tier1 rate, remainder at tier2 rate.
+    var hydrationTier1RateMl: Double
+    var hydrationTierThreshold: Double
+    var hydrationTier2RateMl: Double
     var hydrationWorkingTomorrowBoostMl: Double
     var hydrationMinMl: Double
     var hydrationMaxMl: Double
@@ -47,11 +49,12 @@ struct DrinkingModelConfig: Equatable {
         minProjectionHours: 6,
         maxProjectionHours: 72,
         projectionTailHours: 2,
-        hydrationBaseMl: 600,
-        hydrationPerStandardDrinkMl: 250,
-        hydrationWorkingTomorrowBoostMl: 250,
-        hydrationMinMl: 300,
-        hydrationMaxMl: 3000
+        hydrationTier1RateMl: 300,
+        hydrationTierThreshold: 2,
+        hydrationTier2RateMl: 350,
+        hydrationWorkingTomorrowBoostMl: 150,
+        hydrationMinMl: 200,
+        hydrationMaxMl: 2000
     )
 }
 
@@ -98,6 +101,21 @@ struct DefaultEstimationService: EstimationService {
     }
 
     func recalculate(entries: [DrinkEntry], profile: UserProfile, now: Date) -> SessionSnapshot {
+        // Personalise metabolism rate if the user has entered their weight.
+        // Formula: weightKg * 0.114 g/kg/hr ÷ gramsPerStandardDrink, clamped to [0.5, 1.2].
+        // Calibrated so 70 kg ≈ 0.80 std/hr at AU 10 g standard.
+        if let weightKg = profile.weightKg {
+            let sdPerHour = min(max(weightKg * 0.114 / profile.regionStandard.gramsPerStandardDrink, 0.5), 1.2)
+            if abs(sdPerHour - config.metabolismRateSDPerHour) > 0.001 {
+                var personalizedConfig = config
+                personalizedConfig.metabolismRateSDPerHour = sdPerHour
+                var strippedProfile = profile
+                strippedProfile.weightKg = nil
+                return DefaultEstimationService(config: personalizedConfig)
+                    .recalculate(entries: entries, profile: strippedProfile, now: now)
+            }
+        }
+
         let sortedEntries = entries.sorted(by: { $0.timestamp < $1.timestamp })
         let blocks = buildEffectiveBlocks(entries: sortedEntries)
         let totalStandardDrinks = blocks.reduce(0) { $0 + $1.standardDrinks }
@@ -451,10 +469,10 @@ struct DefaultEstimationService: EstimationService {
     }
 
     private func hydrationPlan(totalStandardDrinks: Double, workingTomorrow: Bool) -> Int {
-        let base = config.hydrationBaseMl
-        let perDrink = totalStandardDrinks * config.hydrationPerStandardDrinkMl
+        let tier1 = min(totalStandardDrinks, config.hydrationTierThreshold) * config.hydrationTier1RateMl
+        let tier2 = max(totalStandardDrinks - config.hydrationTierThreshold, 0) * config.hydrationTier2RateMl
         let tomorrowBoost = workingTomorrow ? config.hydrationWorkingTomorrowBoostMl : 0
-        let raw = base + perDrink + tomorrowBoost
+        let raw = tier1 + tier2 + tomorrowBoost
         let clamped = min(max(raw, config.hydrationMinMl), config.hydrationMaxMl)
         return Int(clamped.rounded())
     }

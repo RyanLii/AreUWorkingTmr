@@ -162,7 +162,7 @@ final class AppStore: ObservableObject {
         metabolizedStandardDrinks: 0,
         projectedZeroTime: .now,
         remainingToZero: 0,
-        hydrationPlanMl: 600,
+        hydrationPlanMl: 200,
         recommendElectrolytes: false
     )
     @Published private(set) var reviewRequestNonce: Int = 0
@@ -429,6 +429,7 @@ final class AppStore: ObservableObject {
         cancelAllScheduledReminders()
         recalculateSnapshot(now: .now)
         clearPersistedModels()
+        connectivity?.sendFullContext()
     }
 
     func handleLocationTransition(stayedDuration: TimeInterval, movedDistanceMeters: Double, now: Date = .now) {

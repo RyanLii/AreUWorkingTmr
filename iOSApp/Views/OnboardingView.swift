@@ -30,7 +30,7 @@ struct OnboardingView: View {
                             .lineLimit(2)
                             .minimumScaleFactor(0.85)
 
-                        Text("Log drinks in seconds on your watch. See your drink load rise and fall in real time — so you can make smarter calls on the night.")
+                        Text("Log drinks in seconds. See your drink load rise and fall in real time — so you can make smarter calls on the night.")
                             .font(NightTheme.bodyFont)
                             .foregroundStyle(.white)
                             .fixedSize(horizontal: false, vertical: true)
@@ -42,23 +42,46 @@ struct OnboardingView: View {
                         }
                         .glassCard()
 
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("I understand these are behavioural estimates only — not medical advice.")
-                                .font(NightTheme.bodyFont)
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .lineLimit(3)
-                                .minimumScaleFactor(0.85)
-                                .fixedSize(horizontal: false, vertical: true)
-
-                            HStack {
-                                Spacer()
-                                Toggle("", isOn: $acknowledgedEstimate)
-                                    .labelsHidden()
-                                    .fixedSize()
-                                    .tint(NightTheme.accent)
+                        Button {
+                            withAnimation(.spring(response: 0.32, dampingFraction: 0.6)) {
+                                acknowledgedEstimate.toggle()
                             }
+                        } label: {
+                            HStack(alignment: .top, spacing: 14) {
+                                VStack(alignment: .leading, spacing: 5) {
+                                    Text("I understand")
+                                        .font(NightTheme.bodyFont.weight(.bold))
+                                        .foregroundStyle(.white)
+                                    Text("This app provides model-based estimates only. Not medical advice, not a BAC device.")
+                                        .font(NightTheme.captionFont)
+                                        .foregroundStyle(NightTheme.label)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+
+                                Spacer(minLength: 12)
+
+                                ZStack {
+                                    Circle()
+                                        .fill(acknowledgedEstimate ? NightTheme.accent : Color.clear)
+                                        .frame(width: 28, height: 28)
+                                    Circle()
+                                        .stroke(
+                                            acknowledgedEstimate ? NightTheme.accent : Color.white.opacity(0.3),
+                                            lineWidth: 2
+                                        )
+                                        .frame(width: 28, height: 28)
+                                    if acknowledgedEstimate {
+                                        Image(systemName: "checkmark")
+                                            .font(.system(size: 13, weight: .bold))
+                                            .foregroundStyle(.white)
+                                            .transition(.scale.combined(with: .opacity))
+                                    }
+                                }
+                                .animation(.spring(response: 0.32, dampingFraction: 0.6), value: acknowledgedEstimate)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
+                        .buttonStyle(.plain)
                         .glassCard()
 
                         VStack(spacing: 10) {
@@ -69,11 +92,15 @@ struct OnboardingView: View {
                                     .font(NightTheme.bodyFont.weight(.semibold))
                                     .multilineTextAlignment(.center)
                                     .lineLimit(3)
+                                    .foregroundStyle(Color.black)
                                     .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
+                                    .padding(.vertical, 14)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                            .fill(NightTheme.accent)
+                                    )
                             }
-                            .buttonStyle(.borderedProminent)
-                            .tint(NightTheme.accent)
+                            .buttonStyle(.plain)
 
                             Button {
                                 onDone()
@@ -84,7 +111,7 @@ struct OnboardingView: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
                                     .background(
-                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
                                             .fill(acknowledgedEstimate ? NightTheme.success : Color.white.opacity(0.08))
                                     )
                             }
@@ -104,7 +131,7 @@ struct OnboardingView: View {
     }
 
     private func featureRow(icon: String, title: String, detail: String) -> some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .center, spacing: 10) {
             Image(systemName: icon)
                 .foregroundStyle(NightTheme.accent)
                 .font(.headline)

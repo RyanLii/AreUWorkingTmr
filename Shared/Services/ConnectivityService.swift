@@ -7,6 +7,7 @@ protocol ConnectivityService: AnyObject {
     func sendDrinksDeleted(_ ids: Set<UUID>)
     func sendProfileUpdated(_ profile: UserProfile)
     func sendDoneTonight()
+    func sendFullContext()
     func requestContext()
 }
 
