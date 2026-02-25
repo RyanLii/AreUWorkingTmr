@@ -127,17 +127,7 @@ private struct BodyLoadChartCanvas: View {
     }
 
     private func linePath(points: [CGPoint]) -> Path {
-        var path = Path()
-        guard points.count > 1 else { return path }
-        path.move(to: points[0])
-        for i in 1..<points.count {
-            let a = points[i - 1]
-            let b = points[i]
-            let cp1 = CGPoint(x: (a.x + b.x) / 2, y: a.y)
-            let cp2 = CGPoint(x: (a.x + b.x) / 2, y: b.y)
-            path.addCurve(to: b, control1: cp1, control2: cp2)
-        }
-        return path
+        catmullRomPath(points: points)
     }
 }
 
@@ -306,17 +296,7 @@ private struct ChartContent: View {
     }
 
     private func linePath(points: [CGPoint]) -> Path {
-        var path = Path()
-        guard points.count > 1 else { return path }
-        path.move(to: points[0])
-        for i in 1..<points.count {
-            let a = points[i - 1]
-            let b = points[i]
-            let cp1 = CGPoint(x: (a.x + b.x) / 2, y: a.y)
-            let cp2 = CGPoint(x: (a.x + b.x) / 2, y: b.y)
-            path.addCurve(to: b, control1: cp1, control2: cp2)
-        }
-        return path
+        catmullRomPath(points: points)
     }
 
     private func areaPath(points: [CGPoint], baseline: CGFloat) -> Path {
@@ -356,4 +336,28 @@ private struct ChartContent: View {
                 .position(x: xPos(date), y: baseline + xLabelHeight / 2)
         }
     }
+}
+
+// MARK: - Catmull-Rom spline
+
+/// Converts a polyline into a smooth Catmull-Rom cubic Bézier path.
+/// Control points are derived from neighboring points so tangents are
+/// continuous at every data point — no kinks.
+private func catmullRomPath(points: [CGPoint]) -> Path {
+    var path = Path()
+    guard points.count > 1 else { return path }
+    path.move(to: points[0])
+    let n = points.count
+    for i in 1..<n {
+        let p0 = points[max(i - 2, 0)]
+        let p1 = points[i - 1]
+        let p2 = points[i]
+        let p3 = points[min(i + 1, n - 1)]
+        let cp1 = CGPoint(x: p1.x + (p2.x - p0.x) / 6,
+                          y: p1.y + (p2.y - p0.y) / 6)
+        let cp2 = CGPoint(x: p2.x - (p3.x - p1.x) / 6,
+                          y: p2.y - (p3.y - p1.y) / 6)
+        path.addCurve(to: p2, control1: cp1, control2: cp2)
+    }
+    return path
 }

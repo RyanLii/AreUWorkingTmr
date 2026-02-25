@@ -130,7 +130,7 @@ struct TodayView: View {
         }
         .onAppear {
             guard activeSummary == nil else { return }
-            guard let s = store.previousSessionSummary() else { return }
+            guard let s = store.previousSessionSummary() ?? store.earlyMorningSummary() else { return }
             guard !UserDefaults.standard.bool(forKey: "summary.dismissed.\(s.sessionKey)") else { return }
             lastShownSummaryKey = s.sessionKey
             activeSummary = s

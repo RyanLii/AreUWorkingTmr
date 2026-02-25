@@ -752,6 +752,54 @@ final class AppStore: ObservableObject {
         )
     }
 
+    /// Early-morning summary (8–12 AM): if alcohol has cleared, show last night's session
+    /// without waiting for the noon session boundary.
+    func earlyMorningSummary(now: Date = .now) -> PreviousSessionSummary? {
+        let hour = Calendar.current.component(.hour, from: now)
+        guard (8..<12).contains(hour) else { return nil }
+        guard sessionSnapshot.effectiveStandardDrinks < 0.1 else { return nil }
+
+        let sessionDrinks = sessionEntries(now: now)
+        guard !sessionDrinks.isEmpty else { return nil }
+
+        let sessionDate = sessionPolicy.sessionInterval(containing: sessionDrinks[0].timestamp).start
+        let currentKey = sessionPolicy.sessionKey(for: now)
+
+        let evalAt = sessionDrinks.map(\.timestamp).max() ?? sessionDate
+        let snap = estimationService.recalculate(entries: sessionDrinks, profile: profile, now: evalAt)
+
+        let seriesStart = sessionDrinks.map(\.timestamp).min() ?? sessionDate
+        let seriesEnd = snap.projectedZeroTime
+        let step: TimeInterval = 5 * 60
+        var bodyLoadPoints: [(date: Date, load: Double)] = []
+        if seriesEnd > seriesStart {
+            var t = seriesStart
+            while t <= seriesEnd {
+                let s = estimationService.recalculate(entries: sessionDrinks, profile: profile, now: t)
+                bodyLoadPoints.append((date: t, load: s.effectiveStandardDrinks))
+                t += step
+            }
+            if bodyLoadPoints.last.map({ $0.date < seriesEnd }) ?? true {
+                let s = estimationService.recalculate(entries: sessionDrinks, profile: profile, now: seriesEnd)
+                bodyLoadPoints.append((date: seriesEnd, load: s.effectiveStandardDrinks))
+            }
+        }
+
+        return PreviousSessionSummary(
+            sessionDate: sessionDate,
+            sessionKey: currentKey,
+            totalStandardDrinks: snap.totalStandardDrinks,
+            drinkCount: sessionDrinks.count,
+            peakStandardDrinks: snap.estimatedPeakStandardDrinks,
+            peakTime: snap.estimatedPeakTime,
+            projectedZeroTime: snap.projectedZeroTime,
+            projectedRecoveryTime: snap.projectedRecoveryTime,
+            hydrationPlanMl: snap.hydrationPlanMl,
+            bodyLoadPoints: bodyLoadPoints,
+            drinkTimestamps: sessionDrinks.map(\.timestamp)
+        )
+    }
+
     func bodyLoadSeries(now: Date = .now) -> (points: [(date: Date, load: Double)], entries: [DrinkEntry]) {
         let sessionDrinks = sessionEntries(now: now)
         guard !sessionDrinks.isEmpty else { return ([], []) }

@@ -281,18 +281,7 @@ private struct MiniChartContent: View {
     }
 
     private func linePath(points: [CGPoint]) -> Path {
-        var path = Path()
-        guard points.count > 1 else { return path }
-        path.move(to: points[0])
-        for i in 1..<points.count {
-            let a = points[i - 1], b = points[i]
-            path.addCurve(
-                to: b,
-                control1: CGPoint(x: (a.x + b.x) / 2, y: a.y),
-                control2: CGPoint(x: (a.x + b.x) / 2, y: b.y)
-            )
-        }
-        return path
+        catmullRomPath(points: points)
     }
 
     private func areaPath(points: [CGPoint], baseline: CGFloat) -> Path {
@@ -303,4 +292,25 @@ private struct MiniChartContent: View {
         path.closeSubpath()
         return path
     }
+}
+
+// MARK: - Catmull-Rom spline
+
+private func catmullRomPath(points: [CGPoint]) -> Path {
+    var path = Path()
+    guard points.count > 1 else { return path }
+    path.move(to: points[0])
+    let n = points.count
+    for i in 1..<n {
+        let p0 = points[max(i - 2, 0)]
+        let p1 = points[i - 1]
+        let p2 = points[i]
+        let p3 = points[min(i + 1, n - 1)]
+        let cp1 = CGPoint(x: p1.x + (p2.x - p0.x) / 6,
+                          y: p1.y + (p2.y - p0.y) / 6)
+        let cp2 = CGPoint(x: p2.x - (p3.x - p1.x) / 6,
+                          y: p2.y - (p3.y - p1.y) / 6)
+        path.addCurve(to: p2, control1: cp1, control2: cp2)
+    }
+    return path
 }
