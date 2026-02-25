@@ -201,17 +201,6 @@ private struct ChartContent: View {
             linePath(points: cgPoints)
                 .stroke(NightTheme.accentSoft, lineWidth: 2)
 
-            // Drink ticks
-            Canvas { ctx, _ in
-                for t in drinkTimes where t >= minDate && t <= maxDate {
-                    let tx = xPos(t)
-                    var p = Path()
-                    p.move(to: CGPoint(x: tx, y: baseline - 10))
-                    p.addLine(to: CGPoint(x: tx, y: baseline))
-                    ctx.stroke(p, with: .color(NightTheme.accentSoft.opacity(0.65)), lineWidth: 2)
-                }
-            }
-
             // "Now" line
             if now > minDate, now < maxDate {
                 let nx = xPos(now)
@@ -300,10 +289,44 @@ private struct ChartContent: View {
     }
 
     private func areaPath(points: [CGPoint], baseline: CGFloat) -> Path {
-        var path = linePath(points: points)
-        guard let last = points.last, let first = points.first else { return path }
+        var path = Path()
+        guard let first = points.first, let last = points.last else { return path }
+
+        // Start on the baseline so closeSubpath closes horizontally along the baseline
+        // instead of drawing a visible vertical edge back to the first data point.
+        path.move(to: CGPoint(x: first.x, y: baseline))
+        path.addLine(to: first)
+
+        if points.count > 1 {
+            let n = points.count
+            for i in 1..<n {
+                let p0 = points[max(i - 2, 0)]
+                let p1 = points[i - 1]
+                let p2 = points[i]
+                let p3 = points[min(i + 1, n - 1)]
+                if i == 1 || i == n - 1 {
+                    // Avoid endpoint overshoot hooks on sharp ramps.
+                    path.addLine(to: p2)
+                    continue
+                }
+
+                let xMin = min(p1.x, p2.x)
+                let xMax = max(p1.x, p2.x)
+                let yMin = min(p1.y, p2.y)
+                let yMax = max(p1.y, p2.y)
+                let rawCP1 = CGPoint(x: p1.x + (p2.x - p0.x) / 6,
+                                     y: p1.y + (p2.y - p0.y) / 6)
+                let rawCP2 = CGPoint(x: p2.x - (p3.x - p1.x) / 6,
+                                     y: p2.y - (p3.y - p1.y) / 6)
+                let cp1 = CGPoint(x: min(max(rawCP1.x, xMin), xMax),
+                                  y: min(max(rawCP1.y, yMin), yMax))
+                let cp2 = CGPoint(x: min(max(rawCP2.x, xMin), xMax),
+                                  y: min(max(rawCP2.y, yMin), yMax))
+                path.addCurve(to: p2, control1: cp1, control2: cp2)
+            }
+        }
+
         path.addLine(to: CGPoint(x: last.x, y: baseline))
-        path.addLine(to: CGPoint(x: first.x, y: baseline))
         path.closeSubpath()
         return path
     }
@@ -353,10 +376,25 @@ private func catmullRomPath(points: [CGPoint]) -> Path {
         let p1 = points[i - 1]
         let p2 = points[i]
         let p3 = points[min(i + 1, n - 1)]
-        let cp1 = CGPoint(x: p1.x + (p2.x - p0.x) / 6,
-                          y: p1.y + (p2.y - p0.y) / 6)
-        let cp2 = CGPoint(x: p2.x - (p3.x - p1.x) / 6,
-                          y: p2.y - (p3.y - p1.y) / 6)
+        if i == 1 || i == n - 1 {
+            // Avoid endpoint overshoot hooks on sharp ramps.
+            path.addLine(to: p2)
+            continue
+        }
+
+        let xMin = min(p1.x, p2.x)
+        let xMax = max(p1.x, p2.x)
+        let yMin = min(p1.y, p2.y)
+        let yMax = max(p1.y, p2.y)
+        let rawCP1 = CGPoint(x: p1.x + (p2.x - p0.x) / 6,
+                             y: p1.y + (p2.y - p0.y) / 6)
+        let rawCP2 = CGPoint(x: p2.x - (p3.x - p1.x) / 6,
+                             y: p2.y - (p3.y - p1.y) / 6)
+        // Clamp control points to the segment bounds to prevent loops/overshoot.
+        let cp1 = CGPoint(x: min(max(rawCP1.x, xMin), xMax),
+                          y: min(max(rawCP1.y, yMin), yMax))
+        let cp2 = CGPoint(x: min(max(rawCP2.x, xMin), xMax),
+                          y: min(max(rawCP2.y, yMin), yMax))
         path.addCurve(to: p2, control1: cp1, control2: cp2)
     }
     return path
