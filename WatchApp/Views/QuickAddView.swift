@@ -184,7 +184,7 @@ struct QuickAddView: View {
                     .watchCard()
                 }
             }
-            .padding(.horizontal, 8)
+            .scenePadding(.horizontal)
             .padding(.top, 6)
             .padding(.bottom, 10)
         }
@@ -644,7 +644,7 @@ struct QuickAddView: View {
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 12)
+            .scenePadding(.horizontal)
             .padding(.top, 6)
             .padding(.bottom, 10)
         }
@@ -905,7 +905,7 @@ struct QuickAddView: View {
                     .font(WatchNightTheme.captionFont)
                     .foregroundStyle(WatchNightTheme.label)
                 }
-                .padding(.horizontal, 12)
+                .scenePadding(.horizontal)
                 .padding(.top, 6)
                 .padding(.bottom, 10)
             }

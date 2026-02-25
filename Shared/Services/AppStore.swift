@@ -45,7 +45,7 @@ struct DefaultAppStoreSessionPolicy: AppStoreSessionPolicy {
     }
 
     // If user does not pick manually, infer from local day rhythm:
-    // noon->noon session means late night/early morning should map to the coming wake-up day.
+    // 11am->11am session means late night/early morning should map to the coming wake-up day.
     func inferWorkingTomorrow(now: Date) -> Bool {
         let hour = calendar.component(.hour, from: now)
 
@@ -752,11 +752,11 @@ final class AppStore: ObservableObject {
         )
     }
 
-    /// Early-morning summary (8–12 AM): if alcohol has cleared, show last night's session
-    /// without waiting for the noon session boundary.
+    /// Early-morning summary (6–11 AM): if alcohol has cleared, show last night's session
+    /// without waiting for the 11am session boundary.
     func earlyMorningSummary(now: Date = .now) -> PreviousSessionSummary? {
         let hour = Calendar.current.component(.hour, from: now)
-        guard (8..<12).contains(hour) else { return nil }
+        guard (6..<11).contains(hour) else { return nil }
         guard sessionSnapshot.effectiveStandardDrinks < 0.1 else { return nil }
 
         let sessionDrinks = sessionEntries(now: now)

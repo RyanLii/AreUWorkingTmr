@@ -5,7 +5,7 @@ import XCTest
 #endif
 
 final class SessionClockTests: XCTestCase {
-    func testIntervalUsesNoonBoundary() {
+    func testIntervalUses11amBoundary() {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .current
         let morning = makeDate(year: 2026, month: 2, day: 16, hour: 10, minute: 0)
@@ -15,9 +15,9 @@ final class SessionClockTests: XCTestCase {
         let afternoonWindow = SessionClock.interval(containing: afternoon, calendar: calendar)
 
         XCTAssertEqual(component(.day, from: morningWindow.start, calendar: calendar), 15)
-        XCTAssertEqual(component(.hour, from: morningWindow.start, calendar: calendar), 12)
+        XCTAssertEqual(component(.hour, from: morningWindow.start, calendar: calendar), 11)
         XCTAssertEqual(component(.day, from: afternoonWindow.start, calendar: calendar), 16)
-        XCTAssertEqual(component(.hour, from: afternoonWindow.start, calendar: calendar), 12)
+        XCTAssertEqual(component(.hour, from: afternoonWindow.start, calendar: calendar), 11)
     }
 
     func testEntryFilteringUsesCurrentSessionOnly() {

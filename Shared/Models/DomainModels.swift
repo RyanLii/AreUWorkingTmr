@@ -298,8 +298,8 @@ struct HomeArrivalContext {
 }
 
 enum SessionClock {
-    // One session runs noon-to-noon so last night still belongs to "tonight" next morning.
-    static let boundaryHour = 12
+    // One session runs 11am-to-11am so last night still belongs to "tonight" next morning.
+    static let boundaryHour = 11
 
     static func interval(containing date: Date, calendar: Calendar = .current) -> DateInterval {
         let todayBoundary = calendar.date(bySettingHour: boundaryHour, minute: 0, second: 0, of: date) ?? date
