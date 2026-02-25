@@ -297,23 +297,17 @@ struct QuickAddView: View {
                             .padding(.vertical, 6)
 
                         statusMetricRow("Total logged", DisplayFormatter.standardDrinks(store.sessionSnapshot.totalStandardDrinks))
-                        statusMetricRow("In body now", DisplayFormatter.standardDrinks(store.sessionSnapshot.effectiveStandardDrinks))
-                        statusMetricRow("Still absorbing", DisplayFormatter.standardDrinks(store.sessionSnapshot.pendingAbsorptionStandardDrinks))
+                        statusMetricRow("Active load", DisplayFormatter.standardDrinks(store.sessionSnapshot.effectiveStandardDrinks))
+                        statusMetricRow("In absorption", DisplayFormatter.standardDrinks(store.sessionSnapshot.pendingAbsorptionStandardDrinks))
                         statusMetricRow("Metabolized", DisplayFormatter.standardDrinks(store.sessionSnapshot.metabolizedStandardDrinks))
                         statusMetricRow("Estimated peak", "\(DisplayFormatter.standardDrinks(store.sessionSnapshot.estimatedPeakStandardDrinks)) at \(DisplayFormatter.eta(store.sessionSnapshot.estimatedPeakTime))")
-                        statusMetricRow("Low load", DisplayFormatter.eta(store.sessionSnapshot.projectedRecoveryTime))
-                        statusMetricRow("Full clear", DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime))
-
-                        if let lastDrink = store.sessionSnapshot.lastDrinkTime {
-                            statusMetricRow("Last drink", DisplayFormatter.eta(lastDrink))
-                        }
 
                         if store.sessionSnapshot.clearingElapsed > 1,
                            (store.sessionSnapshot.state == .clearing || store.sessionSnapshot.state == .cleared) {
                             statusMetricRow("Clearing for", DisplayFormatter.duration(store.sessionSnapshot.clearingElapsed))
                         }
 
-                        Text("Nerd math only. Estimate, not legal or medical advice.")
+                        Text("0.8 std/hr metabolism · 30 min absorption window · estimates only")
                             .font(WatchNightTheme.captionFont)
                             .foregroundStyle(WatchNightTheme.label)
                             .fixedSize(horizontal: false, vertical: true)
