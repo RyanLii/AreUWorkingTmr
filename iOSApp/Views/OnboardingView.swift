@@ -137,15 +137,15 @@ struct OnboardingView: View {
                 .font(.headline)
                 .frame(width: 22, alignment: .center)
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(NightTheme.sectionFont)
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white)
                     .lineLimit(2)
                     .minimumScaleFactor(0.85)
 
                 Text(detail)
-                    .font(NightTheme.bodyFont)
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
                     .foregroundStyle(NightTheme.label)
                     .lineLimit(3)
                     .fixedSize(horizontal: false, vertical: true)
