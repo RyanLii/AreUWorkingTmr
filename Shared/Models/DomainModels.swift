@@ -316,10 +316,12 @@ enum SessionClock {
     }
 
     static func key(for date: Date, calendar: Calendar = .current) -> String {
-        let formatter = DateFormatter()
-        formatter.calendar = calendar
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: interval(containing: date, calendar: calendar).start)
+        let start = interval(containing: date, calendar: calendar).start
+        let c = calendar.dateComponents([.year, .month, .day], from: start)
+        let y = c.year ?? 0
+        let m = c.month ?? 0
+        let d = c.day ?? 0
+        return String(format: "%04d-%02d-%02d", y, m, d)
     }
 
     static func entriesInCurrentSession(_ entries: [DrinkEntry], now: Date, calendar: Calendar = .current) -> [DrinkEntry] {
