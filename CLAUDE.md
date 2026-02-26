@@ -57,3 +57,28 @@ CI runs `swift test --parallel` on every push (`.github/workflows/ci.yml`).
 The `.xcodeproj` is generated — never edit it directly. All project structure is declared in `project.yml` (XcodeGen). After modifying `project.yml`, run `xcodegen generate`.
 
 `Package.swift` defines `SaferNightCore` (the testable core library) and `SaferNightCoreTests`. SwiftData models and persistence are excluded from the package (they require platform frameworks).
+
+## Roadmap
+
+### v0.2.0 — Backfill Logging
+
+**Goal:** Let users log a drink they forgot to record in real time.
+
+**Design decisions:**
+- Backfilled entries are correct-by-timestamp: `SessionClock` automatically assigns them to the right session based on their timestamp, not when they were logged.
+- Backfilling a past drink does **not** update the current session's live snapshot — it only affects historical session summaries (`previousSessionSummary`, `HistoryView`).
+- Backfilled entries use `DrinkSource.edit` (already defined, unused).
+- Watch sync works automatically via the existing `sendDrinksAdded` path.
+
+**UI entry point:** Clock icon button (🕐) in the Quick Add card header (right side of title row, `TodayView.quickAddCard`). Tapping opens a sheet with:
+1. Time picker — `DatePicker` scoped to the current session window (up to 24h back from now, capped at `SessionClock.boundaryHour` of the previous day)
+2. Drink picker — reuses existing preset tiles and `detailSheet` flow
+3. Confirm button — calls `AppStore.addBackfilledDrink()`
+
+**AppStore changes:**
+- Add `func addBackfilledDrink(category:servingName:volumeMl:abvPercent:timestamp:)` — same as `addQuickDrink` but accepts a custom `timestamp` and uses `source: .edit`. Does **not** call `recalculateSnapshot` (past session, no effect on current UI).
+
+**Files to touch:**
+- `Shared/Services/AppStore.swift` — add `addBackfilledDrink()`
+- `iOSApp/Views/TodayView.swift` — add clock button + `BackfillSheet`
+- `iOSApp/Views/BackfillSheet.swift` (new) — time picker + drink selector
