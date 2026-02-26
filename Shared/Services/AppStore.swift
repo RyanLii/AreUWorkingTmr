@@ -841,6 +841,47 @@ final class AppStore: ObservableObject {
         recalculateSnapshot(now: .now)
     }
 
+    /// Full replace: reconciles local entries against the authoritative payload.
+    /// Deletes entries missing from the payload, adds entries missing locally,
+    /// and syncs profile + doneTonight in both directions.
+    func applyFullContext(_ payload: ContextPayload) {
+        let remoteIDs = Set(payload.entries.map(\.id))
+        let localIDs  = Set(entries.map(\.id))
+
+        // Delete entries that exist locally but not in the authoritative payload
+        let toDelete = localIDs.subtracting(remoteIDs)
+        if !toDelete.isEmpty {
+            entries.removeAll(where: { toDelete.contains($0.id) })
+            deletePersistedEntries(ids: toDelete)
+        }
+
+        // Add entries that are in the payload but not yet local
+        var didAdd = false
+        for entry in payload.entries where !localIDs.contains(entry.id) {
+            entries.append(entry)
+            persist(entry: entry)
+            didAdd = true
+        }
+
+        if didAdd {
+            entries.sort { $0.timestamp < $1.timestamp }
+        }
+
+        applyRemoteProfile(payload.profile)
+
+        // Sync doneTonight in both directions
+        if payload.hasMarkedDoneTonight {
+            applyRemoteDoneTonight()
+        } else {
+            hasMarkedDoneTonight = false
+            doneTonightAt = nil
+        }
+
+        if !toDelete.isEmpty || didAdd {
+            recalculateSnapshot(now: .now)
+        }
+    }
+
     func applyRemoteDelete(_ ids: Set<UUID>) {
         guard !ids.isEmpty else { return }
         let before = entries.count

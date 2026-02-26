@@ -55,11 +55,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
             store.applyRemoteDoneTonight()
         case .fullContext:
             if let payload: ContextPayload = decode(from: message) {
-                store.applyRemoteDrinks(payload.entries)
-                store.applyRemoteProfile(payload.profile)
-                if payload.hasMarkedDoneTonight {
-                    store.applyRemoteDoneTonight()
-                }
+                store.applyFullContext(payload)
             }
         case .clearAll:
             store.clearAllData()
