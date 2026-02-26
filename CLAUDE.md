@@ -42,7 +42,7 @@ CI runs `swift test --parallel` on every push (`.github/workflows/ci.yml`).
 
 **Drinking model:** `EstimationService` runs a dynamic standard-drink body-load simulation (config: `DrinkingModelConfig.v14`). Key params: 30-min absorption window, 0.8 std drinks/hr metabolism, 15-min lag, 20-min min absorption duration. The model spec lives in `drinking_model_algorithm/MODEL_SPEC_EN.md`.
 
-**Session boundary:** Sessions run noon-to-noon (`SessionClock`). A drink logged at 2 AM Saturday belongs to Friday night's session. `DefaultAppStoreSessionPolicy` also infers the "working tomorrow" flag from weekdays.
+**Session boundary:** Sessions run 11am-to-11am (`SessionClock`, `boundaryHour = 11`). A drink logged at 2 AM Saturday belongs to Friday night's session. Between 6–11 AM, if alcohol has cleared, `earlyMorningSummary` shows the previous session's summary without waiting for the boundary. `DefaultAppStoreSessionPolicy` also infers the "working tomorrow" flag from weekdays.
 
 **Persistence:** SwiftData with CloudKit-first sync, local fallback. `PersistenceController` sets this up; `SwiftDataAppStorePersistence` wraps the operations behind a protocol.
 
