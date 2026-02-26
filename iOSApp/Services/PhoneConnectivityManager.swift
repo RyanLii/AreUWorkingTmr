@@ -70,6 +70,8 @@ final class PhoneConnectivityManager: NSObject, ObservableObject {
             sendFullContext()
         case .fullContext:
             break // iPhone doesn't receive full context
+        case .clearAll:
+            break // iPhone doesn't receive clearAll
         }
     }
 
@@ -97,6 +99,10 @@ extension PhoneConnectivityManager: ConnectivityService {
 
     func sendDoneTonight() {
         sendMessage(type: .doneTonight)
+    }
+
+    func sendClearAll() {
+        sendMessage(type: .clearAll)
     }
 
     func requestContext() {

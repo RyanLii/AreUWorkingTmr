@@ -429,7 +429,7 @@ final class AppStore: ObservableObject {
         cancelAllScheduledReminders()
         recalculateSnapshot(now: .now)
         clearPersistedModels()
-        connectivity?.sendFullContext()
+        connectivity?.sendClearAll()
     }
 
     func handleLocationTransition(stayedDuration: TimeInterval, movedDistanceMeters: Double, now: Date = .now) {

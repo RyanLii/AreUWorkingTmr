@@ -8,6 +8,7 @@ protocol ConnectivityService: AnyObject {
     func sendProfileUpdated(_ profile: UserProfile)
     func sendDoneTonight()
     func sendFullContext()
+    func sendClearAll()
     func requestContext()
 }
 
@@ -20,6 +21,7 @@ enum WCMsgType: String {
     case doneTonight    = "dt"
     case contextRequest = "cr"
     case fullContext    = "fc"
+    case clearAll       = "ca"
 }
 
 struct ContextPayload: Codable {

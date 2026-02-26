@@ -882,12 +882,12 @@ struct TodayView: View {
                             }
                             Spacer()
                             HStack(spacing: 4) {
-                                Text("Full clear around \(DisplayFormatter.etaRange(displayProjectedZeroTime))")
-                                    .font(.system(size: 10, weight: .semibold, design: .rounded))
-                                    .foregroundStyle(Color(red: 0.36, green: 0.76, blue: 0.92).opacity(0.9))
                                 Circle()
                                     .fill(Color(red: 0.36, green: 0.76, blue: 0.92))
                                     .frame(width: 6, height: 6)
+                                Text("Full clear around \(DisplayFormatter.etaRange(displayProjectedZeroTime))")
+                                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(Color(red: 0.36, green: 0.76, blue: 0.92).opacity(0.9))
                             }
                         }
                         Text("Model estimate only — actual recovery varies by person. Not medical or legal advice.")

@@ -61,6 +61,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
                     store.applyRemoteDoneTonight()
                 }
             }
+        case .clearAll:
+            store.clearAllData()
         case .contextRequest:
             break // Watch doesn't serve context
         }
@@ -94,6 +96,10 @@ extension WatchConnectivityManager: ConnectivityService {
 
     func sendFullContext() {
         // Watch does not initiate full-context pushes; no-op.
+    }
+
+    func sendClearAll() {
+        // Watch does not initiate clear; no-op.
     }
 
     func requestContext() {
