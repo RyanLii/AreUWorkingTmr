@@ -741,11 +741,11 @@ final class AppStore: ObservableObject {
         )
     }
 
-    /// Early-morning summary (6–11 AM): if alcohol has cleared, show last night's session
-    /// without waiting for the 11am session boundary.
+    /// Early-morning summary (6 AM – boundary): if alcohol has cleared, show last night's session
+    /// without waiting for the session boundary.
     func earlyMorningSummary(now: Date = .now) -> PreviousSessionSummary? {
         let hour = Calendar.current.component(.hour, from: now)
-        guard (6..<11).contains(hour) else { return nil }
+        guard (6..<SessionClock.boundaryHour).contains(hour) else { return nil }
         guard sessionSnapshot.effectiveStandardDrinks < 0.1 else { return nil }
 
         let sessionDrinks = sessionEntries(now: now)
