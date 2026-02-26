@@ -722,20 +722,9 @@ final class AppStore: ObservableObject {
         // Build body load series for the chart (5-min steps from first drink to projected clear)
         let seriesStart = sessionEntries.map(\.timestamp).min() ?? sessionDate
         let seriesEnd = snap.projectedZeroTime
-        let step: TimeInterval = 5 * 60
-        var bodyLoadPoints: [(date: Date, load: Double)] = []
-        if seriesEnd > seriesStart {
-            var t = seriesStart
-            while t <= seriesEnd {
-                let s = estimationService.recalculate(entries: sessionEntries, profile: profile, now: t)
-                bodyLoadPoints.append((date: t, load: s.effectiveStandardDrinks))
-                t += step
-            }
-            if bodyLoadPoints.last.map({ $0.date < seriesEnd }) ?? true {
-                let s = estimationService.recalculate(entries: sessionEntries, profile: profile, now: seriesEnd)
-                bodyLoadPoints.append((date: seriesEnd, load: s.effectiveStandardDrinks))
-            }
-        }
+        let bodyLoadPoints = buildBodyLoadSeries(
+            entries: sessionEntries, profile: profile, start: seriesStart, end: seriesEnd
+        )
 
         return PreviousSessionSummary(
             sessionDate: sessionDate,
@@ -770,20 +759,9 @@ final class AppStore: ObservableObject {
 
         let seriesStart = sessionDrinks.map(\.timestamp).min() ?? sessionDate
         let seriesEnd = snap.projectedZeroTime
-        let step: TimeInterval = 5 * 60
-        var bodyLoadPoints: [(date: Date, load: Double)] = []
-        if seriesEnd > seriesStart {
-            var t = seriesStart
-            while t <= seriesEnd {
-                let s = estimationService.recalculate(entries: sessionDrinks, profile: profile, now: t)
-                bodyLoadPoints.append((date: t, load: s.effectiveStandardDrinks))
-                t += step
-            }
-            if bodyLoadPoints.last.map({ $0.date < seriesEnd }) ?? true {
-                let s = estimationService.recalculate(entries: sessionDrinks, profile: profile, now: seriesEnd)
-                bodyLoadPoints.append((date: seriesEnd, load: s.effectiveStandardDrinks))
-            }
-        }
+        let bodyLoadPoints = buildBodyLoadSeries(
+            entries: sessionDrinks, profile: profile, start: seriesStart, end: seriesEnd
+        )
 
         return PreviousSessionSummary(
             sessionDate: sessionDate,
@@ -808,22 +786,35 @@ final class AppStore: ObservableObject {
         let end = sessionSnapshot.projectedZeroTime
         guard end > sessionStart else { return ([], []) }
 
+        let points = buildBodyLoadSeries(
+            entries: sessionDrinks, profile: effectiveProfile, start: sessionStart, end: end
+        )
+        return (points, sessionDrinks)
+    }
+
+    // MARK: - Shared helpers
+
+    /// Builds a body-load time series at 5-min steps from `start` to `end` (inclusive).
+    private func buildBodyLoadSeries(
+        entries: [DrinkEntry],
+        profile: UserProfile,
+        start: Date,
+        end: Date
+    ) -> [(date: Date, load: Double)] {
+        guard end > start else { return [] }
         let step: TimeInterval = 5 * 60
         var points: [(date: Date, load: Double)] = []
-        var t = sessionStart
-
+        var t = start
         while t <= end {
-            let snap = estimationService.recalculate(entries: sessionDrinks, profile: effectiveProfile, now: t)
-            points.append((date: t, load: snap.effectiveStandardDrinks))
+            let s = estimationService.recalculate(entries: entries, profile: profile, now: t)
+            points.append((date: t, load: s.effectiveStandardDrinks))
             t += step
         }
-
         if points.last.map({ $0.date < end }) ?? true {
-            let snap = estimationService.recalculate(entries: sessionDrinks, profile: effectiveProfile, now: end)
-            points.append((date: end, load: snap.effectiveStandardDrinks))
+            let s = estimationService.recalculate(entries: entries, profile: profile, now: end)
+            points.append((date: end, load: s.effectiveStandardDrinks))
         }
-
-        return (points, sessionDrinks)
+        return points
     }
 
     // MARK: - Remote apply (no re-broadcast to avoid loops)
