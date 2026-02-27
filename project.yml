@@ -49,7 +49,7 @@ targets:
         INFOPLIST_KEY_UILaunchScreen_BackgroundColor: LaunchBackground
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
-        TARGETED_DEVICE_FAMILY: 1,2
+        TARGETED_DEVICE_FAMILY: 1
 
   AreUWorkingTmrWatch:
     type: application
