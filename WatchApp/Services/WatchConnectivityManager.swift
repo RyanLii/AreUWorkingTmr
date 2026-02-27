@@ -15,12 +15,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
 
     private func sendMessage(type: WCMsgType, payload: Data? = nil) {
         guard WCSession.default.activationState == .activated else { return }
-
-        var msg: [String: Any] = ["t": type.rawValue]
-        if let data = payload {
-            msg["p"] = data.base64EncodedString()
-        }
-
+        let msg = WCMessageCoding.buildPayload(type: type, data: payload)
         if WCSession.default.isReachable {
             WCSession.default.sendMessage(msg, replyHandler: nil) { _ in
                 WCSession.default.transferUserInfo(msg)
@@ -35,26 +30,25 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     @MainActor
     private func handleMessage(_ message: [String: Any]) {
         guard let store,
-              let typeStr = message["t"] as? String,
-              let type = WCMsgType(rawValue: typeStr) else { return }
+              let type = WCMessageCoding.parseType(from: message) else { return }
 
         switch type {
         case .drinksAdded:
-            if let entries: [DrinkEntry] = decode(from: message) {
+            if let entries: [DrinkEntry] = WCMessageCoding.decode(from: message) {
                 store.applyRemoteDrinks(entries)
             }
         case .drinksDeleted:
-            if let uuidStrings: [String] = decode(from: message) {
+            if let uuidStrings: [String] = WCMessageCoding.decode(from: message) {
                 store.applyRemoteDelete(Set(uuidStrings.compactMap(UUID.init)))
             }
         case .profileUpdated:
-            if let profile: UserProfile = decode(from: message) {
+            if let profile: UserProfile = WCMessageCoding.decode(from: message) {
                 store.applyRemoteProfile(profile)
             }
         case .doneTonight:
             store.applyRemoteDoneTonight()
         case .fullContext:
-            if let payload: ContextPayload = decode(from: message) {
+            if let payload: ContextPayload = WCMessageCoding.decode(from: message) {
                 store.applyFullContext(payload)
             }
         case .clearAll:
@@ -64,11 +58,6 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
         }
     }
 
-    private func decode<T: Decodable>(from message: [String: Any]) -> T? {
-        guard let base64 = message["p"] as? String,
-              let data = Data(base64Encoded: base64) else { return nil }
-        return try? JSONDecoder().decode(T.self, from: data)
-    }
 }
 
 // MARK: - ConnectivityService

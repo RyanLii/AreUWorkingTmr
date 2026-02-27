@@ -29,3 +29,24 @@ struct ContextPayload: Codable {
     let profile: UserProfile
     let hasMarkedDoneTonight: Bool
 }
+
+// MARK: - Shared encoding / decoding helpers (pure Foundation — no WCSession)
+
+enum WCMessageCoding {
+    static func buildPayload(type: WCMsgType, data: Data? = nil) -> [String: Any] {
+        var msg: [String: Any] = ["t": type.rawValue]
+        if let data { msg["p"] = data.base64EncodedString() }
+        return msg
+    }
+
+    static func decode<T: Decodable>(from message: [String: Any]) -> T? {
+        guard let base64 = message["p"] as? String,
+              let data = Data(base64Encoded: base64) else { return nil }
+        return try? JSONDecoder().decode(T.self, from: data)
+    }
+
+    static func parseType(from message: [String: Any]) -> WCMsgType? {
+        guard let raw = message["t"] as? String else { return nil }
+        return WCMsgType(rawValue: raw)
+    }
+}

@@ -18,6 +18,8 @@ let package = Package(
             ],
             sources: [
                 "Models/DomainModels.swift",
+                "Models/ServingConfig.swift",
+                "Services/ConnectivityService.swift",
                 "Services/DrinkParser.swift",
                 "Services/EstimationService.swift",
                 "Services/ReminderService.swift",

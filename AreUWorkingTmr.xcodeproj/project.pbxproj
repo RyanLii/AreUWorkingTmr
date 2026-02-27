@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -71,8 +71,11 @@
 		D37E0B0F9D74DDDAE53201AE /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 065D72303F83C17078FA0A00 /* SwiftDataModels.swift */; };
 		D7B890045B2A5FE881B6DBCC /* DrinkParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A61C3149EBB796A7238C563 /* DrinkParser.swift */; };
 		D948EC3A29A2C3A86B8BD2FC /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5614B0440491A76516A2A69A /* PersistenceController.swift */; };
+		DF320015254C4C31F07D0CC2 /* ServingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E08A9E6EF666CBC7CA004B0 /* ServingConfig.swift */; };
 		E260BB59B1AD454D53275BFB /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E7068AFCC1F70E81B421F9 /* AppStore.swift */; };
+		E32F3494B2DFD4720E33531A /* ServingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E08A9E6EF666CBC7CA004B0 /* ServingConfig.swift */; };
 		E5221CE5366292F008208238 /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFEDB9F8ED0255803A65F93E /* ReminderService.swift */; };
+		E9BB59C76AB5B909F37ACA3D /* ServingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E08A9E6EF666CBC7CA004B0 /* ServingConfig.swift */; };
 		EB91D7B577797968613D4235 /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E7068AFCC1F70E81B421F9 /* AppStore.swift */; };
 		EEBA745527CFE3BD47AF717A /* LottieView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D39104866B2808A16C2A67A /* LottieView.swift */; };
 		F657FDC711A824F6F2997FD4 /* BodyLoadChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88F96E1FC86AE27AD331A4FD /* BodyLoadChartView.swift */; };
@@ -122,10 +125,11 @@
 		38784054EA12747F620E058D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		3D39104866B2808A16C2A67A /* LottieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottieView.swift; sourceTree = "<group>"; };
 		4236A3CD907EE833E02E68EB /* SessionClockTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionClockTests.swift; sourceTree = "<group>"; };
-		42776EAFA9A2351E2666C5DB /* AreUWorkingTmr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AreUWorkingTmr.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		42776EAFA9A2351E2666C5DB /* AreUWorkingTmr.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AreUWorkingTmr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4A4D763FB8769DCAC94F0F6D /* BuzzStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuzzStatus.swift; sourceTree = "<group>"; };
 		4ECCD2B546E0A73D15C578F9 /* PeakEasterEggOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeakEasterEggOverlay.swift; sourceTree = "<group>"; };
 		5614B0440491A76516A2A69A /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		5E08A9E6EF666CBC7CA004B0 /* ServingConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServingConfig.swift; sourceTree = "<group>"; };
 		5E0D2809A0D5A478DE450294 /* EstimationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EstimationService.swift; sourceTree = "<group>"; };
 		63CDAEA51FA9DEE0271F7368 /* AreUWorkingTmrApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AreUWorkingTmrApp.swift; sourceTree = "<group>"; };
 		679E7F82AA11DD3B34B6EFC6 /* WatchConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WatchConnectivity.framework; path = System/Library/Frameworks/WatchConnectivity.framework; sourceTree = SDKROOT; };
@@ -230,6 +234,7 @@
 			isa = PBXGroup;
 			children = (
 				81B8E282AB31F06D4F8C9F16 /* DomainModels.swift */,
+				5E08A9E6EF666CBC7CA004B0 /* ServingConfig.swift */,
 				065D72303F83C17078FA0A00 /* SwiftDataModels.swift */,
 			);
 			path = Models;
@@ -471,6 +476,7 @@
 				A3C4754F09E9A78CD6C3977D /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */,
 				E1F6F3D6B5C958B187CAE2D3 /* XCRemoteSwiftPackageReference "lottie-ios" */,
 			);
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -519,6 +525,7 @@
 				956FDEAACD7595C14BE6C241 /* PersistenceController.swift in Sources */,
 				3F3E1BAE8568E8EBFF163CBB /* QuickAddView.swift in Sources */,
 				4438E207250456DA1C8E85BE /* ReminderService.swift in Sources */,
+				E32F3494B2DFD4720E33531A /* ServingConfig.swift in Sources */,
 				FE6E4A7CF0BB3F944821C716 /* SwiftDataModels.swift in Sources */,
 				7CB518A5C337CE795D4AC984 /* TimelineView.swift in Sources */,
 				894CFDC0CC6B4C64FF379EE6 /* VoiceLogView.swift in Sources */,
@@ -546,6 +553,7 @@
 				304F1B8B7690DBB33D199475 /* PersistenceController.swift in Sources */,
 				A587BBAF520DCCA7F762030A /* ReminderService.swift in Sources */,
 				A6F74530B65479B6BE5ADC7C /* ReminderServiceTests.swift in Sources */,
+				E9BB59C76AB5B909F37ACA3D /* ServingConfig.swift in Sources */,
 				F9D27A6275B3F0360F52ECD5 /* SessionClockTests.swift in Sources */,
 				85D9A0A3551129DE46F7F5BB /* SwiftDataModels.swift in Sources */,
 			);
@@ -580,6 +588,7 @@
 				E5221CE5366292F008208238 /* ReminderService.swift in Sources */,
 				66EFF32A3EA5FE5A34EB016C /* RemindersView.swift in Sources */,
 				48656F907CF089F43DEFCE2C /* RootTabView.swift in Sources */,
+				DF320015254C4C31F07D0CC2 /* ServingConfig.swift in Sources */,
 				7C6CBF9B2AD513607E631331 /* SessionSummaryCard.swift in Sources */,
 				39BFD3B3829EECFFA3FD6E94 /* SettingsHubView.swift in Sources */,
 				D37E0B0F9D74DDDAE53201AE /* SwiftDataModels.swift in Sources */,
@@ -655,7 +664,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.nestroundlabs.AreUWorkingTmrTests;
 				PRODUCT_NAME = AreUWorkingTmrTests;
 				SDKROOT = iphoneos;
-					TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -666,7 +675,6 @@
 				CODE_SIGN_ENTITLEMENTS = iOSApp/AreUWorkingTmr.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 11;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
@@ -684,7 +692,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.nestroundlabs.AreUWorkingTmr;
 				PRODUCT_NAME = AreUWorkingTmr;
 				SDKROOT = iphoneos;
-					TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -695,7 +703,6 @@
 				CODE_SIGN_ENTITLEMENTS = iOSApp/AreUWorkingTmr.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 11;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Last Round?";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
@@ -713,7 +720,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.nestroundlabs.AreUWorkingTmr;
 				PRODUCT_NAME = AreUWorkingTmr;
 				SDKROOT = iphoneos;
-					TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
