@@ -140,8 +140,8 @@ struct TodayView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             HStack(spacing: 8) {
-                Label("Live standard drinks", systemImage: "bolt.fill")
-                Label("Monitor your load", systemImage: "waveform.path.ecg")
+                Label("Live session totals", systemImage: "bolt.fill")
+                Label("View your trend", systemImage: "waveform.path.ecg")
             }
             .font(NightTheme.captionFont)
             .foregroundStyle(NightTheme.label)

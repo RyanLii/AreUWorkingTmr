@@ -21,8 +21,8 @@ struct BuzzStatusDescriptor: Equatable {
         if effective < 0.3 {
             return BuzzStatusDescriptor(
                 level: .underTheRadar,
-                title: "Under the radar",
-                description: "Trace load. No measurable impact estimated."
+                title: "Low logged load",
+                description: "Low trend from your entries."
             )
         }
 
