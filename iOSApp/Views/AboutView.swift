@@ -20,19 +20,19 @@ struct AboutView: View {
             SectionCard("Safety & Disclaimer") {
                 disclaimerRow(
                     "Estimates only",
-                    "Load and recovery figures are model-based approximations, not measured values."
+                    "Session trend figures are model-based approximations, not measured values."
                 )
                 disclaimerRow(
                     "Not medical advice",
                     "This app does not provide health, medical, or clinical guidance of any kind."
                 )
                 disclaimerRow(
-                    "Not a BAC device",
-                    "Last Round? does not measure blood alcohol concentration."
+                    "Not a measurement device",
+                    "Last Round? does not provide sensor-based alcohol measurements."
                 )
                 disclaimerRow(
-                    "Not for driving decisions",
-                    "Never use this app to determine whether it is safe to drive or operate machinery."
+                    "Not for safety-critical decisions",
+                    "Never use this app to assess readiness for machinery operation or other safety-critical tasks."
                 )
             }
 

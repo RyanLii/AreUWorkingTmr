@@ -58,14 +58,10 @@ struct SessionSummaryCard: View {
                                         .font(NightTheme.captionFont)
                                         .foregroundStyle(NightTheme.label)
                                     PreviousSessionMiniChart(
-                                        points: summary.bodyLoadPoints,
-                                        drinkTimes: summary.drinkTimestamps,
-                                        peakStandardDrinks: summary.peakStandardDrinks,
-                                        peakTime: summary.peakTime,
-                                        recoveryTime: summary.projectedRecoveryTime
+                                        points: summary.bodyLoadPoints
                                     )
                                     .frame(height: 158)
-                                    Text("0.8 std/hr metabolism · estimates only")
+                                    Text("Trend estimates from your log entries.")
                                         .font(.system(size: 9, weight: .medium, design: .rounded))
                                         .foregroundStyle(.white.opacity(0.35))
                                 }
@@ -74,14 +70,13 @@ struct SessionSummaryCard: View {
 
                             // Stats rows
                             VStack(alignment: .leading, spacing: 10) {
-                                summaryRow(
-                                    "Peak load",
-                                    DisplayFormatter.standardDrinks(summary.peakStandardDrinks)
-                                        + " at " + DisplayFormatter.eta(summary.peakTime)
-                                )
-                                summaryRow("Projected clear", DisplayFormatter.eta(summary.projectedZeroTime))
-                                summaryRow("Low load threshold", DisplayFormatter.eta(summary.projectedRecoveryTime))
+                                summaryRow("Highest trend point", DisplayFormatter.standardDrinks(summary.peakStandardDrinks))
+                                summaryRow("Session load", DisplayFormatter.standardDrinks(summary.totalStandardDrinks))
                                 summaryRow("Hydration goal", "\(summary.hydrationPlanMl) ml")
+                                // REVIEW_SAFE_MODE: previous timed summary rows kept for future internal builds.
+                                // summaryRow("Peak load", DisplayFormatter.standardDrinks(summary.peakStandardDrinks) + " at " + DisplayFormatter.eta(summary.peakTime))
+                                // summaryRow("Settling window", DisplayFormatter.eta(summary.projectedZeroTime))
+                                // summaryRow("Low load threshold", DisplayFormatter.eta(summary.projectedRecoveryTime))
                                 Text("Hydration goal is an estimate and not medical advice.")
                                     .font(.system(size: 9, weight: .regular, design: .rounded))
                                     .foregroundStyle(NightTheme.label.opacity(0.55))
@@ -139,19 +134,11 @@ struct SessionSummaryCard: View {
 
 private struct PreviousSessionMiniChart: View {
     let points: [(date: Date, load: Double)]
-    let drinkTimes: [Date]
-    let peakStandardDrinks: Double
-    let peakTime: Date
-    let recoveryTime: Date
 
     var body: some View {
         GeometryReader { geo in
             MiniChartContent(
                 points: points,
-                drinkTimes: drinkTimes,
-                peakStandardDrinks: peakStandardDrinks,
-                peakTime: peakTime,
-                recoveryTime: recoveryTime,
                 size: geo.size
             )
         }
@@ -160,10 +147,6 @@ private struct PreviousSessionMiniChart: View {
 
 private struct MiniChartContent: View {
     let points: [(date: Date, load: Double)]
-    let drinkTimes: [Date]
-    let peakStandardDrinks: Double
-    let peakTime: Date
-    let recoveryTime: Date
     let size: CGSize
 
     private let topPad: CGFloat = 20
@@ -226,38 +209,6 @@ private struct MiniChartContent: View {
             // Line
             linePath(points: cgPoints)
                 .stroke(NightTheme.accentSoft, lineWidth: 2)
-
-            // Low load dashed line
-            if recoveryTime > minDate && recoveryTime < maxDate {
-                let rx = xPos(recoveryTime)
-                Path { p in
-                    p.move(to: CGPoint(x: rx, y: topPad))
-                    p.addLine(to: CGPoint(x: rx, y: baseline))
-                }
-                .stroke(NightTheme.success.opacity(0.55), style: StrokeStyle(lineWidth: 1, dash: [3, 5]))
-
-                Text("Low load threshold")
-                    .font(.system(size: 8, weight: .bold, design: .rounded))
-                    .foregroundStyle(NightTheme.success.opacity(0.8))
-                    .position(x: xPos(recoveryTime), y: topPad - 10)
-            }
-
-            // Peak dot + label
-            if peakStandardDrinks > 0.05 {
-                let px = xPos(peakTime)
-                let py = yPos(peakStandardDrinks)
-
-                Circle()
-                    .fill(NightTheme.accentSoft)
-                    .frame(width: 7, height: 7)
-                    .shadow(color: NightTheme.accentSoft.opacity(0.9), radius: 5)
-                    .position(x: px, y: py)
-
-                Text("peak \(DisplayFormatter.standardDrinks(peakStandardDrinks))")
-                    .font(.system(size: 8, weight: .bold, design: .rounded))
-                    .foregroundStyle(NightTheme.accentSoft)
-                    .position(x: px, y: py - 12)
-            }
 
             // X-axis time labels
             ForEach(Array(xLabelDates.enumerated()), id: \.offset) { _, date in

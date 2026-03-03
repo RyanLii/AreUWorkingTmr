@@ -54,7 +54,7 @@ struct BuzzStatusDescriptor: Equatable {
             return BuzzStatusDescriptor(
                 level: .onFire,
                 title: "On fire",
-                description: "Approaching projected peak."
+                description: "Load trend is elevated."
             )
         }
 
@@ -62,14 +62,14 @@ struct BuzzStatusDescriptor: Equatable {
             return BuzzStatusDescriptor(
                 level: .tooLit,
                 title: "Heavy load",
-                description: "Heavy load. Extended recovery window ahead."
+                description: "High load. Wind-down mode recommended."
             )
         }
 
         return BuzzStatusDescriptor(
             level: .takeItEasyZone,
             title: "High load zone",
-            description: "Very high load. Long clear window projected."
+            description: "Very high load. Pause drinks and prioritize rest."
         )
     }
 }

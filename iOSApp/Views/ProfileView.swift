@@ -10,13 +10,13 @@ struct ProfileView: View {
 
     private func estimatedRateText(for weightKg: Double) -> String {
         let rate = min(max(weightKg * 0.114 / profile.regionStandard.gramsPerStandardDrink, 0.5), 1.2)
-        return String(format: "Est. %.2f std/hr for your region", rate)
+        return String(format: "Trend pace setting: %.2f std/hr", rate)
     }
 
     var body: some View {
         AppScreenScaffold {
             SectionCard("Body Metrics") {
-                bodyText("Add your weight for a personalised metabolism rate. Leave it empty and the model uses 0.8 std/hr — the population average.")
+                bodyText("Add your weight to personalize trend pacing. Leave it empty to use the default pace for your region.")
 
                 Divider().overlay(Color.white.opacity(0.12))
 
@@ -62,7 +62,7 @@ struct ProfileView: View {
             }
 
             SectionCard("Standard Drinks") {
-                bodyText("\"Standard drink\" is a unit of pure alcohol. Different countries define it differently — this setting ensures the model counts correctly for your region.")
+                bodyText("\"Standard drink\" is a unit of pure alcohol. Different countries define it differently — this setting keeps your logging consistent for your region.")
 
                 Divider().overlay(Color.white.opacity(0.12))
 
@@ -185,11 +185,11 @@ struct ProfileView: View {
     private func regionExplanation(_ region: RegionStandard) -> String {
         switch region {
         case .au10g:
-            return "Australian standard: 1 std drink = 10g alcohol. A 375ml mid-strength beer (3.5%) ≈ 1.0 std."
+            return "Australian standard: 1 std drink = 10g alcohol. A 375ml mid-strength beer (3.5%) is about 1.0 std."
         case .uk8g:
-            return "UK unit: 1 unit = 8g alcohol. A 568ml pint at 4% ≈ 2.3 units. Tighter threshold than AU/US."
+            return "UK unit: 1 unit = 8g alcohol. A 568ml pint at 4% is about 2.3 units."
         case .us14g:
-            return "US standard: 1 drink = 14g alcohol. A 355ml beer at 5% ≈ 1.0 std. Higher threshold than AU/UK."
+            return "US standard: 1 drink = 14g alcohol. A 355ml beer at 5% is about 1.0 std."
         }
     }
 }

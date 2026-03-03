@@ -236,8 +236,8 @@ enum BodyLoadState: String, Codable, CaseIterable {
         switch self {
         case .preAbsorption: "Pre-absorption"
         case .absorbing: "Absorbing"
-        case .clearing: "Clearing"
-        case .cleared: "Cleared"
+        case .clearing: "Settling"
+        case .cleared: "Settled"
         }
     }
 
@@ -248,9 +248,9 @@ enum BodyLoadState: String, Codable, CaseIterable {
         case .absorbing:
             "Body load is rising. Consider slowing down."
         case .clearing:
-            "Body load is falling. Keep hydrating and resting."
+            "Body load trend is easing. Keep hydrating and resting."
         case .cleared:
-            "Model estimates this session has cleared."
+            "Model estimates this session has settled."
         }
     }
 }

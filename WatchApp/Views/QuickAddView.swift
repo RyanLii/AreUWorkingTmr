@@ -232,7 +232,7 @@ struct QuickAddView: View {
                     Circle()
                         .fill(WatchNightTheme.warning)
                         .frame(width: 5, height: 5)
-                    Text("Low load begins~ \(DisplayFormatter.approxEta(store.sessionSnapshot.projectedRecoveryTime))")
+                    Text("Trend easing in progress")
                         .font(WatchNightTheme.captionFont)
                         .foregroundStyle(WatchNightTheme.warning.opacity(0.9))
                         .lineLimit(1)
@@ -242,15 +242,24 @@ struct QuickAddView: View {
                     Circle()
                         .fill(Color(red: 0.36, green: 0.76, blue: 0.92))
                         .frame(width: 5, height: 5)
-                    Text("Full clear around \(DisplayFormatter.etaRange(store.sessionSnapshot.projectedZeroTime))")
+                    Text("Approaching baseline trend")
                         .font(WatchNightTheme.captionFont)
                         .foregroundStyle(WatchNightTheme.label)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
                 }
+                Text(statusTrendCopy)
+                    .font(WatchNightTheme.captionFont)
+                    .foregroundStyle(WatchNightTheme.labelSoft)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+
+                // REVIEW_SAFE_MODE: timed copy kept for future internal builds.
+                // Text("Low load begins~ \(DisplayFormatter.approxEta(store.sessionSnapshot.projectedRecoveryTime))")
+                // Text("Settling window around \(DisplayFormatter.etaRange(store.sessionSnapshot.projectedZeroTime))")
             }
 
-            Text("Model estimate only — actual recovery varies by person. Not medical or legal advice.")
+            Text("Model estimate only — actual recovery varies by person. Not a safety or medical measurement.")
                 .font(.system(size: 9, weight: .regular, design: .rounded))
                 .foregroundStyle(WatchNightTheme.label.opacity(0.55))
                 .fixedSize(horizontal: false, vertical: true)
@@ -284,18 +293,23 @@ struct QuickAddView: View {
                         statusMetricRow("Active load", DisplayFormatter.standardDrinks(store.sessionSnapshot.effectiveStandardDrinks))
                         statusMetricRow("In absorption", DisplayFormatter.standardDrinks(store.sessionSnapshot.pendingAbsorptionStandardDrinks))
                         statusMetricRow("Metabolized", DisplayFormatter.standardDrinks(store.sessionSnapshot.metabolizedStandardDrinks))
-                        statusMetricRow("Estimated peak", "\(DisplayFormatter.standardDrinks(store.sessionSnapshot.estimatedPeakStandardDrinks)) at \(DisplayFormatter.eta(store.sessionSnapshot.estimatedPeakTime))")
+                        statusMetricRow("Trend phase", trendPhaseLabel)
 
-                        if store.sessionSnapshot.clearingElapsed > 1,
-                           (store.sessionSnapshot.state == .clearing || store.sessionSnapshot.state == .cleared) {
-                            statusMetricRow("Clearing for", DisplayFormatter.duration(store.sessionSnapshot.clearingElapsed))
-                        }
-
-                        Text("0.8 std/hr metabolism · 30 min absorption window · estimates only")
+                        Text("Trend estimates from your log entries.")
                             .font(WatchNightTheme.captionFont)
                             .foregroundStyle(WatchNightTheme.label)
                             .fixedSize(horizontal: false, vertical: true)
                             .padding(.top, 2)
+
+                        // REVIEW_SAFE_MODE: timed status rows kept for future internal builds.
+                        // statusMetricRow(
+                        //     "Estimated peak",
+                        //     "\(DisplayFormatter.standardDrinks(store.sessionSnapshot.estimatedPeakStandardDrinks)) at \(DisplayFormatter.eta(store.sessionSnapshot.estimatedPeakTime))"
+                        // )
+                        // if store.sessionSnapshot.clearingElapsed > 1,
+                        //    (store.sessionSnapshot.state == .clearing || store.sessionSnapshot.state == .cleared) {
+                        //     statusMetricRow("Cooling for", DisplayFormatter.duration(store.sessionSnapshot.clearingElapsed))
+                        // }
                     }
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
@@ -370,6 +384,33 @@ struct QuickAddView: View {
         }
 
         return buzzStatus.description
+    }
+
+    private var trendPhaseLabel: String {
+        switch store.sessionSnapshot.state {
+        case .preAbsorption:
+            return "Starting"
+        case .absorbing:
+            return "Rising"
+        case .clearing:
+            return "Easing"
+        case .cleared:
+            return "Settled"
+        }
+    }
+
+    private var statusTrendCopy: String {
+        let progress = dynamicCooledOffProgress(at: .now)
+        if progress > 0.75 {
+            return "Trend is flattening toward baseline."
+        }
+        if progress > 0.45 {
+            return "Load trend is easing steadily."
+        }
+        if progress > 0.20 {
+            return "Load trend has turned downward."
+        }
+        return "Trend shift is in progress."
     }
 
     private var sessionStartTime: Date? {

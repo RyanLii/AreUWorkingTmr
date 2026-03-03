@@ -20,8 +20,8 @@ struct PrivacyView: View {
 
             SectionCard("How the Model Works") {
                 bodyText("Live status shows an estimate of how many standard drinks are still active in your body, based on what you've logged.")
-                bodyText("The estimate accounts for absorption delay, how quickly drinks were consumed, and a typical metabolism rate.")
-                bodyText("This is a behavioural guide only — not medical advice. When in doubt, don't drive.")
+                bodyText("The trend uses your logged drink timing, volume, and strength with a generalized pacing model.")
+                bodyText("This is a behavioural guide only — not medical advice or a safety-readiness assessment.")
             }
 
             SectionCard("Product") {

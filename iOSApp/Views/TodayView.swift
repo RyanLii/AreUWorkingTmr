@@ -134,7 +134,7 @@ struct TodayView: View {
                 .font(NightTheme.subtitleFont)
                 .foregroundStyle(NightTheme.accentSoft)
 
-            Text("Track drinks in real time. See your projected peak and clearance window.")
+            Text("Log drinks quickly. View your session log and trend from your entries.")
                 .font(NightTheme.bodyFont)
                 .foregroundStyle(.white.opacity(0.92))
                 .fixedSize(horizontal: false, vertical: true)
@@ -194,32 +194,21 @@ struct TodayView: View {
                         )
                     }
 
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("PEAK")
-                            .font(.system(size: 9, weight: .semibold, design: .rounded))
-                            .foregroundStyle(NightTheme.label.opacity(0.55))
-                        statusDetailRow(
-                            "Estimated peak",
-                            "\(DisplayFormatter.standardDrinks(statusSnapshot.estimatedPeakStandardDrinks)) at \(DisplayFormatter.eta(statusSnapshot.estimatedPeakTime))"
-                        )
-                    }
+                    statusDetailRow("Trend phase", trendPhaseLabel)
 
-                    if statusSnapshot.clearingElapsed > 1,
-                       (statusSnapshot.state == .clearing || statusSnapshot.state == .cleared) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("RUNTIME")
-                                .font(.system(size: 9, weight: .semibold, design: .rounded))
-                                .foregroundStyle(NightTheme.label.opacity(0.55))
-                            statusDetailRow(
-                                "Clearing for",
-                                DisplayFormatter.duration(statusSnapshot.clearingElapsed)
-                            )
-                        }
-                    }
-
-                    Text("0.8 std/hr metabolism · 30 min absorption window · estimates only")
+                    Text("Trend estimates from your log entries.")
                         .font(NightTheme.captionFont)
                         .foregroundStyle(NightTheme.label)
+
+                    // REVIEW_SAFE_MODE: timed status rows kept here for future internal builds.
+                    // statusDetailRow(
+                    //     "Estimated peak",
+                    //     "\(DisplayFormatter.standardDrinks(statusSnapshot.estimatedPeakStandardDrinks)) at \(DisplayFormatter.eta(statusSnapshot.estimatedPeakTime))"
+                    // )
+                    // if statusSnapshot.clearingElapsed > 1,
+                    //    (statusSnapshot.state == .clearing || statusSnapshot.state == .cleared) {
+                    //     statusDetailRow("Cooling for", DisplayFormatter.duration(statusSnapshot.clearingElapsed))
+                    // }
 
                     Button {
                         showLoadCurve = true
@@ -860,7 +849,7 @@ struct TodayView: View {
                                 Circle()
                                     .fill(NightTheme.warning)
                                     .frame(width: 6, height: 6)
-                                Text("Low load begins~ \(DisplayFormatter.approxEta(statusSnapshot.projectedRecoveryTime))")
+                                Text("Trend easing in progress")
                                     .font(.system(size: 10, weight: .semibold, design: .rounded))
                                     .foregroundStyle(NightTheme.warning.opacity(0.9))
                             }
@@ -869,15 +858,22 @@ struct TodayView: View {
                                 Circle()
                                     .fill(Color(red: 0.36, green: 0.76, blue: 0.92))
                                     .frame(width: 6, height: 6)
-                                Text("Full clear around \(DisplayFormatter.etaRange(displayProjectedZeroTime))")
+                                Text("Approaching baseline trend")
                                     .font(.system(size: 10, weight: .semibold, design: .rounded))
                                     .foregroundStyle(Color(red: 0.36, green: 0.76, blue: 0.92).opacity(0.9))
                             }
                         }
-                        Text("Model estimate only — actual recovery varies by person. Not medical or legal advice.")
+                        Text(cooldownFlavorCopy(progress: cooledProgress))
+                            .font(.system(size: 9, weight: .medium, design: .rounded))
+                            .foregroundStyle(NightTheme.label.opacity(0.8))
+                        Text("Model estimate only — actual recovery varies by person. Not a safety or medical measurement.")
                             .font(.system(size: 9, weight: .regular, design: .rounded))
                             .foregroundStyle(NightTheme.label.opacity(0.55))
                             .fixedSize(horizontal: false, vertical: true)
+
+                        // REVIEW_SAFE_MODE: timed copy kept for future internal builds.
+                        // Text("Low load begins~ \(DisplayFormatter.approxEta(statusSnapshot.projectedRecoveryTime))")
+                        // Text("Settling window around \(DisplayFormatter.etaRange(displayProjectedZeroTime))")
                     }
                 }
                 .transition(.identity)
@@ -904,6 +900,19 @@ struct TodayView: View {
         }
     }
 
+    private var trendPhaseLabel: String {
+        switch statusSnapshot.state {
+        case .preAbsorption:
+            return "Starting"
+        case .absorbing:
+            return "Rising"
+        case .clearing:
+            return "Easing"
+        case .cleared:
+            return "Settled"
+        }
+    }
+
     private var statusMoodCopy: String {
         buzzStatus.description
     }
@@ -915,7 +924,7 @@ struct TodayView: View {
                 Text("Body load decreasing")
                     .font(.system(size: 11, weight: .bold, design: .rounded))
                     .foregroundStyle(statusBadgeColor.opacity(0.90))
-                Text("Peak passed \(DisplayFormatter.eta(statusSnapshot.estimatedPeakTime))")
+                Text("Trend is easing after earlier rise")
                     .font(.system(size: 10, weight: .medium, design: .rounded))
                     .foregroundStyle(NightTheme.label)
             }
@@ -931,10 +940,10 @@ struct TodayView: View {
 
     private var statusRecoveryHeadline: String {
         if statusIsCleared {
-            return "Load cleared."
+            return "Load trend settled."
         }
 
-        return "Low impact est. \(DisplayFormatter.eta(statusSnapshot.projectedRecoveryTime))."
+        return "Trend easing."
     }
 
     private var statusRecoveryCountdown: String {
@@ -942,7 +951,7 @@ struct TodayView: View {
             return "All good"
         }
 
-        let remaining = max(0, statusSnapshot.projectedRecoveryTime.timeIntervalSince(.now))
+        let remaining = max(0, statusSnapshot.remainingToZero)
         return DisplayFormatter.countdown(remaining)
     }
 
@@ -979,18 +988,18 @@ struct TodayView: View {
 
     private func cooldownFlavorCopy(progress: Double) -> String {
         if progress > 0.75 {
-            return "Active load still elevated. Clearance in early phase."
+            return "Trend is flattening toward baseline."
         }
 
         if progress > 0.45 {
-            return "Load declining. Past the halfway mark."
+            return "Load trend is easing steadily."
         }
 
         if progress > 0.20 {
-            return "Approaching low-impact threshold."
+            return "Load trend has turned downward."
         }
 
-        return "Near baseline. Final stretch."
+        return "Trend shift is in progress."
     }
 
     private func remainingLoadBar(progress: Double, recoveryFraction: Double) -> some View {
@@ -1098,12 +1107,6 @@ struct TodayView: View {
         return session.map(\.timestamp).min()
     }
 
-    private var displayProjectedZeroTime: Date {
-        let reference = !progressAnchorToken.isEmpty ? progressAnchorProjectedZero : statusSnapshot.projectedZeroTime
-        let roundedMinute = floor(reference.timeIntervalSince1970 / 60) * 60
-        return Date(timeIntervalSince1970: roundedMinute)
-    }
-
     private func syncStableProgressAnchor() {
         if statusSnapshot.totalStandardDrinks <= 0 || statusSnapshot.state == .cleared {
             progressAnchorToken = ""
@@ -1123,15 +1126,18 @@ struct TodayView: View {
     }
 
     private var doneTonightSummary: String {
-        let baselineTime = DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime)
         let liveAmount = DisplayFormatter.standardDrinks(currentEffectiveStandardDrinks)
+        // REVIEW_SAFE_MODE: previous timed variant:
+        // let baselineTime = DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime)
 
         if isHeavyLoad {
-            return "Big night logged. About \(liveAmount) is still active. Switch to water and rest. Baseline trends around \(baselineTime)."
+            return "Big night logged. About \(liveAmount) is still active. Switch to water and rest."
+            // return "Big night logged. About \(liveAmount) is still active. Switch to water and rest. Baseline trends around \(baselineTime)."
         }
 
         if store.sessionSnapshot.remainingToZero > 0 {
-            return "Good call wrapping up. About \(liveAmount) is still active. Baseline trends around \(baselineTime)."
+            return "Good call wrapping up. About \(liveAmount) is still active. Hydrate and wind down."
+            // return "Good call wrapping up. About \(liveAmount) is still active. Baseline trends around \(baselineTime)."
         }
 
         return "Good call wrapping up. You're near baseline now. Hydrate and set yourself up for tomorrow."

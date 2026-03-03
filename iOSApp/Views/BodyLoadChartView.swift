@@ -27,7 +27,7 @@ struct BodyLoadChartView: View {
                         Text("Load Curve")
                             .font(.system(size: 22, weight: .bold, design: .rounded))
                             .foregroundStyle(.white)
-                        Text("Active std drinks in your body over time")
+                        Text("Session trend over time")
                             .font(.system(size: 12, weight: .medium, design: .rounded))
                             .foregroundStyle(.white.opacity(0.4))
                     }
@@ -61,7 +61,7 @@ struct BodyLoadChartView: View {
 
                     Spacer(minLength: 0)
 
-                    Text("0.8 std/hr metabolism · 30 min absorption window · estimates only")
+                    Text("Trend estimates from your log entries.")
                         .font(.system(size: 11, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.45))
                         .frame(maxWidth: .infinity, alignment: .center)
@@ -216,7 +216,7 @@ private struct ChartContent: View {
                     .position(x: nx, y: topPad - 10)
             }
 
-            // Peak dot
+            // High-point dot
             if snapshot.estimatedPeakStandardDrinks > 0.05 {
                 let px = xPos(snapshot.estimatedPeakTime)
                 let py = yPos(snapshot.estimatedPeakStandardDrinks)
@@ -227,7 +227,7 @@ private struct ChartContent: View {
                     .shadow(color: NightTheme.accentSoft.opacity(0.9), radius: 6)
                     .position(x: px, y: py)
 
-                Text("peak \(DisplayFormatter.standardDrinks(snapshot.estimatedPeakStandardDrinks))")
+                Text("high point")
                     .font(.system(size: 9, weight: .bold, design: .rounded))
                     .foregroundStyle(NightTheme.accentSoft)
                     .position(x: px, y: py - 14)
@@ -240,20 +240,16 @@ private struct ChartContent: View {
                     .position(x: px, y: py)
             }
 
-            // Low load dashed line + label
-            if snapshot.projectedRecoveryTime > minDate, snapshot.projectedRecoveryTime < maxDate {
-                let rx = xPos(snapshot.projectedRecoveryTime)
-                Path { p in
-                    p.move(to: CGPoint(x: rx, y: topPad))
-                    p.addLine(to: CGPoint(x: rx, y: baseline))
-                }
-                .stroke(NightTheme.success.opacity(0.65), style: StrokeStyle(lineWidth: 1, dash: [3, 5]))
-
-                Text("Low load threshold")
-                    .font(.system(size: 9, weight: .bold, design: .rounded))
-                    .foregroundStyle(NightTheme.success.opacity(0.85))
-                    .position(x: rx, y: topPad - 10)
-            }
+            // REVIEW_SAFE_MODE: previous timed markers kept for future internal builds.
+            // Text("peak \(DisplayFormatter.standardDrinks(snapshot.estimatedPeakStandardDrinks))")
+            // if snapshot.projectedRecoveryTime > minDate, snapshot.projectedRecoveryTime < maxDate {
+            //     let rx = xPos(snapshot.projectedRecoveryTime)
+            //     Path { p in
+            //         p.move(to: CGPoint(x: rx, y: topPad))
+            //         p.addLine(to: CGPoint(x: rx, y: baseline))
+            //     }
+            //     .stroke(NightTheme.success.opacity(0.65), style: StrokeStyle(lineWidth: 1, dash: [3, 5]))
+            // }
 
             // Y labels
             ForEach(0...4, id: \.self) { i in

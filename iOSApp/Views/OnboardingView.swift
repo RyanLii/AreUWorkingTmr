@@ -30,14 +30,14 @@ struct OnboardingView: View {
                             .lineLimit(2)
                             .minimumScaleFactor(0.85)
 
-                        Text("Log drinks in seconds. See your drink load rise and fall in real time — so you can make smarter calls on the night.")
+                        Text("Log drinks in seconds. See your session trend in real time so you can pace your night better.")
                             .font(NightTheme.bodyFont)
                             .foregroundStyle(.white)
                             .fixedSize(horizontal: false, vertical: true)
 
                         VStack(alignment: .leading, spacing: 10) {
                             featureRow(icon: "applewatch", title: "Log in seconds", detail: "Pick the drink, size, and strength — straight from your wrist.")
-                            featureRow(icon: "waveform.path.ecg", title: "Live drink estimate", detail: "Watch your drink load rise and fall in real time.")
+                            featureRow(icon: "waveform.path.ecg", title: "Live drink trend", detail: "Watch your session trend evolve as you log.")
                             featureRow(icon: "drop.fill", title: "Recovery reminders", detail: "Hydration nudge and morning check-in so tomorrow feels better.")
                         }
                         .glassCard()
@@ -52,7 +52,7 @@ struct OnboardingView: View {
                                     Text("I understand")
                                         .font(NightTheme.bodyFont.weight(.bold))
                                         .foregroundStyle(.white)
-                                    Text("This app provides model-based estimates only. Not medical advice, not a BAC device.")
+                                    Text("This app is for logging and trend awareness only. Not a measurement tool, medical advice, or safety-readiness guidance.")
                                         .font(NightTheme.captionFont)
                                         .foregroundStyle(NightTheme.label)
                                         .fixedSize(horizontal: false, vertical: true)
