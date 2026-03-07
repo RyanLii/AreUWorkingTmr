@@ -188,6 +188,15 @@ private struct MiniChartContent: View {
         return labels
     }
 
+    // Stride-filtered labels that fit the mini chart width without crowding.
+    private var visibleXLabelDates: [Date] {
+        let dates = xLabelDates
+        guard !dates.isEmpty else { return [] }
+        let maxVisible = max(2, Int(w / 44))
+        let stride = max(1, Int(ceil(Double(dates.count) / Double(maxVisible))))
+        return dates.enumerated().compactMap { i, d in i % stride == 0 ? d : nil }
+    }
+
     private let timeFmt: DateFormatter = {
         let f = DateFormatter(); f.dateFormat = "HH:mm"; return f
     }()
@@ -211,7 +220,7 @@ private struct MiniChartContent: View {
                 .stroke(NightTheme.accentSoft, lineWidth: 2)
 
             // X-axis time labels
-            ForEach(Array(xLabelDates.enumerated()), id: \.offset) { _, date in
+            ForEach(Array(visibleXLabelDates.enumerated()), id: \.offset) { _, date in
                 Text(timeFmt.string(from: date))
                     .font(.system(size: 9, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.45))

@@ -18,7 +18,7 @@ struct BodyLoadChartView: View {
     var body: some View {
         let data = store.bodyLoadSeries(now: now)
 
-        ZStack {
+        ZStack(alignment: .topLeading) {
             NightTheme.background.ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 0) {
@@ -58,8 +58,7 @@ struct BodyLoadChartView: View {
                         onPeakTap: handlePeakTap
                     )
                     .padding(.horizontal, 20)
-
-                    Spacer(minLength: 0)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                     Text("Trend estimates from your log entries.")
                         .font(.system(size: 11, weight: .medium, design: .rounded))
@@ -68,6 +67,7 @@ struct BodyLoadChartView: View {
                         .padding(.bottom, 24)
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .scaleEffect(screenScale)
 
             if showEasterEgg {
@@ -167,6 +167,14 @@ private struct ChartContent: View {
 
     private var baseline: CGFloat { yPos(0) }
     private var cgPoints: [CGPoint] { series.map { CGPoint(x: xPos($0.date), y: yPos($0.load)) } }
+    private var nowMarkerX: CGFloat? {
+        guard now > minDate, now < maxDate else { return nil }
+        return xPos(now)
+    }
+    private var peakMarker: (x: CGFloat, y: CGFloat)? {
+        guard snapshot.estimatedPeakStandardDrinks > 0.05 else { return nil }
+        return (xPos(snapshot.estimatedPeakTime), yPos(snapshot.estimatedPeakStandardDrinks))
+    }
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -202,8 +210,7 @@ private struct ChartContent: View {
                 .stroke(NightTheme.accentSoft, lineWidth: 2)
 
             // "Now" line
-            if now > minDate, now < maxDate {
-                let nx = xPos(now)
+            if let nx = nowMarkerX {
                 Path { p in
                     p.move(to: CGPoint(x: nx, y: topPad))
                     p.addLine(to: CGPoint(x: nx, y: baseline))
@@ -213,13 +220,13 @@ private struct ChartContent: View {
                 Text("now")
                     .font(.system(size: 9, weight: .bold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.5))
-                    .position(x: nx, y: topPad - 10)
+                    .position(nowLabelPosition(for: nx))
             }
 
             // High-point dot
-            if snapshot.estimatedPeakStandardDrinks > 0.05 {
-                let px = xPos(snapshot.estimatedPeakTime)
-                let py = yPos(snapshot.estimatedPeakStandardDrinks)
+            if let peak = peakMarker {
+                let px = peak.x
+                let py = peak.y
 
                 Circle()
                     .fill(NightTheme.accentSoft)
@@ -230,7 +237,7 @@ private struct ChartContent: View {
                 Text("high point")
                     .font(.system(size: 9, weight: .bold, design: .rounded))
                     .foregroundStyle(NightTheme.accentSoft)
-                    .position(x: px, y: py - 14)
+                    .position(highPointLabelPosition(for: peak))
 
                 // Invisible tap target (44pt for easy tapping)
                 Color.clear
@@ -275,6 +282,7 @@ private struct ChartContent: View {
                 maxDate: maxDate,
                 totalSeconds: totalSeconds,
                 baseline: baseline,
+                chartWidth: chartW,
                 xPos: xPos
             )
         }
@@ -332,6 +340,7 @@ private struct ChartContent: View {
         maxDate: Date,
         totalSeconds: TimeInterval,
         baseline: CGFloat,
+        chartWidth: CGFloat,
         xPos: @escaping (Date) -> CGFloat
     ) -> some View {
         let fmt = DateFormatter()
@@ -348,12 +357,53 @@ private struct ChartContent: View {
             }
         }
 
-        return ForEach(Array(labels.enumerated()), id: \.offset) { _, date in
+        // Keep time labels readable across device widths and long sessions.
+        let maxVisible = max(2, Int(chartWidth / 48))
+        let strideValue = max(1, Int(ceil(Double(max(labels.count, 1)) / Double(maxVisible))))
+        var visible = labels.enumerated().compactMap { index, date in
+            index % strideValue == 0 ? date : nil
+        }
+        // Only force-append last label if it won't crowd the previous visible label.
+        if let last = labels.last, visible.last != last,
+           let prevVisible = visible.last {
+            let gap = xPos(last) - xPos(prevVisible)
+            if gap >= 44 {
+                visible.append(last)
+            }
+        }
+
+        return ForEach(Array(visible.enumerated()), id: \.offset) { _, date in
             Text(fmt.string(from: date))
                 .font(.system(size: 10, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white.opacity(0.55))
                 .position(x: xPos(date), y: baseline + xLabelHeight / 2)
         }
+    }
+
+    private func nowLabelPosition(for x: CGFloat) -> CGPoint {
+        CGPoint(x: clampedLabelX(x), y: topPad + 10)
+    }
+
+    private func highPointLabelPosition(for peak: (x: CGFloat, y: CGFloat)) -> CGPoint {
+        let clampedPeakX = clampedLabelX(peak.x)
+        var labelY = max(topPad + 10, peak.y - 14)
+
+        if let nx = nowMarkerX {
+            let nowPos = nowLabelPosition(for: nx)
+            // Use generous thresholds: "high point" text ≈ 50pt wide, "now" ≈ 18pt wide.
+            // Extra headroom accounts for font-metric differences across OS versions.
+            if abs(nowPos.x - clampedPeakX) < 80, abs(nowPos.y - labelY) < 22 {
+                labelY = min(baseline - 20, peak.y + 18)
+            }
+        }
+
+        return CGPoint(x: clampedPeakX, y: labelY)
+    }
+
+    private func clampedLabelX(_ x: CGFloat) -> CGFloat {
+        let minX = yLabelWidth + 18
+        let maxX = max(minX, yLabelWidth + chartW - 18)
+        return min(max(x, minX), maxX)
     }
 }
 
