@@ -259,7 +259,7 @@ struct QuickAddView: View {
                 // Text("Settling window around \(DisplayFormatter.etaRange(store.sessionSnapshot.projectedZeroTime))")
             }
 
-            Text("Model estimate only — actual recovery varies by person. Not a safety or medical measurement.")
+            Text("Model estimate only — actual pacing varies by person. Not a safety or medical measurement.")
                 .font(.system(size: 9, weight: .regular, design: .rounded))
                 .foregroundStyle(WatchNightTheme.label.opacity(0.55))
                 .fixedSize(horizontal: false, vertical: true)
@@ -290,9 +290,6 @@ struct QuickAddView: View {
                             .padding(.vertical, 6)
 
                         statusMetricRow("Total logged", DisplayFormatter.standardDrinks(store.sessionSnapshot.totalStandardDrinks))
-                        statusMetricRow("Current trend", DisplayFormatter.standardDrinks(store.sessionSnapshot.effectiveStandardDrinks))
-                        statusMetricRow("Recently logged", DisplayFormatter.standardDrinks(store.sessionSnapshot.pendingAbsorptionStandardDrinks))
-                        statusMetricRow("Earlier in session", DisplayFormatter.standardDrinks(store.sessionSnapshot.metabolizedStandardDrinks))
                         statusMetricRow("Trend phase", trendPhaseLabel)
 
                         Text("Trend estimates from your log entries.")

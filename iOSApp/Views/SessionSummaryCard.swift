@@ -54,7 +54,7 @@ struct SessionSummaryCard: View {
                             // Body load curve
                             if !summary.bodyLoadPoints.isEmpty {
                                 VStack(alignment: .leading, spacing: 8) {
-                                    Text("Body load curve")
+                                    Text("Session trend")
                                         .font(NightTheme.captionFont)
                                         .foregroundStyle(NightTheme.label)
                                     PreviousSessionMiniChart(

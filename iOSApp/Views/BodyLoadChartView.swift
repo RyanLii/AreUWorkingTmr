@@ -24,7 +24,7 @@ struct BodyLoadChartView: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Load Curve")
+                        Text("Session Trend")
                             .font(.system(size: 22, weight: .bold, design: .rounded))
                             .foregroundStyle(.white)
                         Text("Session trend over time")
@@ -44,7 +44,7 @@ struct BodyLoadChartView: View {
 
                 if data.points.isEmpty {
                     Spacer()
-                    Text("Log a drink to see your load curve")
+                    Text("Log a drink to see your session trend")
                         .font(.system(size: 14, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.4))
                         .frame(maxWidth: .infinity, alignment: .center)
@@ -234,7 +234,7 @@ private struct ChartContent: View {
                     .shadow(color: NightTheme.accentSoft.opacity(0.9), radius: 6)
                     .position(x: px, y: py)
 
-                Text("high point")
+                Text("peak logged")
                     .font(.system(size: 9, weight: .bold, design: .rounded))
                     .foregroundStyle(NightTheme.accentSoft)
                     .position(highPointLabelPosition(for: peak))

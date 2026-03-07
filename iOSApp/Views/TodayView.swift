@@ -176,24 +176,6 @@ struct TodayView: View {
                         )
                     }
 
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("SESSION BREAKDOWN")
-                            .font(.system(size: 9, weight: .semibold, design: .rounded))
-                            .foregroundStyle(NightTheme.label.opacity(0.55))
-                        statusDetailRow(
-                            "Current trend",
-                            DisplayFormatter.standardDrinks(statusEffectiveStandardDrinks)
-                        )
-                        statusDetailRow(
-                            "Recently logged",
-                            DisplayFormatter.standardDrinks(statusSnapshot.pendingAbsorptionStandardDrinks)
-                        )
-                        statusDetailRow(
-                            "Earlier in session",
-                            DisplayFormatter.standardDrinks(statusSnapshot.metabolizedStandardDrinks)
-                        )
-                    }
-
                     statusDetailRow("Trend phase", trendPhaseLabel)
 
                     Text("Trend estimates from your log entries.")
@@ -216,7 +198,7 @@ struct TodayView: View {
                         HStack(spacing: 5) {
                             Image(systemName: "waveform.path.ecg")
                                 .font(.system(size: 10, weight: .semibold))
-                            Text("View load curve")
+                            Text("View session trend")
                                 .font(.system(size: 11, weight: .semibold, design: .rounded))
                         }
                         .foregroundStyle(NightTheme.accentSoft)
@@ -866,7 +848,7 @@ struct TodayView: View {
                         Text(cooldownFlavorCopy(progress: cooledProgress))
                             .font(.system(size: 9, weight: .medium, design: .rounded))
                             .foregroundStyle(NightTheme.label.opacity(0.8))
-                        Text("Model estimate only — actual recovery varies by person. Not a safety or medical measurement.")
+                        Text("Model estimate only — actual pacing varies by person. Not a safety or medical measurement.")
                             .font(.system(size: 9, weight: .regular, design: .rounded))
                             .foregroundStyle(NightTheme.label.opacity(0.55))
                             .fixedSize(horizontal: false, vertical: true)
@@ -921,7 +903,7 @@ struct TodayView: View {
     private var statusMoodView: some View {
         if statusSnapshot.state == .clearing && !statusIsCleared {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Body load decreasing")
+                Text("Session trend decreasing")
                     .font(.system(size: 11, weight: .bold, design: .rounded))
                     .foregroundStyle(statusBadgeColor.opacity(0.90))
                 Text("Trend is easing after earlier rise")
@@ -1131,13 +1113,13 @@ struct TodayView: View {
         // let baselineTime = DisplayFormatter.eta(store.sessionSnapshot.projectedZeroTime)
 
         if isHeavyLoad {
-            return "Big night logged. About \(liveAmount) is still active. Switch to water and rest."
-            // return "Big night logged. About \(liveAmount) is still active. Switch to water and rest. Baseline trends around \(baselineTime)."
+            return "Big night logged. About \(liveAmount) logged this session. Switch to water and rest."
+            // return "Big night logged. About \(liveAmount) logged this session. Switch to water and rest. Baseline trends around \(baselineTime)."
         }
 
         if store.sessionSnapshot.remainingToZero > 0 {
-            return "Good call wrapping up. About \(liveAmount) is still active. Hydrate and wind down."
-            // return "Good call wrapping up. About \(liveAmount) is still active. Baseline trends around \(baselineTime)."
+            return "Good call wrapping up. About \(liveAmount) logged tonight. Hydrate and wind down."
+            // return "Good call wrapping up. About \(liveAmount) logged tonight. Baseline trends around \(baselineTime)."
         }
 
         return "Good call wrapping up. You're near baseline now. Hydrate and set yourself up for tomorrow."
