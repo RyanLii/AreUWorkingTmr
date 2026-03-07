@@ -290,9 +290,9 @@ struct QuickAddView: View {
                             .padding(.vertical, 6)
 
                         statusMetricRow("Total logged", DisplayFormatter.standardDrinks(store.sessionSnapshot.totalStandardDrinks))
-                        statusMetricRow("Active load", DisplayFormatter.standardDrinks(store.sessionSnapshot.effectiveStandardDrinks))
-                        statusMetricRow("In absorption", DisplayFormatter.standardDrinks(store.sessionSnapshot.pendingAbsorptionStandardDrinks))
-                        statusMetricRow("Metabolized", DisplayFormatter.standardDrinks(store.sessionSnapshot.metabolizedStandardDrinks))
+                        statusMetricRow("Current trend", DisplayFormatter.standardDrinks(store.sessionSnapshot.effectiveStandardDrinks))
+                        statusMetricRow("Recently logged", DisplayFormatter.standardDrinks(store.sessionSnapshot.pendingAbsorptionStandardDrinks))
+                        statusMetricRow("Earlier in session", DisplayFormatter.standardDrinks(store.sessionSnapshot.metabolizedStandardDrinks))
                         statusMetricRow("Trend phase", trendPhaseLabel)
 
                         Text("Trend estimates from your log entries.")

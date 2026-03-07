@@ -9,8 +9,7 @@ struct ProfileView: View {
     @FocusState private var weightFocused: Bool
 
     private func estimatedRateText(for weightKg: Double) -> String {
-        let rate = min(max(weightKg * 0.114 / profile.regionStandard.gramsPerStandardDrink, 0.5), 1.2)
-        return String(format: "Trend pace setting: %.2f std/hr", rate)
+        return "Weight personalizes your session trend pacing."
     }
 
     var body: some View {

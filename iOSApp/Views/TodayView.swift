@@ -177,19 +177,19 @@ struct TodayView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("LOAD DYNAMICS")
+                        Text("SESSION BREAKDOWN")
                             .font(.system(size: 9, weight: .semibold, design: .rounded))
                             .foregroundStyle(NightTheme.label.opacity(0.55))
                         statusDetailRow(
-                            "Active load",
+                            "Current trend",
                             DisplayFormatter.standardDrinks(statusEffectiveStandardDrinks)
                         )
                         statusDetailRow(
-                            "In absorption",
+                            "Recently logged",
                             DisplayFormatter.standardDrinks(statusSnapshot.pendingAbsorptionStandardDrinks)
                         )
                         statusDetailRow(
-                            "Metabolized",
+                            "Earlier in session",
                             DisplayFormatter.standardDrinks(statusSnapshot.metabolizedStandardDrinks)
                         )
                     }

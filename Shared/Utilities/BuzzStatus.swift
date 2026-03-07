@@ -29,32 +29,32 @@ struct BuzzStatusDescriptor: Equatable {
         if effective < 0.8 {
             return BuzzStatusDescriptor(
                 level: .goodVibes,
-                title: "Good vibes",
-                description: "Light load. Within single-drink range."
+                title: "Light session",
+                description: "Light trend from your log entries."
             )
         }
 
         if effective < 1.6 {
             return BuzzStatusDescriptor(
                 level: .buzzin,
-                title: "Buzzin'",
-                description: "Moderate load. Absorption window active."
+                title: "Mid session",
+                description: "Mid-range trend from your log entries."
             )
         }
 
         if effective < 2.6 {
             return BuzzStatusDescriptor(
                 level: .wavy,
-                title: "Wavy",
-                description: "Above common two-drink range."
+                title: "Active session",
+                description: "Session trend above two-drink range."
             )
         }
 
         if effective < 3.8 {
             return BuzzStatusDescriptor(
                 level: .onFire,
-                title: "On fire",
-                description: "Load trend is elevated."
+                title: "Elevated session",
+                description: "Session load trend is elevated."
             )
         }
 
